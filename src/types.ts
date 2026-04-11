@@ -6,6 +6,7 @@ export type AgentType =
   | "claude-desktop"
   | "codex"
   | "cursor"
+  | "factory-droid"
   | "gemini-cli"
   | "goose"
   | "github-copilot-cli"
@@ -19,6 +20,8 @@ export const agentAliases: Record<string, AgentType> = {
   "cline-vscode": "cline",
   codeium: "windsurf",
   cascade: "windsurf",
+  droid: "factory-droid",
+  factory: "factory-droid",
   gemini: "gemini-cli",
   "github-copilot": "vscode",
 };

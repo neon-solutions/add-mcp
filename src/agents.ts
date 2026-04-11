@@ -393,6 +393,20 @@ export const agents: Record<AgentType, AgentConfig> = {
     transformConfig: transformCodexConfig,
   },
 
+  "factory-droid": {
+    name: "factory-droid",
+    displayName: "Factory Droid",
+    configPath: join(home, ".factory", "mcp.json"),
+    localConfigPath: ".factory/mcp.json",
+    projectDetectPaths: [".factory"],
+    configKey: "mcpServers",
+    format: "json",
+    supportedTransports: ["stdio", "http", "sse"],
+    detectGlobalInstall: async () => {
+      return existsSync(join(home, ".factory"));
+    },
+  },
+
   cursor: {
     name: "cursor",
     displayName: "Cursor",
