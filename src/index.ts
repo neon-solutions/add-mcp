@@ -149,6 +149,8 @@ interface Options {
   type?: string;
   header?: string[];
   env?: string[];
+  autoApprove?: boolean;
+  approveTool?: string[];
   yes?: boolean;
   all?: boolean;
   gitignore?: boolean;
@@ -234,6 +236,25 @@ function extractSubcommandOptionsFromArgv(): Partial<Options> {
     }
     if (arg === "--gitignore") {
       result.gitignore = true;
+      continue;
+    }
+    if (arg === "--auto-approve") {
+      result.autoApprove = true;
+      continue;
+    }
+    if (arg === "--approve-tool") {
+      const tools: string[] = result.approveTool ? [...result.approveTool] : [];
+      let j = i + 1;
+      while (j < argv.length) {
+        const value = argv[j];
+        if (!value || value.startsWith("-")) break;
+        tools.push(value);
+        j += 1;
+      }
+      if (tools.length > 0) {
+        result.approveTool = tools;
+      }
+      i = j - 1;
       continue;
     }
     if ((arg === "-n" || arg === "--name") && argv[i + 1]) {
@@ -390,6 +411,16 @@ program
     collect,
     [],
   )
+  .option(
+    "--auto-approve",
+    "Auto-approve MCP tool calls for agents that support it (Codex and Claude Code)",
+  )
+  .option(
+    "--approve-tool <tool>",
+    "Tool name to auto-approve when --auto-approve is set (repeatable, defaults to all tools)",
+    collect,
+    [],
+  )
   .option("-y, --yes", "Skip confirmation prompts")
   .option("--all", "Install to all agents")
   .option("--gitignore", "Add generated project config files to .gitignore")
@@ -460,6 +491,16 @@ program
     "Server name override (defaults to catalog entry name)",
   )
   .option("-y, --yes", "Skip confirmation prompts")
+  .option(
+    "--auto-approve",
+    "Auto-approve MCP tool calls for agents that support it (Codex and Claude Code)",
+  )
+  .option(
+    "--approve-tool <tool>",
+    "Tool name to auto-approve when --auto-approve is set (repeatable, defaults to all tools)",
+    collect,
+    [],
+  )
   .option("--all", "Install to all agents")
   .option("--gitignore", "Add generated project config files to .gitignore")
   .action(
@@ -484,6 +525,16 @@ program
     "Server name override (defaults to catalog entry name)",
   )
   .option("-y, --yes", "Skip confirmation prompts")
+  .option(
+    "--auto-approve",
+    "Auto-approve MCP tool calls for agents that support it (Codex and Claude Code)",
+  )
+  .option(
+    "--approve-tool <tool>",
+    "Tool name to auto-approve when --auto-approve is set (repeatable, defaults to all tools)",
+    collect,
+    [],
+  )
   .option("--all", "Install to all agents")
   .option("--gitignore", "Add generated project config files to .gitignore")
   .action(
@@ -1258,6 +1309,10 @@ async function main(target: string | undefined, options: Options) {
     );
   }
 
+  const approveTools = [...new Set(options.approveTool ?? [])];
+  const autoApproveTools =
+    options.autoApprove || approveTools.length > 0 ? approveTools : undefined;
+
   // Determine server name
   const serverName = options.name || parsed.inferredName;
   p.log.info(`Server name: ${chalk.cyan(serverName)}`);
@@ -1285,6 +1340,7 @@ async function main(target: string | undefined, options: Options) {
     transport: resolvedTransport,
     headers: isRemote && hasHeaderValues ? headerResult.headers : undefined,
     env: !isRemote && hasEnvValues ? envResult.env : undefined,
+    autoApproveTools,
   });
 
   // Determine target agents
@@ -1555,6 +1611,15 @@ async function main(target: string | undefined, options: Options) {
   const summaryLines: string[] = [];
   summaryLines.push(`${chalk.cyan("Server:")} ${serverName}`);
   summaryLines.push(`${chalk.cyan("Type:")} ${sourceType}`);
+  if (autoApproveTools) {
+    summaryLines.push(
+      `${chalk.cyan("Auto-approve:")} ${
+        autoApproveTools.length === 0
+          ? "All tools"
+          : autoApproveTools.join(", ")
+      }`,
+    );
+  }
 
   // Determine scope display
   const localAgents = targetAgents.filter(

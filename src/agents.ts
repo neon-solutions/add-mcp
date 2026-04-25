@@ -141,6 +141,23 @@ function transformCodexConfig(
   _serverName: string,
   config: McpServerConfig,
 ): unknown {
+  const addCodexApproval = (target: Record<string, unknown>) => {
+    if (!config.autoApproveTools) return target;
+
+    if (config.autoApproveTools.length === 0) {
+      target.default_tools_approval_mode = "approve";
+      return target;
+    }
+
+    target.tools = Object.fromEntries(
+      config.autoApproveTools.map((tool) => [
+        tool,
+        { approval_mode: "approve" },
+      ]),
+    );
+    return target;
+  };
+
   if (config.url) {
     const remoteConfig: Record<string, unknown> = {
       type: config.type || "http",
@@ -151,14 +168,14 @@ function transformCodexConfig(
       remoteConfig.http_headers = config.headers;
     }
 
-    return remoteConfig;
+    return addCodexApproval(remoteConfig);
   }
 
-  return {
+  return addCodexApproval({
     command: config.command,
     args: config.args || [],
     env: config.env,
-  };
+  });
 }
 
 function transformCursorConfig(

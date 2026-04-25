@@ -14,6 +14,7 @@ import { join, dirname } from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import yaml from "js-yaml";
+import * as TOML from "@iarna/toml";
 
 let passed = 0;
 let failed = 0;
@@ -140,6 +141,78 @@ test("E2E CLI: --gitignore with --global warns and does not write project .gitig
   );
   assert.strictEqual(existsSync(join(projectDir, ".gitignore")), false);
   assert.strictEqual(existsSync(join(homeDir, ".cursor", "mcp.json")), true);
+});
+
+test("E2E CLI: Codex auto-approve selected tool", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "executor mcp",
+      "-a",
+      "codex",
+      "-y",
+      "--name",
+      "executor",
+      "--auto-approve",
+      "--approve-tool",
+      "execute",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const configPath = join(projectDir, ".codex", "config.toml");
+  const saved = TOML.parse(readFileSync(configPath, "utf-8")) as Record<
+    string,
+    unknown
+  >;
+  const mcpServers = saved.mcp_servers as Record<string, unknown>;
+  const executor = mcpServers.executor as Record<string, unknown>;
+  const tools = executor.tools as Record<string, unknown>;
+  assert.deepStrictEqual(tools.execute, { approval_mode: "approve" });
+});
+
+test("E2E CLI: Claude Code auto-approve selected tool", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "executor mcp",
+      "-a",
+      "claude-code",
+      "-y",
+      "--name",
+      "executor",
+      "--auto-approve",
+      "--approve-tool",
+      "execute",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const settingsPath = join(projectDir, ".claude", "settings.local.json");
+  const settings = JSON.parse(readFileSync(settingsPath, "utf-8")) as Record<
+    string,
+    unknown
+  >;
+  const permissions = settings.permissions as Record<string, unknown>;
+  assert.deepStrictEqual(permissions.allow, ["mcp__executor__execute"]);
 });
 
 test("E2E CLI: find -y without registry config asks to configure registries", () => {
@@ -393,13 +466,24 @@ test("E2E CLI: stdio server to claude-desktop succeeds", () => {
     );
   }
 
-  const configPath = join(
-    homeDir,
-    "Library",
-    "Application Support",
-    "Claude",
-    "claude_desktop_config.json",
-  );
+  const configPath =
+    process.platform === "darwin"
+      ? join(
+          homeDir,
+          "Library",
+          "Application Support",
+          "Claude",
+          "claude_desktop_config.json",
+        )
+      : process.platform === "win32"
+        ? join(
+            homeDir,
+            "AppData",
+            "Roaming",
+            "Claude",
+            "claude_desktop_config.json",
+          )
+        : join(homeDir, ".config", "Claude", "claude_desktop_config.json");
   assert.strictEqual(existsSync(configPath), true);
 
   const saved = JSON.parse(readFileSync(configPath, "utf-8"));

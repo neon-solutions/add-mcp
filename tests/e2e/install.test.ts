@@ -736,6 +736,41 @@ test("E2E: Codex config transformation - local server includes env", () => {
   });
 });
 
+test("E2E: Codex config transformation - auto-approve all tools", () => {
+  const parsed = parseSource("mcp-server-postgres");
+  const config = buildServerConfig(parsed, {
+    autoApproveTools: [],
+  });
+
+  const codexAgent = agents.codex;
+
+  const transformed = codexAgent.transformConfig!("postgres", config) as Record<
+    string,
+    unknown
+  >;
+
+  assert.strictEqual(transformed.default_tools_approval_mode, "approve");
+});
+
+test("E2E: Codex config transformation - auto-approve selected tools", () => {
+  const parsed = parseSource("mcp-server-postgres");
+  const config = buildServerConfig(parsed, {
+    autoApproveTools: ["query", "schema"],
+  });
+
+  const codexAgent = agents.codex;
+
+  const transformed = codexAgent.transformConfig!("postgres", config) as Record<
+    string,
+    unknown
+  >;
+
+  assert.deepStrictEqual(transformed.tools, {
+    query: { approval_mode: "approve" },
+    schema: { approval_mode: "approve" },
+  });
+});
+
 test("E2E: Write TOML config file (Codex format)", () => {
   const tempDir = createTempDir();
   const codexConfigPath = join(tempDir, ".codex", "config.toml");
@@ -761,6 +796,30 @@ test("E2E: Write TOML config file (Codex format)", () => {
   const serverEntry = mcpServers.postgres as Record<string, unknown>;
   assert.strictEqual(serverEntry.command, "npx");
   assert.deepStrictEqual(serverEntry.args, ["-y", "mcp-server-postgres"]);
+});
+
+test("E2E: Write TOML config file with Codex selected tool approval", () => {
+  const tempDir = createTempDir();
+  const codexConfigPath = join(tempDir, ".codex", "config.toml");
+
+  const parsed = parseSource("mcp-server-postgres");
+  const serverConfig = buildServerConfig(parsed, {
+    autoApproveTools: ["query"],
+  });
+
+  const codexAgent = agents.codex;
+  const transformed = codexAgent.transformConfig!("postgres", serverConfig);
+
+  const config = buildConfigWithKey("mcp_servers", "postgres", transformed);
+  writeConfig(codexConfigPath, config, "toml", "mcp_servers");
+
+  assert.strictEqual(existsSync(codexConfigPath), true);
+
+  const savedConfig = readTomlConfig(codexConfigPath);
+  const mcpServers = savedConfig.mcp_servers as Record<string, unknown>;
+  const serverEntry = mcpServers.postgres as Record<string, unknown>;
+  const tools = serverEntry.tools as Record<string, unknown>;
+  assert.deepStrictEqual(tools.query, { approval_mode: "approve" });
 });
 
 // ============================================

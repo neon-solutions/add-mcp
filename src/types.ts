@@ -79,6 +79,8 @@ export interface McpServerConfig {
   command?: string;
   args?: string[];
   env?: Record<string, string>;
+  /** Auto-approve MCP tool calls for agents that support it. Empty means all tools. */
+  autoApproveTools?: string[];
 }
 
 export interface ConfigFile {

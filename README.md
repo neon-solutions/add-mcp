@@ -141,6 +141,12 @@ npx add-mcp mcp-server-github --all -g -y
 
 # Add generated config files to .gitignore
 npx add-mcp https://mcp.example.com/mcp -a cursor -y --gitignore
+
+# Auto-approve all tools for agents that support it (Codex and Claude Code)
+npx add-mcp "executor mcp" --name executor -a codex -a claude-code --auto-approve
+
+# Auto-approve only selected tools
+npx add-mcp "executor mcp" --name executor -a codex --auto-approve --approve-tool execute
 ```
 
 ### Options
@@ -153,6 +159,8 @@ npx add-mcp https://mcp.example.com/mcp -a cursor -y --gitignore
 | `--type <type>`          | Alias for `--transport`                                                  |
 | `--header <header>`      | HTTP header for remote servers (repeatable, `Key: Value`)                |
 | `--env <env>`            | Env var for local stdio servers (repeatable, `KEY=VALUE`)                |
+| `--auto-approve`         | Auto-approve MCP tool calls for supported agents (Codex and Claude Code) |
+| `--approve-tool <tool>`  | Tool name to auto-approve with `--auto-approve` (repeatable)             |
 | `-n, --name <name>`      | Server name (auto-inferred if not provided)                              |
 | `-y, --yes`              | Skip all confirmation prompts                                            |
 | `--all`                  | Install to all agents                                                    |
@@ -194,14 +202,16 @@ npx add-mcp find github --all --gitignore
 
 ### Options
 
-| Option                | Description                                                              |
-| --------------------- | ------------------------------------------------------------------------ |
-| `-g, --global`        | Install to user directory instead of project                             |
-| `-a, --agent <agent>` | Target specific agents (e.g., `cursor`, `claude-code`). Can be repeated. |
-| `-n, --name <name>`   | Server name override (defaults to the selected catalog entry name)       |
-| `-y, --yes`           | Skip confirmation prompts                                                |
-| `--all`               | Install to all agents                                                    |
-| `--gitignore`         | Add generated config files to `.gitignore`                               |
+| Option                  | Description                                                              |
+| ----------------------- | ------------------------------------------------------------------------ |
+| `-g, --global`          | Install to user directory instead of project                             |
+| `-a, --agent <agent>`   | Target specific agents (e.g., `cursor`, `claude-code`). Can be repeated. |
+| `-n, --name <name>`     | Server name override (defaults to the selected catalog entry name)       |
+| `--auto-approve`        | Auto-approve MCP tool calls for supported agents (Codex and Claude Code) |
+| `--approve-tool <tool>` | Tool name to auto-approve with `--auto-approve` (repeatable)             |
+| `-y, --yes`             | Skip confirmation prompts                                                |
+| `--all`                 | Install to all agents                                                    |
+| `--gitignore`           | Add generated config files to `.gitignore`                               |
 
 Transport for `find`/`search` is inferred from registry metadata. The CLI prefers HTTP remotes when available and only falls back to SSE when HTTP is not available for the selected install context.
 

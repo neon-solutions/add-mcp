@@ -485,6 +485,54 @@ test("installServer - cline extension global uses VS Code global storage path", 
   }
 });
 
+test("installServer - claude-code local auto-approval writes settings.local.json", () => {
+  const tempDir = createTempDir();
+  const parsed = parseSource("mcp-server-postgres");
+  const config = buildServerConfig(parsed, {
+    autoApproveTools: ["query"],
+  });
+
+  const results = installServer("postgres", config, ["claude-code"], {
+    routing: new Map<AgentType, "local" | "global">([["claude-code", "local"]]),
+    cwd: tempDir,
+  });
+
+  const result = results.get("claude-code");
+  assert.ok(result?.success);
+
+  const mcpConfig = readJsonConfig(join(tempDir, ".mcp.json"));
+  const mcpServers = mcpConfig.mcpServers as Record<string, unknown>;
+  assert.ok(mcpServers.postgres);
+
+  const settings = readJsonConfig(
+    join(tempDir, ".claude", "settings.local.json"),
+  );
+  const permissions = settings.permissions as Record<string, unknown>;
+  assert.deepStrictEqual(permissions.allow, ["mcp__postgres__query"]);
+});
+
+test("installServer - claude-code auto-approval all tools uses server rule", () => {
+  const tempDir = createTempDir();
+  const parsed = parseSource("mcp-server-postgres");
+  const config = buildServerConfig(parsed, {
+    autoApproveTools: [],
+  });
+
+  const results = installServer("postgres", config, ["claude-code"], {
+    routing: new Map<AgentType, "local" | "global">([["claude-code", "local"]]),
+    cwd: tempDir,
+  });
+
+  const result = results.get("claude-code");
+  assert.ok(result?.success);
+
+  const settings = readJsonConfig(
+    join(tempDir, ".claude", "settings.local.json"),
+  );
+  const permissions = settings.permissions as Record<string, unknown>;
+  assert.deepStrictEqual(permissions.allow, ["mcp__postgres"]);
+});
+
 test("installServer - mcporter local writes config/mcporter.json", () => {
   const tempDir = createTempDir();
   const parsed = parseSource("mcp-server-postgres");
