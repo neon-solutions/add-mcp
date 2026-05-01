@@ -9,6 +9,7 @@ export type AgentType =
   | "gemini-cli"
   | "goose"
   | "github-copilot-cli"
+  | "kiro-cli"
   | "mcporter"
   | "opencode"
   | "vscode"
@@ -21,6 +22,7 @@ export const agentAliases: Record<string, AgentType> = {
   cascade: "windsurf",
   gemini: "gemini-cli",
   "github-copilot": "vscode",
+  kiro: "kiro-cli",
 };
 
 export type ConfigFormat = "json" | "yaml" | "toml";

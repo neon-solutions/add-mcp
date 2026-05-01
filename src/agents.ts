@@ -436,6 +436,20 @@ export const agents: Record<AgentType, AgentConfig> = {
     transformConfig: transformGooseConfig,
   },
 
+  "kiro-cli": {
+    name: "kiro-cli",
+    displayName: "Kiro CLI",
+    configPath: join(home, ".kiro", "settings", "mcp.json"),
+    localConfigPath: ".kiro/settings/mcp.json",
+    projectDetectPaths: [".kiro"],
+    configKey: "mcpServers",
+    format: "json",
+    supportedTransports: ["stdio", "http", "sse"],
+    detectGlobalInstall: async () => {
+      return existsSync(join(home, ".kiro"));
+    },
+  },
+
   "github-copilot-cli": {
     name: "github-copilot-cli",
     displayName: "GitHub Copilot CLI",

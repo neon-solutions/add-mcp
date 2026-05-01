@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.11.0] - 2026-06-18
+
+- add support for Kiro CLI (`kiro-cli` / `kiro`)
+
 ## [1.10.4] - 2026-05-23
 
 - add `-h` shorthand for `--header` (use `--help` for help)

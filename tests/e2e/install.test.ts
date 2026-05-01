@@ -321,6 +321,53 @@ test("E2E: Install to Gemini CLI (local)", () => {
   assert.ok(mcpServers.github);
 });
 
+test("E2E: Install to Kiro CLI (local) - stdio", () => {
+  const tempDir = createTempDir();
+  const parsed = parseSource("mcp-server-github");
+  const config = buildServerConfig(parsed);
+
+  const result = installServerForAgent("github", config, "kiro-cli", {
+    local: true,
+    cwd: tempDir,
+  });
+
+  assert.strictEqual(result.success, true);
+
+  const configPath = join(tempDir, ".kiro", "settings", "mcp.json");
+  assert.strictEqual(existsSync(configPath), true);
+
+  const savedConfig = readJsonConfig(configPath);
+  const mcpServers = savedConfig.mcpServers as Record<string, unknown>;
+  assert.ok(mcpServers.github);
+
+  const serverConfig = mcpServers.github as Record<string, unknown>;
+  assert.strictEqual(serverConfig.command, "npx");
+  assert.deepStrictEqual(serverConfig.args, ["-y", "mcp-server-github"]);
+});
+
+test("E2E: Install to Kiro CLI (local) - remote", () => {
+  const tempDir = createTempDir();
+  const parsed = parseSource("https://mcp.example.com/api");
+  const config = buildServerConfig(parsed);
+
+  const result = installServerForAgent("example", config, "kiro-cli", {
+    local: true,
+    cwd: tempDir,
+  });
+
+  assert.strictEqual(result.success, true);
+
+  const configPath = join(tempDir, ".kiro", "settings", "mcp.json");
+  assert.strictEqual(existsSync(configPath), true);
+
+  const savedConfig = readJsonConfig(configPath);
+  const mcpServers = savedConfig.mcpServers as Record<string, unknown>;
+  assert.ok(mcpServers.example);
+
+  const serverConfig = mcpServers.example as Record<string, unknown>;
+  assert.strictEqual(serverConfig.url, "https://mcp.example.com/api");
+});
+
 // ============================================
 // E2E Tests: Merge existing config
 // ============================================
