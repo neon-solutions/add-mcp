@@ -1,5 +1,14 @@
 import * as p from "@clack/prompts";
 import type { TransportType } from "./types.js";
+import {
+  type PackageArgPrompt,
+  type RegistryPackageArgumentDefinition,
+  buildPackageArgumentsArgvInteractive,
+  buildPackageArgumentsArgvNonInteractive,
+  definitionsFromPackage,
+} from "./package-arguments.js";
+
+export type { RegistryPackageArgumentDefinition } from "./package-arguments.js";
 
 export type RegistryRemoteTransport = "streamable-http" | "sse";
 
@@ -31,9 +40,8 @@ export interface RegistryPackageDefinition {
   version?: string;
   environmentVariables?: RegistryNamedVariableDefinition[];
   headers?: RegistryHeaderDefinition[];
-  args?: RegistryPackageArgumentDefinition[];
-  arguments?: RegistryPackageArgumentDefinition[];
-  commandArguments?: RegistryPackageArgumentDefinition[];
+  /** MCP registry / server.json package CLI arguments (positional vs named). */
+  packageArguments?: RegistryPackageArgumentDefinition[];
   transport: {
     type: "stdio";
   };
@@ -41,16 +49,6 @@ export interface RegistryPackageDefinition {
 
 export interface RegistryNamedVariableDefinition extends RegistryVariableDefinition {
   name: string;
-}
-
-export interface RegistryPackageArgumentDefinition {
-  name?: string;
-  value?: string;
-  description?: string;
-  isRequired?: boolean;
-  isSecret?: boolean;
-  default?: string;
-  choices?: string[];
 }
 
 export interface RegistryServerEntry {
@@ -468,27 +466,6 @@ function packageVariableFields(
     }));
 }
 
-function packageArgumentFields(pkg: RegistryPackageDefinition): PromptField[] {
-  const definitions = [
-    ...(pkg.args ?? []),
-    ...(pkg.arguments ?? []),
-    ...(pkg.commandArguments ?? []),
-  ];
-  return definitions.map((arg, index) => {
-    const descriptor =
-      arg.name?.trim() ||
-      arg.value?.trim() ||
-      arg.description?.trim() ||
-      `#${index + 1}`;
-    return {
-      key: String(index),
-      label: `Argument ${descriptor}`,
-      isRequired: arg.isRequired === true,
-      placeholder: buildPlaceholderValue("variable"),
-    };
-  });
-}
-
 function resolveNonInteractiveRemote(remote: RegistryRemoteDefinition): {
   url: string;
   headers?: Record<string, string>;
@@ -556,14 +533,15 @@ function resolveNonInteractivePackage(pkg: RegistryPackageDefinition): {
     }
   }
 
-  const args = packageArgumentFields(pkg)
-    .filter((field) => field.isRequired)
-    .map((field) => field.placeholder);
+  const argv = buildPackageArgumentsArgvNonInteractive(
+    definitionsFromPackage(pkg),
+    buildPlaceholderValue("variable"),
+  );
 
   return {
     env: Object.keys(env).length > 0 ? env : undefined,
     headers: Object.keys(headers).length > 0 ? headers : undefined,
-    args: args.length > 0 ? args : undefined,
+    args: argv.length > 0 ? argv : undefined,
   };
 }
 
@@ -574,6 +552,12 @@ async function resolveInteractivePackage(
   headers?: Record<string, string>;
   args?: string[];
 } | null> {
+  const promptPackageArg: PackageArgPrompt = async (info) =>
+    p.text({
+      message: `${info.label} ${info.isRequired ? "(required)" : "(optional)"}`,
+      placeholder: info.placeholder,
+    });
+
   const envResult = await collectPromptValues(
     packageVariableFields(pkg.environmentVariables),
     promptValue,
@@ -586,13 +570,11 @@ async function resolveInteractivePackage(
   );
   if (headerResult.cancelled) return null;
 
-  const argumentFields = packageArgumentFields(pkg);
-  const argsResult = await collectPromptValues(argumentFields, promptValue);
-  if (argsResult.cancelled) return null;
-
-  const args = argumentFields
-    .map((field) => argsResult.values[field.key])
-    .filter((value): value is string => typeof value === "string");
+  const argvResult = await buildPackageArgumentsArgvInteractive(
+    definitionsFromPackage(pkg),
+    promptPackageArg,
+  );
+  if (argvResult.cancelled) return null;
 
   return {
     env:
@@ -601,7 +583,7 @@ async function resolveInteractivePackage(
       Object.keys(headerResult.values).length > 0
         ? headerResult.values
         : undefined,
-    args: args.length > 0 ? args : undefined,
+    args: argvResult.argv.length > 0 ? argvResult.argv : undefined,
   };
 }
 

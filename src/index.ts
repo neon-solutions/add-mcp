@@ -43,6 +43,11 @@ import {
   type InstalledServer,
 } from "./reader.js";
 import { removeServerFromConfig } from "./formats/index.js";
+import {
+  hasTemplateVars,
+  resolveArrayTemplates,
+  resolveRecordTemplates,
+} from "./template.js";
 
 import packageJson from "../package.json" with { type: "json" };
 
@@ -379,7 +384,15 @@ function parseEnv(values: string[]): ParsedEnvResult {
   return { env, invalid };
 }
 
-import { hasTemplateVars, resolveRecordTemplates } from "./template.js";
+function omitEmptyStringValues(
+  record: Record<string, string>,
+): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(record).filter(
+      ([, v]) => typeof v === "string" && v.trim().length > 0,
+    ),
+  );
+}
 
 program
   .name("add-mcp")
@@ -404,19 +417,19 @@ program
   .option("--type <type>", "Alias for --transport")
   .option(
     "--header <header>",
-    "HTTP header for remote servers (repeatable, 'Key: Value')",
+    "HTTP header for remote servers (repeatable, 'Key: Value'). Placeholders ${VAR} prompt interactively when not using --yes.",
     collect,
     [],
   )
   .option(
     "--env <env>",
-    "Environment variable for local stdio servers (repeatable, 'KEY=VALUE')",
+    "Environment variable for local stdio servers (repeatable, 'KEY=VALUE'). Placeholders ${VAR} prompt interactively when not using --yes.",
     collect,
     [],
   )
   .option(
     "--args <arg>",
-    "Argument for local stdio servers (repeatable)",
+    "Argument for local stdio servers (repeatable). Placeholders ${VAR} prompt interactively when not using --yes.",
     collect,
     [],
   )
@@ -1306,6 +1319,8 @@ async function main(target: string | undefined, options: Options) {
       placeholder: `<${varName}>`,
     });
 
+  let resolvedArgs = [...argsValues];
+
   if (
     !options.yes &&
     hasHeaderValues &&
@@ -1338,6 +1353,28 @@ async function main(target: string | undefined, options: Options) {
     }
   }
 
+  if (!options.yes && hasArgsValues && hasTemplateVars(resolvedArgs)) {
+    const result = await resolveArrayTemplates(resolvedArgs, promptTemplateVar);
+    if (result.cancelled) {
+      p.cancel("Cancelled");
+      process.exit(0);
+    }
+    resolvedArgs = result.resolved;
+  }
+
+  const headersForConfig =
+    isRemote && hasHeaderValues
+      ? omitEmptyStringValues(headerResult.headers)
+      : undefined;
+  const envForConfig =
+    !isRemote && hasEnvValues
+      ? omitEmptyStringValues(envResult.env)
+      : undefined;
+  const argsForConfig =
+    !isRemote && hasArgsValues
+      ? resolvedArgs.filter((a) => a.trim().length > 0)
+      : undefined;
+
   // Determine server name
   const serverName = options.name || parsed.inferredName;
   p.log.info(`Server name: ${chalk.cyan(serverName)}`);
@@ -1363,9 +1400,15 @@ async function main(target: string | undefined, options: Options) {
   // Build server config
   const serverConfig = buildServerConfig(parsed, {
     transport: resolvedTransport,
-    headers: isRemote && hasHeaderValues ? headerResult.headers : undefined,
-    env: !isRemote && hasEnvValues ? envResult.env : undefined,
-    args: !isRemote && hasArgsValues ? argsValues : undefined,
+    headers:
+      headersForConfig && Object.keys(headersForConfig).length > 0
+        ? headersForConfig
+        : undefined,
+    env:
+      envForConfig && Object.keys(envForConfig).length > 0
+        ? envForConfig
+        : undefined,
+    args: argsForConfig && argsForConfig.length > 0 ? argsForConfig : undefined,
   });
 
   // Determine target agents

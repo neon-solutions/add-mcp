@@ -10,6 +10,14 @@ export function findTemplateVars(value: string): string[] {
   return vars;
 }
 
+/** Replace each `${VAR}` with the same placeholder (non-interactive / -y installs). */
+export function substituteTemplatePlaceholders(
+  value: string,
+  replacement: string,
+): string {
+  return value.replace(/\$\{([^}]+)\}/g, () => replacement);
+}
+
 export async function resolveTemplates(
   value: string,
   ask: (varName: string) => Promise<string | symbol>,

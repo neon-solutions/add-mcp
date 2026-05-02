@@ -707,9 +707,9 @@ test("buildInstallPlanForEntry includes only required package env/header/args pl
           { name: "Authorization", isRequired: true },
           { name: "X-Optional", isRequired: false },
         ],
-        args: [
-          { name: "--required-arg", isRequired: true },
-          { name: "--optional-arg", isRequired: false },
+        packageArguments: [
+          { type: "named", name: "--required-arg", isRequired: true },
+          { type: "named", name: "--optional-arg", isRequired: false },
         ],
       },
     },
@@ -724,7 +724,10 @@ test("buildInstallPlanForEntry includes only required package env/header/args pl
   assert.deepStrictEqual(plan?.headers, {
     Authorization: "<your-header-value-here>",
   });
-  assert.deepStrictEqual(plan?.args, ["<your-variable-value-here>"]);
+  assert.deepStrictEqual(plan?.args, [
+    "--required-arg",
+    "<your-variable-value-here>",
+  ]);
 });
 
 test("buildInstallPlanForEntry omits env/headers/args when all package inputs are optional in -y mode", async () => {
@@ -739,7 +742,9 @@ test("buildInstallPlanForEntry omits env/headers/args when all package inputs ar
         transport: { type: "stdio" },
         environmentVariables: [{ name: "OPT_ENV", isRequired: false }],
         headers: [{ name: "X-Optional", isRequired: false }],
-        args: [{ name: "--verbose", isRequired: false }],
+        packageArguments: [
+          { type: "named", name: "--verbose", isRequired: false },
+        ],
       },
     },
     { yes: true },
@@ -752,19 +757,23 @@ test("buildInstallPlanForEntry omits env/headers/args when all package inputs ar
   assert.strictEqual(plan?.args, undefined);
 });
 
-test("buildInstallPlanForEntry merges arguments and commandArguments fields in -y mode", async () => {
+test("buildInstallPlanForEntry merges named packageArguments in -y mode", async () => {
   const plan = await buildInstallPlanForEntry(
     {
       name: "com.example/multi-arg-fields",
-      description: "Package using arguments and commandArguments",
+      description: "Package using multiple named flags",
       version: "1.0.0",
       package: {
         registryType: "npm",
         identifier: "@example/multi-arg-fields",
         transport: { type: "stdio" },
-        arguments: [{ name: "--from-arguments", isRequired: true }],
-        commandArguments: [
-          { name: "--from-command-arguments", isRequired: true },
+        packageArguments: [
+          { type: "named", name: "--from-arguments", isRequired: true },
+          {
+            type: "named",
+            name: "--from-command-arguments",
+            isRequired: true,
+          },
         ],
       },
     },
@@ -773,7 +782,9 @@ test("buildInstallPlanForEntry merges arguments and commandArguments fields in -
 
   assert.ok(plan);
   assert.deepStrictEqual(plan?.args, [
+    "--from-arguments",
     "<your-variable-value-here>",
+    "--from-command-arguments",
     "<your-variable-value-here>",
   ]);
 });
@@ -804,20 +815,24 @@ test("buildInstallPlanForEntry filters blank-name env variables in -y mode", asy
   });
 });
 
-test("buildInstallPlanForEntry uses arg value/description as label fallback in -y mode", async () => {
+test("buildInstallPlanForEntry uses positional packageArguments in -y mode", async () => {
   const plan = await buildInstallPlanForEntry(
     {
       name: "com.example/arg-fallbacks",
-      description: "Package with various arg descriptors",
+      description: "Package with mixed positional args",
       version: "1.0.0",
       package: {
         registryType: "npm",
         identifier: "@example/arg-fallbacks",
         transport: { type: "stdio" },
-        args: [
-          { value: "/path/to/db", isRequired: true },
-          { description: "The workspace directory", isRequired: true },
-          { isRequired: true },
+        packageArguments: [
+          { type: "positional", value: "/path/to/db" },
+          {
+            type: "positional",
+            description: "The workspace directory",
+            isRequired: true,
+          },
+          { type: "positional", valueHint: "slot3", isRequired: true },
         ],
       },
     },
@@ -825,7 +840,11 @@ test("buildInstallPlanForEntry uses arg value/description as label fallback in -
   );
 
   assert.ok(plan);
-  assert.strictEqual(plan?.args?.length, 3);
+  assert.deepStrictEqual(plan?.args, [
+    "/path/to/db",
+    "<your-variable-value-here>",
+    "<your-variable-value-here>",
+  ]);
 });
 
 test("buildInstallPlanForEntry returns null when entry has no remotes or packages", async () => {

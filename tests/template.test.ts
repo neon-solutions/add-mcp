@@ -7,6 +7,7 @@ import {
   resolveRecordTemplates,
   resolveArrayTemplates,
   hasTemplateVars,
+  substituteTemplatePlaceholders,
 } from "../src/template.js";
 
 let passed = 0;
@@ -62,6 +63,13 @@ test("findTemplateVars is reentrant across calls", () => {
   assert.deepStrictEqual(findTemplateVars("${A}"), ["A"]);
   assert.deepStrictEqual(findTemplateVars("${B}"), ["B"]);
   assert.deepStrictEqual(findTemplateVars("${C}${D}"), ["C", "D"]);
+});
+
+test("substituteTemplatePlaceholders replaces each template", () => {
+  assert.strictEqual(
+    substituteTemplatePlaceholders("a=${X}-${Y}", "<ph>"),
+    "a=<ph>-<ph>",
+  );
 });
 
 // resolveTemplates

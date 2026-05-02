@@ -18,7 +18,7 @@ Example installing the Context7 remote MCP server:
 npx add-mcp https://mcp.context7.com/mcp
 ```
 
-You can add env variables and arguments (stdio) and headers (remote) to the server config using the `--env`, `--args` and `--header` options.
+You can add env variables and arguments (stdio) and headers (remote) to the server config using the `--env`, `--args` and `--header` options. With `${VAR}` placeholders, interactive installs prompt for each variable (omit skipped optional keys so empty strings are not written to config).
 
 ## Find an MCP Servers
 

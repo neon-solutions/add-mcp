@@ -2,8 +2,8 @@
 
 ## [1.9.0] - 2026-04-08
 
-- prompt for `${VAR}` template values in `--env` and `--header` flags during interactive mode
-- prompt for package environment variables, headers, and arguments during `find` search installs
+- prompt for `${VAR}` template values in `--env`, `--header`, and `--args` flags during interactive mode (skipped optional keys are omitted from written config)
+- prompt for package environment variables, headers, and registry `packageArguments` during `find` search installs (named flags preserved as `flag` + `value` argv pairs; positional order preserved; `-y` substitutes `${VAR}` with placeholders)
 
 ## [1.8.1] - 2026-04-07
 
