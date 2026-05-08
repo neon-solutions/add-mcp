@@ -50,8 +50,9 @@ MCP servers can be installed to any of these agents:
 | OpenCode               | `opencode`           | `opencode.json`         | `~/.config/opencode/opencode.json`                                                                              |
 | VS Code                | `vscode`             | `.vscode/mcp.json`      | `~/Library/Application Support/Code/User/mcp.json`                                                              |
 | Zed                    | `zed`                | `.zed/settings.json`    | `~/Library/Application Support/Zed/settings.json`                                                               |
+| Zencoder / Zenflow     | `zencoder`           | `.zencoder/settings.json` | `~/.zencoder/settings.json`                                                                                   |
 
-**Aliases:** `cline-vscode` → `cline`, `gemini` → `gemini-cli`, `github-copilot` → `vscode`
+**Aliases:** `cline-vscode` → `cline`, `gemini` → `gemini-cli`, `github-copilot` → `vscode`, `zenflow` → `zencoder`
 
 ## Installation Scope
 

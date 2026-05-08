@@ -60,9 +60,9 @@ function cleanup() {
 // Agent Configuration Tests
 // ============================================
 
-test("getAgentTypes returns all 14 agents", () => {
+test("getAgentTypes returns all 15 agents", () => {
   const types = getAgentTypes();
-  assert.strictEqual(types.length, 14);
+  assert.strictEqual(types.length, 15);
   assert.ok(types.includes("antigravity"));
   assert.ok(types.includes("cline"));
   assert.ok(types.includes("cline-cli"));
@@ -77,6 +77,7 @@ test("getAgentTypes returns all 14 agents", () => {
   assert.ok(types.includes("opencode"));
   assert.ok(types.includes("vscode"));
   assert.ok(types.includes("zed"));
+  assert.ok(types.includes("zencoder"));
 });
 
 test("All agents have required properties", () => {
@@ -124,9 +125,13 @@ test("supportsProjectConfig - returns false for global-only agents", () => {
   assert.strictEqual(supportsProjectConfig("goose"), false);
 });
 
-test("getProjectCapableAgents returns 9 agents", () => {
+test("supportsProjectConfig - returns true for zencoder", () => {
+  assert.strictEqual(supportsProjectConfig("zencoder"), true);
+});
+
+test("getProjectCapableAgents returns 10 agents", () => {
   const projectAgents = getProjectCapableAgents();
-  assert.strictEqual(projectAgents.length, 9);
+  assert.strictEqual(projectAgents.length, 10);
   assert.ok(projectAgents.includes("claude-code"));
   assert.ok(projectAgents.includes("cursor"));
   assert.ok(projectAgents.includes("vscode"));
@@ -136,6 +141,7 @@ test("getProjectCapableAgents returns 9 agents", () => {
   assert.ok(projectAgents.includes("mcporter"));
   assert.ok(projectAgents.includes("codex"));
   assert.ok(projectAgents.includes("zed"));
+  assert.ok(projectAgents.includes("zencoder"));
 });
 
 test("getGlobalOnlyAgents returns 5 agents", () => {
@@ -242,6 +248,14 @@ test("detectProjectAgents - detects .zed directory", () => {
   assert.ok(detected.includes("zed"));
 });
 
+test("detectProjectAgents - detects .zencoder directory", () => {
+  const tempDir = createTempDir();
+  mkdirSync(join(tempDir, ".zencoder"));
+
+  const detected = detectProjectAgents(tempDir);
+  assert.ok(detected.includes("zencoder"));
+});
+
 test("detectProjectAgents - detects config/mcporter.json", () => {
   const tempDir = createTempDir();
   mkdirSync(join(tempDir, "config"), { recursive: true });
@@ -308,6 +322,7 @@ test("isTransportSupported - most agents support http", () => {
     "opencode",
     "vscode",
     "zed",
+    "zencoder",
   ];
 
   for (const type of httpAgents) {
@@ -334,6 +349,7 @@ test("isTransportSupported - most agents support sse", () => {
     "opencode",
     "vscode",
     "zed",
+    "zencoder",
   ];
 
   for (const type of sseAgents) {

@@ -511,6 +511,20 @@ export const agents: Record<AgentType, AgentConfig> = {
     },
     transformConfig: transformZedConfig,
   },
+
+  zencoder: {
+    name: "zencoder",
+    displayName: "Zencoder / Zenflow",
+    configPath: join(home, ".zencoder", "settings.json"),
+    localConfigPath: ".zencoder/settings.json",
+    projectDetectPaths: [".zencoder"],
+    configKey: "mcpServers",
+    format: "json",
+    supportedTransports: ["stdio", "http", "sse"],
+    detectGlobalInstall: async () => {
+      return existsSync(join(home, ".zencoder"));
+    },
+  },
 };
 
 export function getAgentTypes(): AgentType[] {
