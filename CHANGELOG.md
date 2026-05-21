@@ -1,9 +1,11 @@
 # Changelog
 
-## [1.9.0] - 2026-04-08
+## [1.9.0] - 2026-05-21
 
 - prompt for `${VAR}` template values in `--env`, `--header`, and `--args` flags during interactive mode (skipped optional keys are omitted from written config)
 - prompt for package environment variables, headers, and registry `packageArguments` during `find` search installs (named flags preserved as `flag` + `value` argv pairs; positional order preserved; `-y` substitutes `${VAR}` with placeholders)
+- fix `find` package installs to align argv ordering with registry `packageArguments`
+- allow `pypi` `registryType` in registry entries used by `find`/`search`
 
 ## [1.8.1] - 2026-04-07
 
