@@ -46,11 +46,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/neondatabase/add-mcp.git"
+    "url": "git+https://github.com/neon-solutions/add-mcp.git"
   },
-  "homepage": "https://github.com/neondatabase/add-mcp#readme",
+  "homepage": "https://github.com/neon-solutions/add-mcp#readme",
   "bugs": {
-    "url": "https://github.com/neondatabase/add-mcp/issues"
+    "url": "https://github.com/neon-solutions/add-mcp/issues"
   },
   "dependencies": {
     "@clack/prompts": "^0.9.1",

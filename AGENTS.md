@@ -25,3 +25,7 @@ A CLI to install MCP servers for different coding agents (Claude Code, Cursor, V
 10. **PR** — push your branch and open a pull request against `main`.
 
 CI runs registry verification, typecheck, a subset of unit/e2e tests, build, and Fallow (advisory). Keep local runs of the full `test` script green before you rely on CI.
+
+## Releasing
+
+`add-mcp` ships through a locked-down GitHub Actions pipeline using npm Trusted Publishing (OIDC), provenance attestation, and `npm stage publish` with WebAuthn-gated maintainer approval. **There is no supported `npm publish` from a laptop.** See [docs/RELEASING.md](docs/RELEASING.md) for the one-time setup checklist, per-release runbook, and break-glass procedure.
