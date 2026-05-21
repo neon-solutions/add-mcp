@@ -329,6 +329,17 @@ interface ParsedHeadersResult {
   invalid: string[];
 }
 
+function looksLikeEatenShellVar(invalidEntries: string[]): boolean {
+  for (const entry of invalidEntries) {
+    const colonIndex = entry.indexOf(":");
+    if (colonIndex <= 0) continue;
+    const key = entry.slice(0, colonIndex).trim();
+    const value = entry.slice(colonIndex + 1).trim();
+    if (key && !value) return true;
+  }
+  return false;
+}
+
 function parseHeaders(values: string[]): ParsedHeadersResult {
   const headers: Record<string, string> = {};
   const invalid: string[] = [];
@@ -1276,8 +1287,11 @@ async function main(target: string | undefined, options: Options) {
   const headerValues = options.header ?? [];
   const headerResult = parseHeaders(headerValues);
   if (headerResult.invalid.length > 0) {
+    const hint = looksLikeEatenShellVar(headerResult.invalid)
+      ? " (looks like your shell expanded a ${VAR} to an empty string; use single quotes: --header 'Key: ${VAR}' to pass the template literally)"
+      : "";
     p.log.error(
-      `Invalid --header value(s): ${headerResult.invalid.join(", ")}. Use "Key: Value" format.`,
+      `Invalid --header value(s): ${headerResult.invalid.join(", ")}. Use "Key: Value" format.${hint}`,
     );
     process.exit(1);
   }

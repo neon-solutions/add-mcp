@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.9.1] - 2026-05-21
+
+- hint at shell expansion in the `--header` error message when a value is empty (`--header "Key: ${UNSET}"` after the shell ate the placeholder) — suggests using single quotes to pass the `${VAR}` template literally
+
 ## [1.9.0] - 2026-05-21
 
 - prompt for `${VAR}` template values in `--env`, `--header`, and `--args` flags during interactive mode (skipped optional keys are omitted from written config)

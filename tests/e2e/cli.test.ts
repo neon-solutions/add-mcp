@@ -584,6 +584,41 @@ test("E2E CLI: invalid --env format exits with error", () => {
   assert.match(output, /Use "KEY=VALUE" format\./);
 });
 
+test("E2E CLI: --header with empty value hints at shell expansion", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    ["https://mcp.example.com/mcp", "-y", "--header", "Authorization: "],
+    projectDir,
+    homeDir,
+  );
+
+  assert.notStrictEqual(result.status, 0, "CLI should exit with non-zero");
+
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /Invalid --header value\(s\)/);
+  assert.match(output, /single quotes/);
+  assert.match(output, /\$\{VAR\}/);
+});
+
+test("E2E CLI: --header with no colon does not show shell-expansion hint", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    ["https://mcp.example.com/mcp", "-y", "--header", "no-colon-here"],
+    projectDir,
+    homeDir,
+  );
+
+  assert.notStrictEqual(result.status, 0, "CLI should exit with non-zero");
+
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /Invalid --header value\(s\)/);
+  assert.doesNotMatch(output, /single quotes/);
+});
+
 test("E2E CLI: remote install with --env warns and succeeds", () => {
   const projectDir = createTempDir();
   const homeDir = createTempDir();
