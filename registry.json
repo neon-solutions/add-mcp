@@ -157,13 +157,17 @@
         {
           "src": "https://clerk.com/v2/downloads/symbol-dark.svg",
           "mimeType": "image/svg+xml",
-          "sizes": ["any"],
+          "sizes": [
+            "any"
+          ],
           "theme": "light"
         },
         {
           "src": "https://clerk.com/v2/downloads/symbol-light.svg",
           "mimeType": "image/svg+xml",
-          "sizes": ["any"],
+          "sizes": [
+            "any"
+          ],
           "theme": "dark"
         }
       ],
@@ -209,13 +213,17 @@
         {
           "src": "https://upstash.com/logo/upstash-icon-white-bg.svg",
           "mimeType": "image/svg+xml",
-          "sizes": ["any"],
+          "sizes": [
+            "any"
+          ],
           "theme": "light"
         },
         {
           "src": "https://upstash.com/logo/upstash-icon-dark-bg.svg",
           "mimeType": "image/svg+xml",
-          "sizes": ["any"],
+          "sizes": [
+            "any"
+          ],
           "theme": "dark"
         }
       ],
@@ -363,6 +371,22 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.figma/mcp",
+      "title": "Figma",
+      "description": "Official Figma MCP server for accessing design files, components, and design context",
+      "version": "1.0.0",
+      "websiteUrl": "https://help.figma.com/hc/en-us/articles/35281350665623-Figma-MCP-collection-How-to-set-up-the-Figma-remote-MCP-server-preferred",
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.figma.com/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "dev.firecrawl/mcp",
       "title": "Firecrawl",
       "description": "Web scraping, crawling, search, and structured data extraction powered by Firecrawl.",
@@ -403,22 +427,6 @@
               "isSecret": true
             }
           ]
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.figma/mcp",
-      "title": "Figma",
-      "description": "Official Figma MCP server for accessing design files, components, and design context",
-      "version": "1.0.0",
-      "websiteUrl": "https://help.figma.com/hc/en-us/articles/35281350665623-Figma-MCP-collection-How-to-set-up-the-Figma-remote-MCP-server-preferred",
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://mcp.figma.com/mcp"
         }
       ]
     }
@@ -564,13 +572,17 @@
         {
           "src": "https://neon.com/brand/neon-logomark-light-color.svg",
           "mimeType": "image/svg+xml",
-          "sizes": ["any"],
+          "sizes": [
+            "any"
+          ],
           "theme": "light"
         },
         {
           "src": "https://neon.com/brand/neon-logomark-dark-color.svg",
           "mimeType": "image/svg+xml",
-          "sizes": ["any"],
+          "sizes": [
+            "any"
+          ],
           "theme": "dark"
         }
       ],
@@ -709,13 +721,17 @@
         {
           "src": "https://railway.com/brand/logo-dark.svg",
           "mimeType": "image/svg+xml",
-          "sizes": ["any"],
+          "sizes": [
+            "any"
+          ],
           "theme": "light"
         },
         {
           "src": "https://railway.com/brand/logo-light.svg",
           "mimeType": "image/svg+xml",
-          "sizes": ["any"],
+          "sizes": [
+            "any"
+          ],
           "theme": "dark"
         }
       ],
@@ -777,13 +793,17 @@
         {
           "src": "https://cdn.resend.com/brand/resend-icon-black.svg",
           "mimeType": "image/svg+xml",
-          "sizes": ["any"],
+          "sizes": [
+            "any"
+          ],
           "theme": "light"
         },
         {
           "src": "https://cdn.resend.com/brand/resend-icon-white.svg",
           "mimeType": "image/svg+xml",
-          "sizes": ["any"],
+          "sizes": [
+            "any"
+          ],
           "theme": "dark"
         }
       ],

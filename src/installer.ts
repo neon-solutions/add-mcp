@@ -37,6 +37,8 @@ export interface BuildServerConfigOptions {
   headers?: Record<string, string>;
   /** Environment variables for local stdio servers */
   env?: Record<string, string>;
+  /** Extra command arguments for local stdio servers */
+  args?: string[];
 }
 
 export interface UpdateGitignoreOptions {
@@ -69,7 +71,7 @@ export function buildServerConfig(
   if (parsed.type === "command") {
     const parts = parsed.value.split(" ");
     const command = parts[0]!;
-    const args = parts.slice(1);
+    const args = [...parts.slice(1), ...(options.args ?? [])];
     const config: McpServerConfig = {
       command,
       args,
@@ -84,7 +86,7 @@ export function buildServerConfig(
 
   const config: McpServerConfig = {
     command: "npx",
-    args: ["-y", parsed.value],
+    args: ["-y", parsed.value, ...(options.args ?? [])],
   };
 
   if (options.env && Object.keys(options.env).length > 0) {

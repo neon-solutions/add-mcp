@@ -159,6 +159,42 @@ test("buildServerConfig - package includes env when provided", () => {
   });
 });
 
+test("buildServerConfig - package appends args when provided", () => {
+  const parsed = parseSource("mcp-server-postgres");
+  const config = buildServerConfig(parsed, {
+    args: ["--read-only", "--workspace", "team-a"],
+  });
+
+  assert.strictEqual(config.command, "npx");
+  assert.deepStrictEqual(config.args, [
+    "-y",
+    "mcp-server-postgres",
+    "--read-only",
+    "--workspace",
+    "team-a",
+  ]);
+});
+
+test("buildServerConfig - package includes env and args together", () => {
+  const parsed = parseSource("mcp-server-postgres");
+  const config = buildServerConfig(parsed, {
+    env: {
+      DATABASE_URL: "postgres://localhost/my-db",
+    },
+    args: ["--read-only"],
+  });
+
+  assert.strictEqual(config.command, "npx");
+  assert.deepStrictEqual(config.args, [
+    "-y",
+    "mcp-server-postgres",
+    "--read-only",
+  ]);
+  assert.deepStrictEqual(config.env, {
+    DATABASE_URL: "postgres://localhost/my-db",
+  });
+});
+
 // buildServerConfig tests - Command
 test("buildServerConfig - npx command", () => {
   const parsed = parseSource("npx -y @org/mcp-server");
@@ -217,17 +253,34 @@ test("buildServerConfig - command includes env when provided", () => {
   });
 });
 
+test("buildServerConfig - command appends args when provided", () => {
+  const parsed = parseSource("node /path/to/server.js --port 3000");
+  const config = buildServerConfig(parsed, {
+    args: ["--read-only"],
+  });
+
+  assert.strictEqual(config.command, "node");
+  assert.deepStrictEqual(config.args, [
+    "/path/to/server.js",
+    "--port",
+    "3000",
+    "--read-only",
+  ]);
+});
+
 test("buildServerConfig - remote source ignores env", () => {
   const parsed = parseSource("https://mcp.example.com/api");
   const config = buildServerConfig(parsed, {
     env: {
       API_KEY: "secret",
     },
+    args: ["--ignored"],
   });
 
   assert.strictEqual(config.type, "http");
   assert.strictEqual(config.url, "https://mcp.example.com/api");
   assert.strictEqual(config.env, undefined);
+  assert.strictEqual(config.args, undefined);
 });
 
 // ============================================

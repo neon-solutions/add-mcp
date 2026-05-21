@@ -1,6 +1,6 @@
 {
   "name": "add-mcp",
-  "version": "1.8.1",
+  "version": "1.9.0",
   "description": "Add MCP servers to your favorite coding agents with a single command.",
   "author": "Andre Landgraf <andre@neon.tech>",
   "license": "Apache-2.0",
@@ -16,12 +16,13 @@
     "fmt": "prettier --write .",
     "build": "tsup src/index.ts --format esm --dts --clean",
     "dev": "tsx src/index.ts",
-    "test": "tsx tests/source-parser.test.ts && tsx tests/agents.test.ts && tsx tests/config.test.ts && tsx tests/installer.test.ts && tsx tests/find.test.ts && tsx tests/reader.test.ts && tsx tests/formats-remove.test.ts && tsx tests/e2e/install.test.ts && tsx tests/e2e/cli.test.ts",
-    "test:unit": "tsx tests/source-parser.test.ts && tsx tests/agents.test.ts && tsx tests/config.test.ts && tsx tests/installer.test.ts && tsx tests/find.test.ts && tsx tests/reader.test.ts && tsx tests/formats-remove.test.ts",
+    "test": "tsx tests/source-parser.test.ts && tsx tests/agents.test.ts && tsx tests/config.test.ts && tsx tests/installer.test.ts && tsx tests/find.test.ts && tsx tests/package-arguments.test.ts && tsx tests/template.test.ts && tsx tests/reader.test.ts && tsx tests/formats-remove.test.ts && tsx tests/e2e/install.test.ts && tsx tests/e2e/cli.test.ts",
+    "test:unit": "tsx tests/source-parser.test.ts && tsx tests/agents.test.ts && tsx tests/config.test.ts && tsx tests/installer.test.ts && tsx tests/find.test.ts && tsx tests/package-arguments.test.ts && tsx tests/template.test.ts && tsx tests/reader.test.ts && tsx tests/formats-remove.test.ts",
     "registry:sort": "tsx scripts/sort-registry.ts",
     "registry:verify": "tsx scripts/verify-registry.ts",
     "test:e2e": "tsx tests/e2e/install.test.ts && tsx tests/e2e/cli.test.ts",
     "typecheck": "tsc --noEmit",
+    "fallow": "fallow",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -62,6 +63,7 @@
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.10.0",
+    "fallow": "^2.61.0",
     "prettier": "^3.8.1",
     "tsup": "^8.3.5",
     "tsx": "^4.19.2",

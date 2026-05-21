@@ -685,6 +685,166 @@ test("buildInstallPlanForEntry returns package target for package-only entry", a
   assert.strictEqual(plan?.target, "@sentry/mcp-server");
   assert.strictEqual(plan?.transport, undefined);
   assert.strictEqual(plan?.headers, undefined);
+  assert.strictEqual(plan?.env, undefined);
+  assert.strictEqual(plan?.args, undefined);
+});
+
+test("buildInstallPlanForEntry includes only required package env/header/args placeholders in -y mode", async () => {
+  const plan = await buildInstallPlanForEntry(
+    {
+      name: "com.example/with-inputs",
+      description: "Package with optional and required values",
+      version: "1.0.0",
+      package: {
+        registryType: "npm",
+        identifier: "@example/with-inputs",
+        transport: { type: "stdio" },
+        environmentVariables: [
+          { name: "REQUIRED_ENV", isRequired: true },
+          { name: "OPTIONAL_ENV", isRequired: false },
+        ],
+        headers: [
+          { name: "Authorization", isRequired: true },
+          { name: "X-Optional", isRequired: false },
+        ],
+        packageArguments: [
+          { type: "named", name: "--required-arg", isRequired: true },
+          { type: "named", name: "--optional-arg", isRequired: false },
+        ],
+      },
+    },
+    { yes: true },
+  );
+
+  assert.ok(plan);
+  assert.strictEqual(plan?.target, "@example/with-inputs");
+  assert.deepStrictEqual(plan?.env, {
+    REQUIRED_ENV: "<your-variable-value-here>",
+  });
+  assert.deepStrictEqual(plan?.headers, {
+    Authorization: "<your-header-value-here>",
+  });
+  assert.deepStrictEqual(plan?.args, [
+    "--required-arg",
+    "<your-variable-value-here>",
+  ]);
+});
+
+test("buildInstallPlanForEntry omits env/headers/args when all package inputs are optional in -y mode", async () => {
+  const plan = await buildInstallPlanForEntry(
+    {
+      name: "com.example/all-optional",
+      description: "Package with only optional values",
+      version: "1.0.0",
+      package: {
+        registryType: "npm",
+        identifier: "@example/all-optional",
+        transport: { type: "stdio" },
+        environmentVariables: [{ name: "OPT_ENV", isRequired: false }],
+        headers: [{ name: "X-Optional", isRequired: false }],
+        packageArguments: [
+          { type: "named", name: "--verbose", isRequired: false },
+        ],
+      },
+    },
+    { yes: true },
+  );
+
+  assert.ok(plan);
+  assert.strictEqual(plan?.target, "@example/all-optional");
+  assert.strictEqual(plan?.env, undefined);
+  assert.strictEqual(plan?.headers, undefined);
+  assert.strictEqual(plan?.args, undefined);
+});
+
+test("buildInstallPlanForEntry merges named packageArguments in -y mode", async () => {
+  const plan = await buildInstallPlanForEntry(
+    {
+      name: "com.example/multi-arg-fields",
+      description: "Package using multiple named flags",
+      version: "1.0.0",
+      package: {
+        registryType: "npm",
+        identifier: "@example/multi-arg-fields",
+        transport: { type: "stdio" },
+        packageArguments: [
+          { type: "named", name: "--from-arguments", isRequired: true },
+          {
+            type: "named",
+            name: "--from-command-arguments",
+            isRequired: true,
+          },
+        ],
+      },
+    },
+    { yes: true },
+  );
+
+  assert.ok(plan);
+  assert.deepStrictEqual(plan?.args, [
+    "--from-arguments",
+    "<your-variable-value-here>",
+    "--from-command-arguments",
+    "<your-variable-value-here>",
+  ]);
+});
+
+test("buildInstallPlanForEntry filters blank-name env variables in -y mode", async () => {
+  const plan = await buildInstallPlanForEntry(
+    {
+      name: "com.example/blank-env",
+      description: "Package with blank env names",
+      version: "1.0.0",
+      package: {
+        registryType: "npm",
+        identifier: "@example/blank-env",
+        transport: { type: "stdio" },
+        environmentVariables: [
+          { name: "", isRequired: true },
+          { name: "   ", isRequired: true },
+          { name: "VALID_KEY", isRequired: true },
+        ],
+      },
+    },
+    { yes: true },
+  );
+
+  assert.ok(plan);
+  assert.deepStrictEqual(plan?.env, {
+    VALID_KEY: "<your-variable-value-here>",
+  });
+});
+
+test("buildInstallPlanForEntry uses positional packageArguments in -y mode", async () => {
+  const plan = await buildInstallPlanForEntry(
+    {
+      name: "com.example/arg-fallbacks",
+      description: "Package with mixed positional args",
+      version: "1.0.0",
+      package: {
+        registryType: "npm",
+        identifier: "@example/arg-fallbacks",
+        transport: { type: "stdio" },
+        packageArguments: [
+          { type: "positional", value: "/path/to/db" },
+          {
+            type: "positional",
+            description: "The workspace directory",
+            isRequired: true,
+          },
+          { type: "positional", valueHint: "slot3", isRequired: true },
+        ],
+      },
+    },
+    { yes: true },
+  );
+
+  assert.ok(plan);
+  assert.deepStrictEqual(plan?.args, [
+    "/path/to/db",
+    "<your-variable-value-here>",
+    "<your-variable-value-here>",
+  ]);
 });
 
 test("buildInstallPlanForEntry returns null when entry has no remotes or packages", async () => {

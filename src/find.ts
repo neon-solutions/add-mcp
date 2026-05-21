@@ -1,5 +1,14 @@
 import * as p from "@clack/prompts";
 import type { TransportType } from "./types.js";
+import {
+  type PackageArgPrompt,
+  type RegistryPackageArgumentDefinition,
+  buildPackageArgumentsArgvInteractive,
+  buildPackageArgumentsArgvNonInteractive,
+  definitionsFromPackage,
+} from "./package-arguments.js";
+
+export type { RegistryPackageArgumentDefinition } from "./package-arguments.js";
 
 export type RegistryRemoteTransport = "streamable-http" | "sse";
 
@@ -26,12 +35,20 @@ export interface RegistryRemoteDefinition {
 }
 
 export interface RegistryPackageDefinition {
-  registryType: "npm" | "oci" | "nuget" | "mcpb";
+  registryType: "npm" | "pypi" | "oci" | "nuget" | "mcpb";
   identifier: string;
   version?: string;
+  environmentVariables?: RegistryNamedVariableDefinition[];
+  headers?: RegistryHeaderDefinition[];
+  /** MCP registry / server.json package CLI arguments (positional vs named). */
+  packageArguments?: RegistryPackageArgumentDefinition[];
   transport: {
     type: "stdio";
   };
+}
+
+export interface RegistryNamedVariableDefinition extends RegistryVariableDefinition {
+  name: string;
 }
 
 export interface RegistryServerEntry {
@@ -55,6 +72,8 @@ export interface FindInstallPlan {
   serverName: string;
   transport?: TransportType;
   headers?: Record<string, string>;
+  env?: Record<string, string>;
+  args?: string[];
 }
 
 export interface PromptField {
@@ -433,6 +452,20 @@ function headerFields(
   }));
 }
 
+function packageVariableFields(
+  variables: RegistryNamedVariableDefinition[] | undefined,
+): PromptField[] {
+  if (!variables) return [];
+  return variables
+    .filter((variable) => variable.name && variable.name.trim().length > 0)
+    .map((variable) => ({
+      key: variable.name,
+      label: `Environment variable ${variable.name}`,
+      isRequired: variable.isRequired === true,
+      placeholder: buildPlaceholderValue("variable"),
+    }));
+}
+
 function resolveNonInteractiveRemote(remote: RegistryRemoteDefinition): {
   url: string;
   headers?: Record<string, string>;
@@ -481,6 +514,79 @@ async function resolveInteractiveRemote(
   };
 }
 
+function resolveNonInteractivePackage(pkg: RegistryPackageDefinition): {
+  env?: Record<string, string>;
+  headers?: Record<string, string>;
+  args?: string[];
+} {
+  const env: Record<string, string> = {};
+  for (const field of packageVariableFields(pkg.environmentVariables)) {
+    if (field.isRequired) {
+      env[field.key] = field.placeholder;
+    }
+  }
+
+  const headers: Record<string, string> = {};
+  for (const field of headerFields(pkg.headers)) {
+    if (field.isRequired) {
+      headers[field.key] = field.placeholder;
+    }
+  }
+
+  const argv = buildPackageArgumentsArgvNonInteractive(
+    definitionsFromPackage(pkg),
+    buildPlaceholderValue("variable"),
+  );
+
+  return {
+    env: Object.keys(env).length > 0 ? env : undefined,
+    headers: Object.keys(headers).length > 0 ? headers : undefined,
+    args: argv.length > 0 ? argv : undefined,
+  };
+}
+
+async function resolveInteractivePackage(
+  pkg: RegistryPackageDefinition,
+): Promise<{
+  env?: Record<string, string>;
+  headers?: Record<string, string>;
+  args?: string[];
+} | null> {
+  const promptPackageArg: PackageArgPrompt = async (info) =>
+    p.text({
+      message: `${info.label} ${info.isRequired ? "(required)" : "(optional)"}`,
+      placeholder: info.placeholder,
+    });
+
+  const envResult = await collectPromptValues(
+    packageVariableFields(pkg.environmentVariables),
+    promptValue,
+  );
+  if (envResult.cancelled) return null;
+
+  const headerResult = await collectPromptValues(
+    headerFields(pkg.headers),
+    promptValue,
+  );
+  if (headerResult.cancelled) return null;
+
+  const argvResult = await buildPackageArgumentsArgvInteractive(
+    definitionsFromPackage(pkg),
+    promptPackageArg,
+  );
+  if (argvResult.cancelled) return null;
+
+  return {
+    env:
+      Object.keys(envResult.values).length > 0 ? envResult.values : undefined,
+    headers:
+      Object.keys(headerResult.values).length > 0
+        ? headerResult.values
+        : undefined,
+    args: argvResult.argv.length > 0 ? argvResult.argv : undefined,
+  };
+}
+
 export async function buildInstallPlanForEntry(
   entry: RegistryServerEntry,
   options: FindCommandOptions,
@@ -519,9 +625,17 @@ export async function buildInstallPlanForEntry(
   }
 
   if (mode === "package" && pkg) {
+    const resolved = options.yes
+      ? resolveNonInteractivePackage(pkg)
+      : await resolveInteractivePackage(pkg);
+    if (!resolved) return null;
+
     return {
       target: formatPackageTarget(pkg),
       serverName: resolveServerName(entry),
+      env: resolved.env,
+      headers: resolved.headers,
+      args: resolved.args,
     };
   }
 
