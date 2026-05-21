@@ -329,12 +329,15 @@ interface ParsedHeadersResult {
   invalid: string[];
 }
 
-function looksLikeEatenShellVar(invalidEntries: string[]): boolean {
+function looksLikeEatenShellVar(
+  invalidEntries: string[],
+  separator: string,
+): boolean {
   for (const entry of invalidEntries) {
-    const colonIndex = entry.indexOf(":");
-    if (colonIndex <= 0) continue;
-    const key = entry.slice(0, colonIndex).trim();
-    const value = entry.slice(colonIndex + 1).trim();
+    const separatorIndex = entry.indexOf(separator);
+    if (separatorIndex <= 0) continue;
+    const key = entry.slice(0, separatorIndex).trim();
+    const value = entry.slice(separatorIndex + 1).trim();
     if (key && !value) return true;
   }
   return false;
@@ -382,9 +385,9 @@ function parseEnv(values: string[]): ParsedEnvResult {
     }
 
     const key = entry.slice(0, separatorIndex).trim();
-    const value = entry.slice(separatorIndex + 1);
+    const value = entry.slice(separatorIndex + 1).trim();
 
-    if (!key) {
+    if (!key || !value) {
       invalid.push(entry);
       continue;
     }
@@ -428,19 +431,19 @@ program
   .option("--type <type>", "Alias for --transport")
   .option(
     "--header <header>",
-    "HTTP header for remote servers (repeatable, 'Key: Value'). Placeholders ${VAR} prompt interactively when not using --yes.",
+    "HTTP header for remote servers (repeatable, 'Key: Value'). Placeholders ${VAR} prompt interactively when not using --yes. Use single quotes so your shell does not expand the ${VAR}.",
     collect,
     [],
   )
   .option(
     "--env <env>",
-    "Environment variable for local stdio servers (repeatable, 'KEY=VALUE'). Placeholders ${VAR} prompt interactively when not using --yes.",
+    "Environment variable for local stdio servers (repeatable, 'KEY=VALUE'). Placeholders ${VAR} prompt interactively when not using --yes. Use single quotes so your shell does not expand the ${VAR}.",
     collect,
     [],
   )
   .option(
     "--args <arg>",
-    "Argument for local stdio servers (repeatable). Placeholders ${VAR} prompt interactively when not using --yes.",
+    "Argument for local stdio servers (repeatable). Placeholders ${VAR} prompt interactively when not using --yes. Use single quotes so your shell does not expand the ${VAR}.",
     collect,
     [],
   )
@@ -1287,7 +1290,7 @@ async function main(target: string | undefined, options: Options) {
   const headerValues = options.header ?? [];
   const headerResult = parseHeaders(headerValues);
   if (headerResult.invalid.length > 0) {
-    const hint = looksLikeEatenShellVar(headerResult.invalid)
+    const hint = looksLikeEatenShellVar(headerResult.invalid, ":")
       ? " (looks like your shell expanded a ${VAR} to an empty string; use single quotes: --header 'Key: ${VAR}' to pass the template literally)"
       : "";
     p.log.error(
@@ -1305,8 +1308,11 @@ async function main(target: string | undefined, options: Options) {
   const envValues = options.env ?? [];
   const envResult = parseEnv(envValues);
   if (envResult.invalid.length > 0) {
+    const hint = looksLikeEatenShellVar(envResult.invalid, "=")
+      ? " (looks like your shell expanded a ${VAR} to an empty string; use single quotes: --env 'KEY=${VAR}' to pass the template literally)"
+      : "";
     p.log.error(
-      `Invalid --env value(s): ${envResult.invalid.join(", ")}. Use "KEY=VALUE" format.`,
+      `Invalid --env value(s): ${envResult.invalid.join(", ")}. Use "KEY=VALUE" format.${hint}`,
     );
     process.exit(1);
   }

@@ -2,7 +2,9 @@
 
 ## [1.9.1] - 2026-05-21
 
+- reject `--env "KEY="` with empty value (previously silently written to agent config, breaking the MCP server at runtime); error message now hints at shell expansion when a `${VAR}` was likely eaten
 - hint at shell expansion in the `--header` error message when a value is empty (`--header "Key: ${UNSET}"` after the shell ate the placeholder) — suggests using single quotes to pass the `${VAR}` template literally
+- option help text for `--header`, `--env`, and `--args` now mentions the single-quote requirement so the shell does not expand `${VAR}` placeholders
 
 ## [1.9.0] - 2026-05-21
 
