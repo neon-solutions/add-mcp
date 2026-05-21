@@ -2,7 +2,7 @@ import type { AgentType, ConfigFile } from "./types.js";
 import {
   agents,
   detectProjectAgents,
-  detectAllGlobalAgents,
+  detectGlobalAgents,
 } from "./agents.js";
 import {
   getConfigPath,
@@ -142,7 +142,7 @@ export function readServersForAgent(
  * When `agents` is provided, those agents are included even if not detected
  * (with detected=false).
  */
-export async function gatherInstalledServers(options: {
+export async function listInstalledServers(options: {
   global?: boolean;
   agents?: AgentType[];
   cwd?: string;
@@ -154,7 +154,7 @@ export async function gatherInstalledServers(options: {
     // Explicit agent list: include even if not detected
     const detectedSet = new Set<AgentType>(
       options.global
-        ? await detectAllGlobalAgents()
+        ? await detectGlobalAgents()
         : detectProjectAgents(options.cwd),
     );
 
@@ -183,7 +183,7 @@ export async function gatherInstalledServers(options: {
   } else {
     // Auto-detect
     const detected = options.global
-      ? await detectAllGlobalAgents()
+      ? await detectGlobalAgents()
       : detectProjectAgents(options.cwd);
 
     for (const agentType of detected) {

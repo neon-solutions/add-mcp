@@ -551,7 +551,7 @@ export function detectProjectAgents(cwd?: string): AgentType[] {
   return detected;
 }
 
-export async function detectAllGlobalAgents(): Promise<AgentType[]> {
+export async function detectGlobalAgents(): Promise<AgentType[]> {
   const detected: AgentType[] = [];
 
   for (const [type, config] of Object.entries(agents)) {

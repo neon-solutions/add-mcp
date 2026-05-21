@@ -1,10 +1,19 @@
 {
   "name": "add-mcp",
-  "version": "1.9.1",
+  "version": "1.10.0",
   "description": "Add MCP servers to your favorite coding agents with a single command.",
   "author": "Andre Landgraf <andre@neon.tech>",
   "license": "Apache-2.0",
   "type": "module",
+  "main": "./dist/lib.js",
+  "types": "./dist/lib.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/lib.d.ts",
+      "import": "./dist/lib.js"
+    },
+    "./package.json": "./package.json"
+  },
   "bin": {
     "add-mcp": "dist/index.js"
   },
@@ -14,10 +23,10 @@
   ],
   "scripts": {
     "fmt": "prettier --write .",
-    "build": "tsup src/index.ts --format esm --dts --clean",
+    "build": "tsup src/index.ts src/lib.ts --format esm --dts --clean",
     "dev": "tsx src/index.ts",
-    "test": "tsx tests/source-parser.test.ts && tsx tests/agents.test.ts && tsx tests/config.test.ts && tsx tests/installer.test.ts && tsx tests/find.test.ts && tsx tests/package-arguments.test.ts && tsx tests/template.test.ts && tsx tests/reader.test.ts && tsx tests/formats-remove.test.ts && tsx tests/e2e/install.test.ts && tsx tests/e2e/cli.test.ts",
-    "test:unit": "tsx tests/source-parser.test.ts && tsx tests/agents.test.ts && tsx tests/config.test.ts && tsx tests/installer.test.ts && tsx tests/find.test.ts && tsx tests/package-arguments.test.ts && tsx tests/template.test.ts && tsx tests/reader.test.ts && tsx tests/formats-remove.test.ts",
+    "test": "tsx tests/source-parser.test.ts && tsx tests/agents.test.ts && tsx tests/config.test.ts && tsx tests/installer.test.ts && tsx tests/find.test.ts && tsx tests/package-arguments.test.ts && tsx tests/template.test.ts && tsx tests/reader.test.ts && tsx tests/formats-remove.test.ts && tsx tests/lib.test.ts && tsx tests/e2e/install.test.ts && tsx tests/e2e/cli.test.ts",
+    "test:unit": "tsx tests/source-parser.test.ts && tsx tests/agents.test.ts && tsx tests/config.test.ts && tsx tests/installer.test.ts && tsx tests/find.test.ts && tsx tests/package-arguments.test.ts && tsx tests/template.test.ts && tsx tests/reader.test.ts && tsx tests/formats-remove.test.ts && tsx tests/lib.test.ts",
     "registry:sort": "tsx scripts/sort-registry.ts",
     "registry:verify": "tsx scripts/verify-registry.ts",
     "test:e2e": "tsx tests/e2e/install.test.ts && tsx tests/e2e/cli.test.ts",

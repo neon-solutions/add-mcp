@@ -11,7 +11,7 @@ import {
   getAgentTypes,
   isTransportSupported,
   detectProjectAgents,
-  detectAllGlobalAgents,
+  detectGlobalAgents,
   supportsProjectConfig,
   getProjectCapableAgents,
   buildAgentSelectionChoices,
@@ -36,7 +36,7 @@ import {
   updateGitignoreWithPaths,
 } from "./installer.js";
 import {
-  gatherInstalledServers,
+  listInstalledServers,
   findMatchingServers,
   extractServerIdentity,
   type AgentServers,
@@ -629,7 +629,7 @@ async function runListCommand(options: Options): Promise<void> {
 
   const explicitAgents = resolveAgentFlags(options.agent);
 
-  const agentServersList = await gatherInstalledServers({
+  const agentServersList = await listInstalledServers({
     global: options.global,
     agents: explicitAgents.length > 0 ? explicitAgents : undefined,
   });
@@ -683,7 +683,7 @@ async function runRemoveCommand(
 
   const explicitAgents = resolveAgentFlags(options.agent);
 
-  const agentServersList = await gatherInstalledServers({
+  const agentServersList = await listInstalledServers({
     global: options.global,
     agents: explicitAgents.length > 0 ? explicitAgents : undefined,
   });
@@ -895,7 +895,7 @@ async function runSyncCommand(options: Options): Promise<void> {
   showLogo();
   console.log();
 
-  const agentServersList = await gatherInstalledServers({
+  const agentServersList = await listInstalledServers({
     global: options.global,
   });
 
@@ -1474,7 +1474,7 @@ async function main(target: string | undefined, options: Options) {
 
     if (options.global) {
       // Global mode: detect all globally installed agents
-      detectedAgents = await detectAllGlobalAgents();
+      detectedAgents = await detectGlobalAgents();
       for (const agent of detectedAgents) {
         agentRouting.set(agent, "global");
       }
