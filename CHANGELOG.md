@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.10.0] - 2026-05-21
+
+- expose programmatic API
+
 ## [1.9.1] - 2026-05-21
 
 - reject `--env "KEY="` with empty value (previously silently written to agent config, breaking the MCP server at runtime); error message now hints at shell expansion when a `${VAR}` was likely eaten

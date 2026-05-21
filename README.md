@@ -359,6 +359,47 @@ npx add-mcp sync -g -y
 
 `unify` is an alias for `sync`.
 
+## Programmatic API
+
+```ts
+import {
+  detectProjectAgents,
+  detectGlobalAgents,
+  upsertServer,
+  removeServer,
+  listInstalledServers,
+} from "add-mcp";
+
+const project = detectProjectAgents("/path/to/project");
+const global = await detectGlobalAgents();
+
+// Remote server
+upsertServer(
+  "claude-code",
+  "example",
+  { type: "http", url: "https://mcp.example.com/api" },
+  { local: true, cwd: "/path/to/project" },
+);
+
+// Stdio (npm package)
+upsertServer("claude-code", "postgres", {
+  command: "npx",
+  args: ["-y", "@modelcontextprotocol/server-postgres"],
+});
+
+const projectServers = await listInstalledServers({
+  cwd: "/path/to/project",
+});
+const globalServers = await listInstalledServers({ global: true });
+
+removeServer("claude-code", "example", {
+  local: true,
+  cwd: "/path/to/project",
+});
+```
+
+`upsertServer` and `removeServer` return `{ success, path, error? }` rather than throwing.
+
 ## Troubleshooting
 
 ### Server not loading
