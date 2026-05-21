@@ -67,6 +67,23 @@ function runCli(args: string[], cwd: string, homeDir: string) {
   });
 }
 
+function claudeDesktopConfigPath(homeDir: string): string {
+  if (process.platform === "darwin") {
+    return join(
+      homeDir,
+      "Library",
+      "Application Support",
+      "Claude",
+      "claude_desktop_config.json",
+    );
+  }
+  if (process.platform === "win32") {
+    const appData = process.env.APPDATA || join(homeDir, "AppData", "Roaming");
+    return join(appData, "Claude", "claude_desktop_config.json");
+  }
+  return join(homeDir, ".config", "Claude", "claude_desktop_config.json");
+}
+
 function seedFindRegistries(homeDir: string) {
   const configPath = join(homeDir, ".config", "add-mcp", "config.json");
   mkdirSync(dirname(configPath), { recursive: true });
@@ -393,13 +410,7 @@ test("E2E CLI: stdio server to claude-desktop succeeds", () => {
     );
   }
 
-  const configPath = join(
-    homeDir,
-    "Library",
-    "Application Support",
-    "Claude",
-    "claude_desktop_config.json",
-  );
+  const configPath = claudeDesktopConfigPath(homeDir);
   assert.strictEqual(existsSync(configPath), true);
 
   const saved = JSON.parse(readFileSync(configPath, "utf-8"));
