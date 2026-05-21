@@ -28,13 +28,8 @@ jobs:
       - name: Type check
         run: bun run typecheck
 
-      - name: Run unit tests
-        run: |
-          bun run tsx tests/source-parser.test.ts
-          bun run tsx tests/installer.test.ts
-
-      - name: Run e2e tests
-        run: bun run tsx tests/e2e/install.test.ts
+      - name: Run tests
+        run: bun run test
 
       - name: Build
         run: bun run build
