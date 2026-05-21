@@ -40,7 +40,7 @@ const registryRemoteSchema = z
 
 const registryPackageSchema = z
   .object({
-    registryType: z.enum(["npm", "oci", "nuget", "mcpb"]),
+    registryType: z.enum(["npm", "pypi", "oci", "nuget", "mcpb"]),
     identifier: z.string().min(1),
     registryBaseUrl: z.string().url().optional(),
     version: z.string().optional(),

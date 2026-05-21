@@ -35,7 +35,7 @@ export interface RegistryRemoteDefinition {
 }
 
 export interface RegistryPackageDefinition {
-  registryType: "npm" | "oci" | "nuget" | "mcpb";
+  registryType: "npm" | "pypi" | "oci" | "nuget" | "mcpb";
   identifier: string;
   version?: string;
   environmentVariables?: RegistryNamedVariableDefinition[];
