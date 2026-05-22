@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.10.1] - 2026-05-22
+
+- use single quotes in `--header` / `--env` "Use 'Key: Value' format." error messages so the example matches the recommended shell-quoting style (was double quotes, which contradicted the shell-expansion hint that recommends single quotes)
+
 ## [1.10.0] - 2026-05-21
 
 - expose programmatic API

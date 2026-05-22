@@ -1294,7 +1294,7 @@ async function main(target: string | undefined, options: Options) {
       ? " (looks like your shell expanded a ${VAR} to an empty string; use single quotes: --header 'Key: ${VAR}' to pass the template literally)"
       : "";
     p.log.error(
-      `Invalid --header value(s): ${headerResult.invalid.join(", ")}. Use "Key: Value" format.${hint}`,
+      `Invalid --header value(s): ${headerResult.invalid.join(", ")}. Use 'Key: Value' format.${hint}`,
     );
     process.exit(1);
   }
@@ -1312,7 +1312,7 @@ async function main(target: string | undefined, options: Options) {
       ? " (looks like your shell expanded a ${VAR} to an empty string; use single quotes: --env 'KEY=${VAR}' to pass the template literally)"
       : "";
     p.log.error(
-      `Invalid --env value(s): ${envResult.invalid.join(", ")}. Use "KEY=VALUE" format.${hint}`,
+      `Invalid --env value(s): ${envResult.invalid.join(", ")}. Use 'KEY=VALUE' format.${hint}`,
     );
     process.exit(1);
   }
