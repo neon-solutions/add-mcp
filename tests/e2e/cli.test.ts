@@ -581,7 +581,7 @@ test("E2E CLI: invalid --env format exits with error", () => {
 
   const output = `${result.stdout}\n${result.stderr}`;
   assert.match(output, /Invalid --env value\(s\)/);
-  assert.match(output, /Use "KEY=VALUE" format\./);
+  assert.match(output, /Use 'KEY=VALUE' format\./);
 });
 
 test("E2E CLI: --header with empty value hints at shell expansion", () => {
