@@ -27,7 +27,7 @@ const result = upsertServer(
   "cursor",
   "context7",
   { type: "http", url: "https://mcp.context7.com/mcp" },
-  { local: true, cwd: process.cwd() },
+  { local: true },
 );
 console.log(result);
 ```
