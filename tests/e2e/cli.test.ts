@@ -419,6 +419,44 @@ test("E2E CLI: Goose HTTP install with headers", () => {
   });
 });
 
+test("E2E CLI: Goose HTTP install with -h header shorthand", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "goose",
+      "-y",
+      "--name",
+      "example",
+      "-h",
+      "Authorization: Bearer token",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const gooseConfigPath = join(homeDir, ".config", "goose", "config.yaml");
+  const saved = yaml.load(readFileSync(gooseConfigPath, "utf-8")) as Record<
+    string,
+    unknown
+  >;
+  const extensions = saved.extensions as Record<string, unknown>;
+  const server = extensions.example as Record<string, unknown>;
+
+  assert.deepStrictEqual(server.headers, {
+    Authorization: "Bearer token",
+  });
+});
+
 test("E2E CLI: remote server to claude-desktop errors with custom message", () => {
   const projectDir = createTempDir();
   const homeDir = createTempDir();

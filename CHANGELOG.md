@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.10.4] - 2026-05-23
+
+- add `-h` shorthand for `--header` (use `--help` for help)
+
 ## [1.10.3] - 2026-05-23
 
 - add `windsurf` support with global installs written to `~/.codeium/windsurf/mcp_config.json` (`mcpServers`); aliases: `codeium`, `cascade` ([#31](https://github.com/neon-solutions/add-mcp/pull/31))

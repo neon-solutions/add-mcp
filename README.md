@@ -166,7 +166,7 @@ npx add-mcp https://mcp.example.com/mcp -a cursor -y --gitignore
 | `-a, --agent <agent>`    | Target specific agents (e.g., `cursor`, `claude-code`). Can be repeated. |
 | `-t, --transport <type>` | Transport type for remote servers: `http` (default), `sse`               |
 | `--type <type>`          | Alias for `--transport`                                                  |
-| `--header <header>`      | HTTP header for remote servers (repeatable, `Key: Value`)                |
+| `-h, --header <header>`  | HTTP header for remote servers (repeatable, `Key: Value`)                |
 | `--env <env>`            | Env var for local stdio servers (repeatable, `KEY=VALUE`)                |
 | `-n, --name <name>`      | Server name (auto-inferred if not provided)                              |
 | `-y, --yes`              | Skip all confirmation prompts                                            |

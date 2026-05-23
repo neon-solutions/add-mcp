@@ -242,7 +242,7 @@ function extractSubcommandOptionsFromArgv(): Partial<Options> {
       result.gitignore = true;
       continue;
     }
-    if (arg === "--header" && argv[i + 1]) {
+    if ((arg === "-h" || arg === "--header") && argv[i + 1]) {
       const headers: string[] = result.header ? [...result.header] : [];
       headers.push(argv[i + 1]!);
       result.header = headers;
@@ -414,6 +414,7 @@ program
     "Install MCP servers for coding agents (Claude Code, Cursor, VS Code, OpenCode, Codex, and more — run list-agents for the full list)",
   )
   .version(version)
+  .helpOption("--help", "display help for command")
   .argument("[target]", "MCP server URL (remote) or package name (local stdio)")
   .option(
     "-g, --global",
@@ -430,7 +431,7 @@ program
   )
   .option("--type <type>", "Alias for --transport")
   .option(
-    "--header <header>",
+    "-h, --header <header>",
     "HTTP header for remote servers (repeatable, 'Key: Value'). Placeholders ${VAR} prompt interactively when not using --yes. Use single quotes so your shell does not expand the ${VAR}.",
     collect,
     [],
