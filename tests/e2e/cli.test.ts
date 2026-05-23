@@ -715,6 +715,26 @@ test("E2E CLI: codeium alias installs to windsurf config", () => {
   assert.ok(servers.remote, "remote server should be configured");
 });
 
+test("E2E CLI: cascade alias installs to windsurf config", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    ["https://mcp.example.com/mcp", "-a", "cascade", "-y", "--name", "remote"],
+    projectDir,
+    homeDir,
+  );
+
+  assert.strictEqual(result.status, 0, "CLI should succeed");
+
+  const configPath = join(homeDir, ".codeium", "windsurf", "mcp_config.json");
+  assert.strictEqual(existsSync(configPath), true);
+
+  const saved = JSON.parse(readFileSync(configPath, "utf-8"));
+  const servers = saved.mcpServers as Record<string, unknown>;
+  assert.ok(servers.remote, "remote server should be configured");
+});
+
 test("E2E CLI: local stdio install supports repeated --env", () => {
   const projectDir = createTempDir();
   const homeDir = createTempDir();
