@@ -373,8 +373,7 @@ import {
 const project = detectProjectAgents("/path/to/project");
 const global = await detectGlobalAgents();
 
-// Remote server — defaults to project-level (`.mcp.json` here),
-// matching the CLI default. Pass `local: false` to write the global config.
+// Remote server (project-level by default; pass `local: false` for global)
 upsertServer(
   "claude-code",
   "example",
@@ -382,7 +381,7 @@ upsertServer(
   { cwd: "/path/to/project" },
 );
 
-// Stdio (npm package) installed to the global Claude Code config
+// Stdio (npm package), global install
 upsertServer(
   "claude-code",
   "postgres",
@@ -403,7 +402,7 @@ removeServer("claude-code", "example", {
 });
 ```
 
-`upsertServer` and `removeServer` default to project-level installs (`local: true`); pass `local: false` to target the global config. Both return `{ success, path, error? }` rather than throwing.
+`upsertServer` and `removeServer` return `{ success, path, error? }` rather than throwing.
 
 ## Troubleshooting
 
