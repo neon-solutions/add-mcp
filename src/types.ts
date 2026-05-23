@@ -12,10 +12,13 @@ export type AgentType =
   | "mcporter"
   | "opencode"
   | "vscode"
+  | "windsurf"
   | "zed";
 
 export const agentAliases: Record<string, AgentType> = {
   "cline-vscode": "cline",
+  cascade: "windsurf",
+  codeium: "windsurf",
   gemini: "gemini-cli",
   "github-copilot": "vscode",
 };

@@ -60,9 +60,9 @@ function cleanup() {
 // Agent Configuration Tests
 // ============================================
 
-test("getAgentTypes returns all 14 agents", () => {
+test("getAgentTypes returns all 15 agents", () => {
   const types = getAgentTypes();
-  assert.strictEqual(types.length, 14);
+  assert.strictEqual(types.length, 15);
   assert.ok(types.includes("antigravity"));
   assert.ok(types.includes("cline"));
   assert.ok(types.includes("cline-cli"));
@@ -76,6 +76,7 @@ test("getAgentTypes returns all 14 agents", () => {
   assert.ok(types.includes("mcporter"));
   assert.ok(types.includes("opencode"));
   assert.ok(types.includes("vscode"));
+  assert.ok(types.includes("windsurf"));
   assert.ok(types.includes("zed"));
 });
 
@@ -122,6 +123,7 @@ test("supportsProjectConfig - returns false for global-only agents", () => {
   assert.strictEqual(supportsProjectConfig("cline-cli"), false);
   assert.strictEqual(supportsProjectConfig("claude-desktop"), false);
   assert.strictEqual(supportsProjectConfig("goose"), false);
+  assert.strictEqual(supportsProjectConfig("windsurf"), false);
 });
 
 test("getProjectCapableAgents returns 9 agents", () => {
@@ -138,14 +140,15 @@ test("getProjectCapableAgents returns 9 agents", () => {
   assert.ok(projectAgents.includes("zed"));
 });
 
-test("getGlobalOnlyAgents returns 5 agents", () => {
+test("getGlobalOnlyAgents returns 6 agents", () => {
   const globalAgents = getGlobalOnlyAgents();
-  assert.strictEqual(globalAgents.length, 5);
+  assert.strictEqual(globalAgents.length, 6);
   assert.ok(globalAgents.includes("antigravity"));
   assert.ok(globalAgents.includes("cline"));
   assert.ok(globalAgents.includes("cline-cli"));
   assert.ok(globalAgents.includes("claude-desktop"));
   assert.ok(globalAgents.includes("goose"));
+  assert.ok(globalAgents.includes("windsurf"));
 });
 
 test("Project + global-only agents equals all agents", () => {
@@ -277,6 +280,12 @@ test("detectProjectAgents - does not detect global-only agents", () => {
   assert.ok(!detected.includes("cline-cli"));
   assert.ok(!detected.includes("claude-desktop"));
   assert.ok(!detected.includes("goose"));
+  assert.ok(!detected.includes("windsurf"));
+});
+
+test("agentAliases includes windsurf aliases", () => {
+  assert.strictEqual(agentAliases.codeium, "windsurf");
+  assert.strictEqual(agentAliases.cascade, "windsurf");
 });
 
 // ============================================
@@ -307,6 +316,7 @@ test("isTransportSupported - most agents support http", () => {
     "mcporter",
     "opencode",
     "vscode",
+    "windsurf",
     "zed",
   ];
 
@@ -333,6 +343,7 @@ test("isTransportSupported - most agents support sse", () => {
     "mcporter",
     "opencode",
     "vscode",
+    "windsurf",
     "zed",
   ];
 

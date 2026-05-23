@@ -322,6 +322,78 @@ test("E2E: Install to Gemini CLI (local)", () => {
 });
 
 // ============================================
+// E2E Tests: JSON format agents (global install)
+// ============================================
+
+test("E2E: Install to Windsurf (global) writes global mcp_config.json", () => {
+  const tempDir = createTempDir();
+  const parsed = parseSource("https://mcp.example.com/api");
+  const config = buildServerConfig(parsed);
+
+  const originalConfigPath = agents.windsurf.configPath;
+  agents.windsurf.configPath = join(
+    tempDir,
+    ".codeium",
+    "windsurf",
+    "mcp_config.json",
+  );
+
+  try {
+    const result = installServerForAgent("example", config, "windsurf", {
+      cwd: tempDir,
+    });
+
+    assert.strictEqual(result.success, true);
+
+    const configPath = join(tempDir, ".codeium", "windsurf", "mcp_config.json");
+    assert.strictEqual(existsSync(configPath), true);
+
+    const savedConfig = readJsonConfig(configPath);
+    const mcpServers = savedConfig.mcpServers as Record<string, unknown>;
+    assert.ok(mcpServers);
+
+    const serverConfig = mcpServers.example as Record<string, unknown>;
+    assert.ok(!("type" in serverConfig));
+    assert.strictEqual(serverConfig.serverUrl, "https://mcp.example.com/api");
+  } finally {
+    agents.windsurf.configPath = originalConfigPath;
+  }
+});
+
+test("E2E: Install to Windsurf (global) writes stdio server config", () => {
+  const tempDir = createTempDir();
+  const parsed = parseSource("mcp-server-github");
+  const config = buildServerConfig(parsed);
+
+  const originalConfigPath = agents.windsurf.configPath;
+  agents.windsurf.configPath = join(
+    tempDir,
+    ".codeium",
+    "windsurf",
+    "mcp_config.json",
+  );
+
+  try {
+    const result = installServerForAgent("github", config, "windsurf", {
+      cwd: tempDir,
+    });
+
+    assert.strictEqual(result.success, true);
+
+    const configPath = join(tempDir, ".codeium", "windsurf", "mcp_config.json");
+    assert.strictEqual(existsSync(configPath), true);
+
+    const savedConfig = readJsonConfig(configPath);
+    const mcpServers = savedConfig.mcpServers as Record<string, unknown>;
+    const serverConfig = mcpServers.github as Record<string, unknown>;
+    assert.strictEqual(serverConfig.command, "npx");
+    assert.ok(Array.isArray(serverConfig.args));
+  } finally {
+    agents.windsurf.configPath = originalConfigPath;
+  }
+});
+
+// ============================================
 // E2E Tests: Merge existing config
 // ============================================
 

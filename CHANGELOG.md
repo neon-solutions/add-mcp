@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.10.3] - 2026-05-23
+
+- add `windsurf` support with global installs written to `~/.codeium/windsurf/mcp_config.json` (`mcpServers`); aliases: `codeium`, `cascade` ([#31](https://github.com/neon-solutions/add-mcp/pull/31))
+
 ## [1.10.2] - 2026-05-23
 
 - fix command targets containing absolute, home-relative, dot-relative, or Windows drive paths to stay intact as the single executable command — previously `add-mcp "/Applications/My App/bin/server"` was naively split on spaces, producing `command: "/Applications/My"` with the rest treated as args (regression for paths with spaces, e.g. macOS `.app` bundles); use `--args` to pass arguments alongside a path target ([#29](https://github.com/neon-solutions/add-mcp/issues/29))
