@@ -373,19 +373,24 @@ import {
 const project = detectProjectAgents("/path/to/project");
 const global = await detectGlobalAgents();
 
-// Remote server
+// Remote server (project-level by default; pass `local: false` for global)
 upsertServer(
   "claude-code",
   "example",
   { type: "http", url: "https://mcp.example.com/api" },
-  { local: true, cwd: "/path/to/project" },
+  { cwd: "/path/to/project" },
 );
 
-// Stdio (npm package)
-upsertServer("claude-code", "postgres", {
-  command: "npx",
-  args: ["-y", "@modelcontextprotocol/server-postgres"],
-});
+// Stdio (npm package), global install
+upsertServer(
+  "claude-code",
+  "postgres",
+  {
+    command: "npx",
+    args: ["-y", "@modelcontextprotocol/server-postgres"],
+  },
+  { local: false },
+);
 
 const projectServers = await listInstalledServers({
   cwd: "/path/to/project",
@@ -393,7 +398,6 @@ const projectServers = await listInstalledServers({
 const globalServers = await listInstalledServers({ global: true });
 
 removeServer("claude-code", "example", {
-  local: true,
   cwd: "/path/to/project",
 });
 ```
