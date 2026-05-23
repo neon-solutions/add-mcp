@@ -268,6 +268,74 @@ test("buildServerConfig - command appends args when provided", () => {
   ]);
 });
 
+// Regression: https://github.com/neon-solutions/add-mcp/issues/29
+// Absolute paths must be preserved verbatim as the command — never split on
+// spaces, even when the path itself contains spaces.
+test("buildServerConfig - absolute path with spaces stays a single command", () => {
+  const parsed = parseSource(
+    "/Applications/Hopper Disassembler.app/Contents/MacOS/HopperMCPServer",
+  );
+  const config = buildServerConfig(parsed);
+
+  assert.strictEqual(
+    config.command,
+    "/Applications/Hopper Disassembler.app/Contents/MacOS/HopperMCPServer",
+  );
+  assert.deepStrictEqual(config.args, []);
+});
+
+test("buildServerConfig - absolute path with spaces still accepts --args", () => {
+  const parsed = parseSource(
+    "/Applications/Hopper Disassembler.app/Contents/MacOS/HopperMCPServer",
+  );
+  const config = buildServerConfig(parsed, {
+    args: ["--port", "3000"],
+    env: { LOG_LEVEL: "debug" },
+  });
+
+  assert.strictEqual(
+    config.command,
+    "/Applications/Hopper Disassembler.app/Contents/MacOS/HopperMCPServer",
+  );
+  assert.deepStrictEqual(config.args, ["--port", "3000"]);
+  assert.deepStrictEqual(config.env, { LOG_LEVEL: "debug" });
+});
+
+test("buildServerConfig - absolute path without spaces", () => {
+  const parsed = parseSource("/usr/local/bin/my-mcp-server");
+  const config = buildServerConfig(parsed);
+
+  assert.strictEqual(config.command, "/usr/local/bin/my-mcp-server");
+  assert.deepStrictEqual(config.args, []);
+});
+
+test("buildServerConfig - home-relative path with spaces", () => {
+  const parsed = parseSource("~/My Tools/server-bin");
+  const config = buildServerConfig(parsed);
+
+  assert.strictEqual(config.command, "~/My Tools/server-bin");
+  assert.deepStrictEqual(config.args, []);
+});
+
+test("buildServerConfig - dot-relative path with spaces", () => {
+  const parsed = parseSource("./local bin/my-server");
+  const config = buildServerConfig(parsed);
+
+  assert.strictEqual(config.command, "./local bin/my-server");
+  assert.deepStrictEqual(config.args, []);
+});
+
+test("buildServerConfig - Windows path with spaces", () => {
+  const parsed = parseSource("C:\\Program Files\\My App\\bin\\server.exe");
+  const config = buildServerConfig(parsed);
+
+  assert.strictEqual(
+    config.command,
+    "C:\\Program Files\\My App\\bin\\server.exe",
+  );
+  assert.deepStrictEqual(config.args, []);
+});
+
 test("buildServerConfig - remote source ignores env", () => {
   const parsed = parseSource("https://mcp.example.com/api");
   const config = buildServerConfig(parsed, {

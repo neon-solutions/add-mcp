@@ -4,7 +4,25 @@ function isUrl(input: string): boolean {
   return input.startsWith("http://") || input.startsWith("https://");
 }
 
+/**
+ * Detect filesystem-path-like inputs (absolute, home-relative, dot-relative,
+ * or Windows drive paths). When the user passes a single path as the target —
+ * even one containing spaces like "/Applications/My App/bin/server" — we treat
+ * the entire string as a single command binary and never split it into
+ * command+args. Callers that want args should use the repeatable --args flag.
+ */
+export function looksLikePath(input: string): boolean {
+  if (input.startsWith("/")) return true;
+  if (input.startsWith("~/") || input === "~") return true;
+  if (input.startsWith("./") || input.startsWith("../")) return true;
+  if (/^[A-Za-z]:[\\/]/.test(input)) return true;
+  return false;
+}
+
 function isCommand(input: string): boolean {
+  if (looksLikePath(input)) {
+    return true;
+  }
   if (input.includes(" ")) {
     return true;
   }
@@ -83,6 +101,13 @@ function inferName(input: string, type: SourceType): string {
   }
 
   if (type === "command") {
+    if (looksLikePath(input)) {
+      const segments = input.split(/[\\/]/);
+      const base = segments[segments.length - 1] || "mcp-server";
+      const withoutExt = base.replace(/\.[^.]+$/, "");
+      return extractPackageName(withoutExt || base);
+    }
+
     const parts = input.split(" ");
 
     let startIndex = 0;
