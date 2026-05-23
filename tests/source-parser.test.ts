@@ -126,6 +126,76 @@ test("Command - complex with args", () => {
   assert.strictEqual(result.inferredName, "github");
 });
 
+// Absolute-path command tests (regression: https://github.com/neon-solutions/add-mcp/issues/29)
+test("Command - absolute path without spaces", () => {
+  const result = parseSource("/usr/local/bin/my-mcp-server");
+  assert.strictEqual(result.type, "command");
+  assert.strictEqual(result.value, "/usr/local/bin/my-mcp-server");
+  assert.strictEqual(result.inferredName, "my-mcp-server");
+});
+
+test("Command - absolute path with spaces preserved as single value", () => {
+  const result = parseSource(
+    "/Applications/Hopper Disassembler.app/Contents/MacOS/HopperMCPServer",
+  );
+  assert.strictEqual(result.type, "command");
+  // The whole path (including spaces) is preserved as the command value.
+  assert.strictEqual(
+    result.value,
+    "/Applications/Hopper Disassembler.app/Contents/MacOS/HopperMCPServer",
+  );
+  // Inferred name comes from the binary basename.
+  assert.strictEqual(result.inferredName, "HopperMCPServer");
+});
+
+test("Command - home-relative path with spaces", () => {
+  const result = parseSource("~/My Tools/server-bin");
+  assert.strictEqual(result.type, "command");
+  assert.strictEqual(result.value, "~/My Tools/server-bin");
+  assert.strictEqual(result.inferredName, "bin");
+});
+
+test("Command - dot-relative path", () => {
+  const result = parseSource("./bin/my-server");
+  assert.strictEqual(result.type, "command");
+  assert.strictEqual(result.value, "./bin/my-server");
+  assert.strictEqual(result.inferredName, "my-server");
+});
+
+test("Command - parent-relative path with spaces", () => {
+  const result = parseSource("../local bin/my-server.sh");
+  assert.strictEqual(result.type, "command");
+  assert.strictEqual(result.value, "../local bin/my-server.sh");
+  // Strip extension when inferring name from a binary path.
+  assert.strictEqual(result.inferredName, "my-server");
+});
+
+test("Command - Windows path with spaces", () => {
+  const result = parseSource("C:\\Program Files\\My App\\bin\\server.exe");
+  assert.strictEqual(result.type, "command");
+  assert.strictEqual(
+    result.value,
+    "C:\\Program Files\\My App\\bin\\server.exe",
+  );
+  assert.strictEqual(result.inferredName, "server");
+});
+
+test("Command - Windows path with forward slashes", () => {
+  const result = parseSource("D:/Tools/My Server/run.cmd");
+  assert.strictEqual(result.type, "command");
+  assert.strictEqual(result.value, "D:/Tools/My Server/run.cmd");
+  assert.strictEqual(result.inferredName, "run");
+});
+
+test("Command - absolute path with trailing slash binary", () => {
+  // Even when the path itself includes a space-containing folder name, the
+  // entire string remains the command value.
+  const result = parseSource("/opt/Some App/HopperMCPServer");
+  assert.strictEqual(result.type, "command");
+  assert.strictEqual(result.value, "/opt/Some App/HopperMCPServer");
+  assert.strictEqual(result.inferredName, "HopperMCPServer");
+});
+
 // Helper function tests
 test("isRemoteSource - remote URL returns true", () => {
   const parsed = parseSource("https://example.com/mcp");

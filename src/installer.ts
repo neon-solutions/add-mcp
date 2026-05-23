@@ -9,6 +9,7 @@ import type {
 } from "./types.js";
 import { agents } from "./agents.js";
 import { writeConfig, buildConfigWithKey } from "./formats/index.js";
+import { looksLikePath } from "./source-parser.js";
 
 export interface InstallOptions {
   /** Install to local (project-level) config instead of global */
@@ -69,9 +70,22 @@ export function buildServerConfig(
   }
 
   if (parsed.type === "command") {
-    const parts = parsed.value.split(" ");
-    const command = parts[0]!;
-    const args = [...parts.slice(1), ...(options.args ?? [])];
+    let command: string;
+    let parsedArgs: string[];
+
+    if (looksLikePath(parsed.value)) {
+      // Path-like targets (e.g. "/Applications/My App/bin/server") are kept
+      // intact as a single executable path. Spaces inside the path are not
+      // treated as argument separators. Use --args to pass arguments.
+      command = parsed.value;
+      parsedArgs = [];
+    } else {
+      const parts = parsed.value.split(" ");
+      command = parts[0]!;
+      parsedArgs = parts.slice(1);
+    }
+
+    const args = [...parsedArgs, ...(options.args ?? [])];
     const config: McpServerConfig = {
       command,
       args,

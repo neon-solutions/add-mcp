@@ -110,6 +110,84 @@ function seedFindRegistries(homeDir: string) {
   );
 }
 
+// Regression: https://github.com/neon-solutions/add-mcp/issues/29
+test("E2E CLI: absolute path with spaces is preserved as single command", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const binaryPath =
+    "/Applications/Hopper Disassembler.app/Contents/MacOS/HopperMCPServer";
+
+  const result = runCli(
+    [binaryPath, "-a", "cursor", "-y", "--name", "Hopper"],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const configPath = join(projectDir, ".cursor", "mcp.json");
+  assert.strictEqual(existsSync(configPath), true);
+
+  const saved = JSON.parse(readFileSync(configPath, "utf-8"));
+  const servers = saved.mcpServers as Record<string, unknown>;
+  const server = servers.Hopper as Record<string, unknown>;
+
+  assert.ok(server, "Hopper server should be configured");
+  assert.strictEqual(
+    server.command,
+    binaryPath,
+    "command must keep the full path verbatim (including spaces)",
+  );
+  assert.deepStrictEqual(
+    server.args,
+    [],
+    "no implicit arg-splitting on spaces in the path",
+  );
+});
+
+test("E2E CLI: absolute path with spaces accepts repeated --args", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const binaryPath = "/opt/Some App/bin/my-server";
+
+  const result = runCli(
+    [
+      binaryPath,
+      "-a",
+      "cursor",
+      "-y",
+      "--name",
+      "Server",
+      "--args",
+      "--port",
+      "--args",
+      "3000",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const configPath = join(projectDir, ".cursor", "mcp.json");
+  const saved = JSON.parse(readFileSync(configPath, "utf-8"));
+  const servers = saved.mcpServers as Record<string, unknown>;
+  const server = servers.Server as Record<string, unknown>;
+
+  assert.strictEqual(server.command, binaryPath);
+  assert.deepStrictEqual(server.args, ["--port", "3000"]);
+});
+
 test("E2E CLI: --gitignore adds local config path", () => {
   const projectDir = createTempDir();
   const homeDir = createTempDir();

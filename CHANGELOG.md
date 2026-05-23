@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.10.2] - 2026-05-23
+
+- fix command targets containing absolute, home-relative, dot-relative, or Windows drive paths to stay intact as the single executable command — previously `add-mcp "/Applications/My App/bin/server"` was naively split on spaces, producing `command: "/Applications/My"` with the rest treated as args (regression for paths with spaces, e.g. macOS `.app` bundles); use `--args` to pass arguments alongside a path target ([#29](https://github.com/neon-solutions/add-mcp/issues/29))
+
 ## [1.10.1] - 2026-05-22
 
 - use single quotes in `--header` / `--env` "Use 'Key: Value' format." error messages so the example matches the recommended shell-quoting style (was double quotes, which contradicted the shell-expansion hint that recommends single quotes)
