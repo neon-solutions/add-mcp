@@ -17,8 +17,8 @@ export type AgentType =
 
 export const agentAliases: Record<string, AgentType> = {
   "cline-vscode": "cline",
-  cascade: "windsurf",
   codeium: "windsurf",
+  cascade: "windsurf",
   gemini: "gemini-cli",
   "github-copilot": "vscode",
 };
