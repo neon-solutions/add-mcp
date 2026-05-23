@@ -597,6 +597,124 @@ test("E2E CLI: stdio server to antigravity succeeds", () => {
   assert.strictEqual(server.command, "npx");
 });
 
+test("E2E CLI: remote server to windsurf succeeds with serverUrl config", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "windsurf",
+      "-y",
+      "--name",
+      "remote",
+      "--header",
+      "Authorization: Bearer token",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const configPath = join(homeDir, ".codeium", "windsurf", "mcp_config.json");
+  assert.strictEqual(existsSync(configPath), true);
+
+  const saved = JSON.parse(readFileSync(configPath, "utf-8"));
+  const servers = saved.mcpServers as Record<string, unknown>;
+  const server = servers.remote as Record<string, unknown>;
+  assert.strictEqual(server.serverUrl, "https://mcp.example.com/mcp");
+  assert.deepStrictEqual(server.headers, {
+    Authorization: "Bearer token",
+  });
+});
+
+test("E2E CLI: --all includes windsurf for remote server", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    ["https://mcp.example.com/mcp", "--all", "-y"],
+    projectDir,
+    homeDir,
+  );
+
+  assert.strictEqual(result.status, 0, "CLI should succeed");
+
+  const configPath = join(homeDir, ".codeium", "windsurf", "mcp_config.json");
+  assert.strictEqual(existsSync(configPath), true);
+
+  const saved = JSON.parse(readFileSync(configPath, "utf-8"));
+  const servers = saved.mcpServers as Record<string, unknown>;
+  const windsurfRemoteServer = Object.values(servers).find((value) => {
+    const server = value as Record<string, unknown>;
+    return server.serverUrl === "https://mcp.example.com/mcp";
+  });
+  assert.ok(
+    windsurfRemoteServer,
+    "remote windsurf server should exist in mcpServers",
+  );
+});
+
+test("E2E CLI: stdio server to windsurf succeeds", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "@modelcontextprotocol/server-filesystem",
+      "-a",
+      "windsurf",
+      "-y",
+      "--name",
+      "filesystem",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const configPath = join(homeDir, ".codeium", "windsurf", "mcp_config.json");
+  assert.strictEqual(existsSync(configPath), true);
+
+  const saved = JSON.parse(readFileSync(configPath, "utf-8"));
+  const servers = saved.mcpServers as Record<string, unknown>;
+  assert.ok(servers.filesystem, "filesystem server should be configured");
+
+  const server = servers.filesystem as Record<string, unknown>;
+  assert.strictEqual(server.command, "npx");
+});
+
+test("E2E CLI: codeium alias installs to windsurf config", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    ["https://mcp.example.com/mcp", "-a", "codeium", "-y", "--name", "remote"],
+    projectDir,
+    homeDir,
+  );
+
+  assert.strictEqual(result.status, 0, "CLI should succeed");
+
+  const configPath = join(homeDir, ".codeium", "windsurf", "mcp_config.json");
+  assert.strictEqual(existsSync(configPath), true);
+
+  const saved = JSON.parse(readFileSync(configPath, "utf-8"));
+  const servers = saved.mcpServers as Record<string, unknown>;
+  assert.ok(servers.remote, "remote server should be configured");
+});
+
 test("E2E CLI: local stdio install supports repeated --env", () => {
   const projectDir = createTempDir();
   const homeDir = createTempDir();

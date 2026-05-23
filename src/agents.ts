@@ -65,6 +65,12 @@ const copilotConfigPath = join(
   process.env.XDG_CONFIG_HOME || join(home, ".copilot"),
   "mcp-config.json",
 );
+const windsurfConfigPath = join(
+  home,
+  ".codeium",
+  "windsurf",
+  "mcp_config.json",
+);
 
 function transformGooseConfig(
   serverName: string,
@@ -488,6 +494,20 @@ export const agents: Record<AgentType, AgentConfig> = {
     detectGlobalInstall: async () => {
       return existsSync(vscodePath);
     },
+  },
+
+  windsurf: {
+    name: "windsurf",
+    displayName: "Windsurf",
+    configPath: windsurfConfigPath,
+    projectDetectPaths: [], // Global only - no project support
+    configKey: "mcpServers",
+    format: "json",
+    supportedTransports: ["stdio", "http", "sse"],
+    detectGlobalInstall: async () => {
+      return existsSync(join(home, ".codeium", "windsurf"));
+    },
+    transformConfig: transformAntigravityConfig,
   },
 
   zed: {

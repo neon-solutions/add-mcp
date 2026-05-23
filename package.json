@@ -1,6 +1,6 @@
 {
   "name": "add-mcp",
-  "version": "1.10.2",
+  "version": "1.10.3",
   "description": "Add MCP servers to your favorite coding agents with a single command.",
   "author": "Andre Landgraf <andre@neon.tech>",
   "license": "Apache-2.0",
@@ -51,6 +51,7 @@
     "mcporter",
     "opencode",
     "vscode",
+    "windsurf",
     "zed"
   ],
   "repository": {
