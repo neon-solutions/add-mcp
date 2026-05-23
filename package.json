@@ -51,7 +51,9 @@
     "mcporter",
     "opencode",
     "vscode",
-    "zed"
+    "zed",
+    "zencoder",
+    "zenflow"
   ],
   "repository": {
     "type": "git",

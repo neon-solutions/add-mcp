@@ -12,12 +12,14 @@ export type AgentType =
   | "mcporter"
   | "opencode"
   | "vscode"
-  | "zed";
+  | "zed"
+  | "zencoder";
 
 export const agentAliases: Record<string, AgentType> = {
   "cline-vscode": "cline",
   gemini: "gemini-cli",
   "github-copilot": "vscode",
+  zenflow: "zencoder",
 };
 
 export type ConfigFormat = "json" | "yaml" | "toml";
