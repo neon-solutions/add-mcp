@@ -84,6 +84,10 @@ function claudeDesktopConfigPath(homeDir: string): string {
   return join(homeDir, ".config", "Claude", "claude_desktop_config.json");
 }
 
+function windsurfConfigPath(homeDir: string): string {
+  return join(homeDir, ".codeium", "windsurf", "mcp_config.json");
+}
+
 function seedFindRegistries(homeDir: string) {
   const configPath = join(homeDir, ".config", "add-mcp", "config.json");
   mkdirSync(dirname(configPath), { recursive: true });
@@ -622,7 +626,7 @@ test("E2E CLI: remote server to windsurf succeeds with serverUrl config", () => 
     );
   }
 
-  const configPath = join(homeDir, ".codeium", "windsurf", "mcp_config.json");
+  const configPath = windsurfConfigPath(homeDir);
   assert.strictEqual(existsSync(configPath), true);
 
   const saved = JSON.parse(readFileSync(configPath, "utf-8"));
@@ -646,7 +650,7 @@ test("E2E CLI: --all includes windsurf for remote server", () => {
 
   assert.strictEqual(result.status, 0, "CLI should succeed");
 
-  const configPath = join(homeDir, ".codeium", "windsurf", "mcp_config.json");
+  const configPath = windsurfConfigPath(homeDir);
   assert.strictEqual(existsSync(configPath), true);
 
   const saved = JSON.parse(readFileSync(configPath, "utf-8"));
@@ -684,7 +688,7 @@ test("E2E CLI: stdio server to windsurf succeeds", () => {
     );
   }
 
-  const configPath = join(homeDir, ".codeium", "windsurf", "mcp_config.json");
+  const configPath = windsurfConfigPath(homeDir);
   assert.strictEqual(existsSync(configPath), true);
 
   const saved = JSON.parse(readFileSync(configPath, "utf-8"));
@@ -695,44 +699,26 @@ test("E2E CLI: stdio server to windsurf succeeds", () => {
   assert.strictEqual(server.command, "npx");
 });
 
-test("E2E CLI: codeium alias installs to windsurf config", () => {
-  const projectDir = createTempDir();
-  const homeDir = createTempDir();
+test("E2E CLI: windsurf aliases (codeium, cascade) install to windsurf config", () => {
+  for (const alias of ["codeium", "cascade"] as const) {
+    const projectDir = createTempDir();
+    const homeDir = createTempDir();
 
-  const result = runCli(
-    ["https://mcp.example.com/mcp", "-a", "codeium", "-y", "--name", "remote"],
-    projectDir,
-    homeDir,
-  );
+    const result = runCli(
+      ["https://mcp.example.com/mcp", "-a", alias, "-y", "--name", "remote"],
+      projectDir,
+      homeDir,
+    );
 
-  assert.strictEqual(result.status, 0, "CLI should succeed");
+    assert.strictEqual(result.status, 0, `${alias} alias should succeed`);
 
-  const configPath = join(homeDir, ".codeium", "windsurf", "mcp_config.json");
-  assert.strictEqual(existsSync(configPath), true);
+    const configPath = windsurfConfigPath(homeDir);
+    assert.strictEqual(existsSync(configPath), true);
 
-  const saved = JSON.parse(readFileSync(configPath, "utf-8"));
-  const servers = saved.mcpServers as Record<string, unknown>;
-  assert.ok(servers.remote, "remote server should be configured");
-});
-
-test("E2E CLI: cascade alias installs to windsurf config", () => {
-  const projectDir = createTempDir();
-  const homeDir = createTempDir();
-
-  const result = runCli(
-    ["https://mcp.example.com/mcp", "-a", "cascade", "-y", "--name", "remote"],
-    projectDir,
-    homeDir,
-  );
-
-  assert.strictEqual(result.status, 0, "CLI should succeed");
-
-  const configPath = join(homeDir, ".codeium", "windsurf", "mcp_config.json");
-  assert.strictEqual(existsSync(configPath), true);
-
-  const saved = JSON.parse(readFileSync(configPath, "utf-8"));
-  const servers = saved.mcpServers as Record<string, unknown>;
-  assert.ok(servers.remote, "remote server should be configured");
+    const saved = JSON.parse(readFileSync(configPath, "utf-8"));
+    const servers = saved.mcpServers as Record<string, unknown>;
+    assert.ok(servers.remote, `${alias} should write remote server config`);
+  }
 });
 
 test("E2E CLI: local stdio install supports repeated --env", () => {

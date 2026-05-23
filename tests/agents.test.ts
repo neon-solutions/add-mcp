@@ -21,7 +21,6 @@ import {
   buildAgentSelectionChoices,
 } from "../src/agents.js";
 import type { AgentType } from "../src/types.js";
-import { agentAliases } from "../src/types.js";
 
 let passed = 0;
 let failed = 0;
@@ -281,11 +280,6 @@ test("detectProjectAgents - does not detect global-only agents", () => {
   assert.ok(!detected.includes("claude-desktop"));
   assert.ok(!detected.includes("goose"));
   assert.ok(!detected.includes("windsurf"));
-});
-
-test("agentAliases includes windsurf aliases", () => {
-  assert.strictEqual(agentAliases.codeium, "windsurf");
-  assert.strictEqual(agentAliases.cascade, "windsurf");
 });
 
 // ============================================
