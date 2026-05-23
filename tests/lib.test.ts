@@ -228,24 +228,86 @@ await test("removeServer returns error result for unknown agent type", () => {
   assert.ok(result.error?.includes("Unknown agent type"));
 });
 
-await test("upsertServer + removeServer reject local: true for global-only agents", () => {
+await test("upsertServer + removeServer reject local default for global-only agents", () => {
   const dir = createTempDir();
+  // Default is `local: true`, so global-only agents must be rejected when the
+  // caller omits the flag (rather than silently writing the global config).
   const upsert = upsertServer(
     "claude-desktop",
     "x",
     remote("https://x.example.com"),
-    { local: true, cwd: dir },
+    { cwd: dir },
   );
   assert.strictEqual(upsert.success, false);
   assert.ok(upsert.error?.includes("does not support project-level"));
 
-  const remove = removeServer("claude-desktop", "x", {
-    local: true,
-    cwd: dir,
-  });
+  const remove = removeServer("claude-desktop", "x", { cwd: dir });
   assert.strictEqual(remove.success, false);
   assert.strictEqual(remove.removed, false);
   assert.ok(remove.error?.includes("does not support project-level"));
+});
+
+await test("upsertServer defaults to project-level install (matches CLI)", () => {
+  const dir = createTempDir();
+  // No `local` flag — should write the project-level `.cursor/mcp.json`,
+  // matching the CLI default where `-g` is the opt-in for global installs.
+  const result = upsertServer(
+    "cursor",
+    "defaulted",
+    remote("https://mcp.example.com/api"),
+    { cwd: dir },
+  );
+
+  assert.ok(result.success, result.error);
+  assert.ok(
+    result.path.includes(dir),
+    `expected project path under ${dir}, got ${result.path}`,
+  );
+  assert.ok(
+    result.path.endsWith(join(".cursor", "mcp.json")),
+    `expected .cursor/mcp.json path, got ${result.path}`,
+  );
+
+  const written = readJson(join(dir, ".cursor", "mcp.json"));
+  const servers = written.mcpServers as Record<string, unknown>;
+  assert.ok(servers.defaulted, "server should be present at the project path");
+});
+
+await test("upsertServer with local: false targets the global config", () => {
+  const dir = createTempDir();
+  const result = upsertServer(
+    "cursor",
+    "globalish",
+    remote("https://mcp.example.com/api"),
+    { local: false, cwd: dir },
+  );
+
+  assert.ok(result.success, result.error);
+  assert.ok(
+    !result.path.includes(dir),
+    `expected global path outside ${dir}, got ${result.path}`,
+  );
+  assert.strictEqual(
+    existsSync(join(dir, ".cursor", "mcp.json")),
+    false,
+    "project config should not be written when local: false",
+  );
+});
+
+await test("removeServer defaults to project-level config (matches CLI)", () => {
+  const dir = createTempDir();
+  upsertServer("cursor", "rm-default", remote("https://x.example.com"), {
+    cwd: dir,
+  });
+
+  // No `local` flag — should target the project config we just wrote.
+  const result = removeServer("cursor", "rm-default", { cwd: dir });
+  assert.ok(result.success, result.error);
+  assert.strictEqual(result.removed, true);
+
+  const written = readJson(join(dir, ".cursor", "mcp.json"));
+  const servers = (written.mcpServers ?? {}) as Record<string, unknown>;
+  assert.ok(!servers["rm-default"], "server should be removed");
 });
 
 await test("upsertServer + removeServer honor github-copilot-cli local `servers` key", () => {

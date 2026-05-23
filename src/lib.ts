@@ -42,7 +42,7 @@ function isKnownAgent(agentType: string): agentType is AgentType {
   return Object.prototype.hasOwnProperty.call(agents, agentType);
 }
 
-function validate(agentType: AgentInput, local?: boolean): string | null {
+function validate(agentType: AgentInput, local: boolean): string | null {
   if (!isKnownAgent(agentType)) {
     return `Unknown agent type: ${String(agentType)}`;
   }
@@ -52,19 +52,27 @@ function validate(agentType: AgentInput, local?: boolean): string | null {
   return null;
 }
 
+// Default to project-level (local) installs so the programmatic API matches
+// the CLI, where global is the opt-in (`-g`). Callers can still pass
+// `{ local: false }` to write the global config explicitly.
+function withDefaults(options: InstallOptions): InstallOptions {
+  return { ...options, local: options.local ?? true };
+}
+
 export function upsertServer(
   agentType: AgentInput,
   serverName: string,
   serverConfig: McpServerConfig,
   options: InstallOptions = {},
 ): InstallResult {
-  const error = validate(agentType, options.local);
+  const resolved = withDefaults(options);
+  const error = validate(agentType, resolved.local === true);
   if (error) return { success: false, path: "", error };
   return installServerForAgent(
     serverName,
     serverConfig,
     agentType as AgentType,
-    options,
+    resolved,
   );
 }
 
@@ -111,15 +119,16 @@ export function removeServer(
   serverName: string,
   options: InstallOptions = {},
 ): RemoveServerResult {
-  const error = validate(agentType, options.local);
+  const resolved = withDefaults(options);
+  const error = validate(agentType, resolved.local === true);
   if (error) return { success: false, path: "", removed: false, error };
   const known = agentType as AgentType;
   try {
-    return doRemove(known, serverName, options);
+    return doRemove(known, serverName, resolved);
   } catch (e) {
     return {
       success: false,
-      path: getConfigPath(agents[known], options),
+      path: getConfigPath(agents[known], resolved),
       removed: false,
       error: e instanceof Error ? e.message : "Unknown error",
     };

@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.0.0] - 2026-05-23
+
+- **BREAKING**: `upsertServer` and `removeServer` programmatic APIs now default to project-level (`local: true`) installs to match the CLI default; previously they wrote the global config when `local` was omitted. Pass `{ local: false }` explicitly to target the global config. Callers writing to global-only agents (`claude-desktop`, etc.) must now pass `{ local: false }` since the new default is rejected for those agents (mirrors how `local: true` was rejected before).
+
 ## [1.10.1] - 2026-05-22
 
 - use single quotes in `--header` / `--env` "Use 'Key: Value' format." error messages so the example matches the recommended shell-quoting style (was double quotes, which contradicted the shell-expansion hint that recommends single quotes)
