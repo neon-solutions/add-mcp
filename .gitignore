@@ -1,6 +1,11 @@
 # Dependencies
 node_modules/
 
+# Stray npm/yarn/pnpm lockfiles — this repo uses bun (bun.lock is the source of truth)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
 # Build output
 dist/
 
@@ -21,6 +26,9 @@ npm-debug.log*
 # Test artifacts
 .tmp/
 coverage/
+
+# Fallow cache (local-only)
+.fallow/
 
 # Environment
 .env
