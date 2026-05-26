@@ -1050,5 +1050,25 @@
       ],
       "title": "Vercel"
     }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "io.github.AlvisoOculus/optionsahoy_web",
+      "title": "OptionsAhoy",
+      "description": "Multi-year equity-compensation optimizer: ISO/AMT scheduling, NSO sell-vs-hold, RSU vest decisions, single-stock concentration, protective puts, QSBS qualification. Full federal + 50-state + DC tax code.",
+      "version": "1.0.1",
+      "repository": {
+        "url": "https://github.com/AlvisoOculus/optionsahoy_web",
+        "source": "github"
+      },
+      "websiteUrl": "https://optionsahoy.com/for-agents",
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://optionsahoy.com/mcp"
+        }
+      ]
+    }
   }
 ]
