@@ -158,6 +158,9 @@ interface Options {
   yes?: boolean;
   all?: boolean;
   gitignore?: boolean;
+  authProviderType?: string;
+  oauthScopes?: string;
+  timeout?: string;
 }
 
 async function ensureFindRegistriesConfigured(
@@ -451,6 +454,18 @@ program
   .option("-y, --yes", "Skip confirmation prompts")
   .option("--all", "Install to all agents")
   .option("--gitignore", "Add generated project config files to .gitignore")
+  .option(
+    "--auth-provider-type <type>",
+    "Authentication provider type for remote servers (e.g., credentials provider name)",
+  )
+  .option(
+    "--oauth-scopes <scopes>",
+    "OAuth scopes required by the remote server (comma-separated)",
+  )
+  .option(
+    "--timeout <timeout>",
+    "Timeout in milliseconds for remote server connections",
+  )
   .action(async (target: string | undefined, options: Options) => {
     await main(target, options);
   });
@@ -1430,6 +1445,22 @@ async function main(target: string | undefined, options: Options) {
         ? envForConfig
         : undefined,
     args: argsForConfig && argsForConfig.length > 0 ? argsForConfig : undefined,
+    authProviderType: options.authProviderType,
+    oauthScopes: options.oauthScopes
+      ? options.oauthScopes
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : undefined,
+    timeout: (() => {
+      if (!options.timeout) return undefined;
+      const parsed = parseInt(options.timeout, 10);
+      if (isNaN(parsed)) {
+        p.log.warn(`Invalid --timeout value provided: "${options.timeout}". Omiting from config.`);
+        return undefined;
+      }
+      return parsed;
+    })(),
   });
 
   // Determine target agents

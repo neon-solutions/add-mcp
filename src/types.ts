@@ -77,12 +77,23 @@ export interface McpServerConfig {
   /** For remote servers */
   type?: TransportType;
   url?: string;
+  /** Alternate property name for remote server url (supported by select HTTP remote clients) */
+  httpUrl?: string;
   headers?: Record<string, string>;
+  /** Authentication provider type for remote connections (e.g. for enterprise proxy auth) */
+  authProviderType?: string;
+  /** OAuth configuration scopes for authenticated remote server connections */
+  oauth?: {
+    scopes: string[];
+  };
+  /** Timeout for server connection in milliseconds (supported by select agents) */
+  timeout?: number;
   /** For local stdio servers */
   command?: string;
   args?: string[];
   env?: Record<string, string>;
 }
+
 
 export interface ConfigFile {
   [key: string]: unknown;

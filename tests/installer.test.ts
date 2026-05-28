@@ -720,6 +720,141 @@ test("updateGitignoreWithPaths - appends only new local paths", () => {
   );
 });
 
+// OAuth tests
+
+test("buildServerConfig - remote URL with OAuth scopes and credentials", () => {
+  const parsed = parseSource("https://api.example.com/mcp");
+  const config = buildServerConfig(parsed, {
+    authProviderType: "custom_auth_provider",
+    oauthScopes: ["scope1", "scope2"],
+    timeout: 30000,
+    headers: {
+      "X-Custom-Header": "value1"
+    }
+  });
+
+  assert.strictEqual(config.type, "http");
+  assert.strictEqual(config.httpUrl, "https://api.example.com/mcp");
+  assert.strictEqual(config.authProviderType, "custom_auth_provider");
+  assert.deepStrictEqual(config.oauth, {
+    scopes: ["scope1", "scope2"]
+  });
+  assert.strictEqual(config.timeout, 30000);
+  assert.deepStrictEqual(config.headers, {
+    "X-Custom-Header": "value1"
+  });
+});
+
+test("transformGeminiCliConfig - maps OAuth and credentials correctly", () => {
+  const parsed = parseSource("https://api.example.com/mcp");
+  const config = buildServerConfig(parsed, {
+    authProviderType: "custom_auth_provider",
+    oauthScopes: ["scope1"],
+    timeout: 30000,
+    headers: { "X-Custom-Header": "value1" }
+  });
+
+  const geminiAgent = agents["gemini-cli"];
+  assert.ok(geminiAgent.transformConfig);
+  const transformed = geminiAgent.transformConfig("ExampleServer", config) as Record<string, unknown>;
+
+  assert.strictEqual(transformed.httpUrl, "https://api.example.com/mcp");
+  assert.strictEqual(transformed.authProviderType, "custom_auth_provider");
+  assert.deepStrictEqual(transformed.oauth, {
+    scopes: ["scope1"]
+  });
+  assert.strictEqual(transformed.timeout, 30000);
+  assert.deepStrictEqual(transformed.headers, {
+    "X-Custom-Header": "value1"
+  });
+});
+
+test("transformAntigravityConfig - maps OAuth and credentials correctly", () => {
+  const parsed = parseSource("https://api.example.com/mcp");
+  const config = buildServerConfig(parsed, {
+    authProviderType: "custom_auth_provider",
+    oauthScopes: ["scope1"],
+    timeout: 30000
+  });
+
+  const antigravityAgent = agents["antigravity"];
+  assert.ok(antigravityAgent.transformConfig);
+  const transformed = antigravityAgent.transformConfig("ExampleServer", config) as Record<string, unknown>;
+
+  assert.strictEqual(transformed.serverUrl, "https://api.example.com/mcp");
+  assert.strictEqual(transformed.authProviderType, "custom_auth_provider");
+  assert.deepStrictEqual(transformed.oauth, {
+    scopes: ["scope1"]
+  });
+  assert.strictEqual(transformed.timeout, 30000);
+});
+
+test("buildServerConfig - command source ignores OAuth, authProvider, and timeout options", () => {
+  const parsed = parseSource("node server.js");
+  const config = buildServerConfig(parsed, {
+    authProviderType: "google_credentials",
+    oauthScopes: ["scope1"],
+    timeout: 5000,
+  });
+
+  assert.strictEqual(config.command, "node");
+  assert.deepStrictEqual(config.args, ["server.js"]);
+  assert.strictEqual(config.authProviderType, undefined);
+  assert.strictEqual(config.oauth, undefined);
+  assert.strictEqual(config.timeout, undefined);
+});
+
+test("buildServerConfig - remote URL handles missing or empty OAuth scopes and timeout safely", () => {
+  const parsed = parseSource("https://api.example.com/mcp");
+  const config = buildServerConfig(parsed, {
+    authProviderType: undefined,
+    oauthScopes: [],
+    timeout: undefined,
+  });
+
+  assert.strictEqual(config.type, "http");
+  assert.strictEqual(config.url, "https://api.example.com/mcp");
+  assert.strictEqual(config.authProviderType, undefined);
+  assert.strictEqual(config.oauth, undefined);
+  assert.strictEqual(config.timeout, undefined);
+});
+
+test("transformGeminiCliConfig - handles standard config without OAuth safely", () => {
+  const parsed = parseSource("https://api.example.com/mcp");
+  const config = buildServerConfig(parsed);
+
+  const geminiAgent = agents["gemini-cli"];
+  assert.ok(geminiAgent.transformConfig);
+  const transformed = geminiAgent.transformConfig("StandardServer", config) as Record<string, unknown>;
+
+  assert.strictEqual(transformed.httpUrl, "https://api.example.com/mcp");
+  assert.strictEqual(transformed.authProviderType, undefined);
+  assert.strictEqual(transformed.oauth, undefined);
+  assert.strictEqual(transformed.timeout, undefined);
+});
+
+test("buildServerConfig - handles malformed OAuth scopes", () => {
+  const parsed = parseSource("https://api.example.com/mcp");
+  const cleanedScopes = ["", " ", "scope1", "scope2"]
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const config = buildServerConfig(parsed, {
+    oauthScopes: cleanedScopes,
+  });
+
+  assert.deepStrictEqual(config.oauth?.scopes, ["scope1", "scope2"]);
+});
+
+test("buildServerConfig - handles NaN timeout safely", () => {
+  const parsed = parseSource("https://api.example.com/mcp");
+  const config = buildServerConfig(parsed, {
+    timeout: NaN,
+  });
+
+  assert.strictEqual(config.timeout, undefined);
+});
+
 // Cleanup and summary
 cleanup();
 console.log(`\n${passed} passed, ${failed} failed`);

@@ -36,6 +36,12 @@ export interface BuildServerConfigOptions {
   transport?: TransportType;
   /** HTTP headers for remote servers */
   headers?: Record<string, string>;
+  /** Auth provider type (e.g., google_credentials) */
+  authProviderType?: string;
+  /** Comma-separated OAuth scopes or list of scopes */
+  oauthScopes?: string[];
+  /** Server connection timeout */
+  timeout?: number;
   /** Environment variables for local stdio servers */
   env?: Record<string, string>;
   /** Extra command arguments for local stdio servers */
@@ -60,14 +66,30 @@ export function buildServerConfig(
     const config: McpServerConfig = {
       type: options.transport ?? "http",
       url: parsed.value,
+      httpUrl: parsed.value, // support both naming styles (url / httpUrl)
     };
 
     if (options.headers && Object.keys(options.headers).length > 0) {
       config.headers = options.headers;
     }
 
+    if (options.authProviderType) {
+      config.authProviderType = options.authProviderType;
+    }
+
+    if (options.oauthScopes && options.oauthScopes.length > 0) {
+      config.oauth = {
+        scopes: options.oauthScopes,
+      };
+    }
+
+    if (options.timeout !== undefined && !isNaN(options.timeout)) {
+      config.timeout = options.timeout;
+    }
+
     return config;
   }
+
 
   if (parsed.type === "command") {
     let command: string;

@@ -226,6 +226,18 @@ function transformAntigravityConfig(
       serverUrl: config.url,
     };
 
+    if (config.authProviderType) {
+      remoteConfig.authProviderType = config.authProviderType;
+    }
+
+    if (config.oauth) {
+      remoteConfig.oauth = config.oauth;
+    }
+
+    if (config.timeout !== undefined) {
+      remoteConfig.timeout = config.timeout;
+    }
+
     if (config.headers && Object.keys(config.headers).length > 0) {
       remoteConfig.headers = config.headers;
     }
@@ -301,6 +313,40 @@ function resolveMcporterConfigPath(
     return globalJsoncPath;
   }
   return globalJsonPath;
+}
+
+function transformGeminiCliConfig(
+  _serverName: string,
+  config: McpServerConfig,
+): unknown {
+  if (!config) return config;
+
+  const url = config.url || config.httpUrl;
+  if (url) {
+    const remoteConfig: Record<string, unknown> = {
+      httpUrl: url,
+    };
+
+    if (config.authProviderType) {
+      remoteConfig.authProviderType = config.authProviderType;
+    }
+
+    if (config.oauth) {
+      remoteConfig.oauth = config.oauth;
+    }
+
+    if (config.timeout !== undefined && !isNaN(config.timeout)) {
+      remoteConfig.timeout = config.timeout;
+    }
+
+    if (config.headers && Object.keys(config.headers).length > 0) {
+      remoteConfig.headers = config.headers;
+    }
+
+    return remoteConfig;
+  }
+
+  return config;
 }
 
 export const agents: Record<AgentType, AgentConfig> = {
@@ -420,7 +466,9 @@ export const agents: Record<AgentType, AgentConfig> = {
     detectGlobalInstall: async () => {
       return existsSync(join(home, ".gemini"));
     },
+    transformConfig: transformGeminiCliConfig,
   },
+
 
   goose: {
     name: "goose",
