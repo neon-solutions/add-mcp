@@ -710,6 +710,26 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "ai.pyrimid/mcp",
+      "title": "Pyrimid",
+      "description": "Official Pyrimid MCP server for discovering paid AI and API products with x402 and Base USDC.",
+      "repository": {
+        "url": "https://github.com/pyrimid-ai/pyrimid",
+        "source": "github"
+      },
+      "version": "1.0.0",
+      "websiteUrl": "https://pyrimid.ai",
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://pyrimid.ai/api/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "io.github.railwayapp/mcp-server",
       "description": "Official Railway MCP server",
       "repository": {
