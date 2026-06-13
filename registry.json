@@ -1050,5 +1050,29 @@
       ],
       "title": "Vercel"
     }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.xquik/mcp",
+      "title": "Xquik",
+      "description": "Xquik MCP server for X data workflows, account monitoring, extraction jobs, and webhooks.",
+      "version": "1.0.0",
+      "websiteUrl": "https://docs.xquik.com/mcp/overview",
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://xquik.com/mcp",
+          "headers": [
+            {
+              "name": "X-API-Key",
+              "description": "Xquik API key.",
+              "isRequired": true,
+              "isSecret": true
+            }
+          ]
+        }
+      ]
+    }
   }
 ]
