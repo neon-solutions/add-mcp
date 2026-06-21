@@ -124,6 +124,10 @@ npx add-mcp https://mcp.example.com/sse --transport sse
 # Remote MCP server with auth header
 npx add-mcp https://mcp.example.com/mcp --header "Authorization: Bearer $TOKEN"
 
+# Remote server with a request timeout and OAuth scopes
+# (each agent only keeps the fields it supports; others are dropped with a warning)
+npx add-mcp https://mcp.example.com/mcp --timeout 30000 --scopes "read,write"
+
 # npm package (runs via npx)
 npx add-mcp @modelcontextprotocol/server-postgres
 
@@ -168,10 +172,29 @@ npx add-mcp https://mcp.example.com/mcp -a cursor -y --gitignore
 | `--type <type>`          | Alias for `--transport`                                                  |
 | `-h, --header <header>`  | HTTP header for remote servers (repeatable, `Key: Value`)                |
 | `--env <env>`            | Env var for local stdio servers (repeatable, `KEY=VALUE`)                |
+| `--timeout <ms>`         | Request timeout (ms) for remote servers (capability-gated, see below)    |
+| `--scopes <scopes>`      | OAuth scopes for remote servers, comma-separated (capability-gated)      |
+| `--oauth-scopes <scopes>`| Alias for `--scopes`                                                     |
 | `-n, --name <name>`      | Server name (auto-inferred if not provided)                              |
 | `-y, --yes`              | Skip all confirmation prompts                                            |
 | `--all`                  | Install to all agents                                                    |
 | `--gitignore`            | Add generated config files to `.gitignore`                               |
+
+#### Capability-gated fields (`--timeout`, `--scopes`)
+
+Not every MCP client understands every field. `add-mcp` keeps one canonical
+server config and each agent declares which optional fields it supports, mapping
+them into that client's native shape:
+
+| Field      | Flag             | Supported by                | Mapped to                          |
+| ---------- | ---------------- | --------------------------- | ---------------------------------- |
+| Timeout    | `--timeout`      | Claude Code, Gemini CLI     | `timeout` (milliseconds)           |
+| OAuth scopes | `--scopes`     | Cursor, Gemini CLI          | Cursor `auth.scopes`, Gemini `oauth.scopes` |
+
+When you target an agent that does not support a field, `add-mcp` drops it from
+that agent's config and prints a warning (e.g. _"request timeout is not
+supported by VS Code; dropped from that config."_). Other agents still receive
+it. Both flags apply to remote servers only.
 
 ### Transport Types
 

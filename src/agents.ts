@@ -72,6 +72,67 @@ const windsurfConfigPath = join(
   "mcp_config.json",
 );
 
+/**
+ * Build the spec-aligned remote shape shared by clients that consume MCP
+ * servers more or less verbatim (`{ type?, url, headers?, timeout? }`). Only
+ * keys with meaningful values are emitted so nothing unknown leaks through.
+ */
+function buildStandardRemote(config: McpServerConfig): Record<string, unknown> {
+  const remote: Record<string, unknown> = {};
+  if (config.type) remote.type = config.type;
+  if (config.url) remote.url = config.url;
+  if (config.headers && Object.keys(config.headers).length > 0) {
+    remote.headers = config.headers;
+  }
+  if (typeof config.timeout === "number") {
+    remote.timeout = config.timeout;
+  }
+  return remote;
+}
+
+/** Build the standard local (stdio) shape: `{ command, args, env? }`. */
+function buildStandardLocal(config: McpServerConfig): Record<string, unknown> {
+  const local: Record<string, unknown> = {
+    command: config.command,
+    args: config.args || [],
+  };
+  if (config.env && Object.keys(config.env).length > 0) {
+    local.env = config.env;
+  }
+  return local;
+}
+
+/**
+ * Default transform for spec-aligned clients (Claude Code, Claude Desktop, VS
+ * Code). Builds a fresh object with only known keys, so unsupported optional
+ * fields can never leak even though these clients otherwise mirror the schema.
+ */
+function transformStandardConfig(
+  _serverName: string,
+  config: McpServerConfig,
+): unknown {
+  return config.url ? buildStandardRemote(config) : buildStandardLocal(config);
+}
+
+/**
+ * Gemini CLI mirrors the standard shape but nests OAuth scopes under an
+ * `oauth.scopes` array (its documented location for remote auth scopes).
+ */
+function transformGeminiConfig(
+  _serverName: string,
+  config: McpServerConfig,
+): unknown {
+  if (!config.url) {
+    return buildStandardLocal(config);
+  }
+
+  const remote = buildStandardRemote(config);
+  if (config.oauthScopes && config.oauthScopes.length > 0) {
+    remote.oauth = { scopes: config.oauthScopes };
+  }
+  return remote;
+}
+
 function transformGooseConfig(
   serverName: string,
   config: McpServerConfig,
@@ -180,10 +241,14 @@ function transformCursorConfig(
       remoteConfig.headers = config.headers;
     }
 
+    if (config.oauthScopes && config.oauthScopes.length > 0) {
+      remoteConfig.auth = { scopes: config.oauthScopes };
+    }
+
     return remoteConfig;
   }
 
-  return config;
+  return buildStandardLocal(config);
 }
 
 function transformClineConfig(
@@ -312,6 +377,7 @@ export const agents: Record<AgentType, AgentConfig> = {
     configKey: "mcpServers",
     format: "json",
     supportedTransports: ["stdio", "http", "sse"],
+    supportedFields: [],
     detectGlobalInstall: async () => {
       return existsSync(join(home, ".gemini"));
     },
@@ -326,6 +392,7 @@ export const agents: Record<AgentType, AgentConfig> = {
     configKey: "mcpServers",
     format: "json",
     supportedTransports: ["stdio", "http", "sse"],
+    supportedFields: [],
     detectGlobalInstall: async () => {
       return existsSync(dirname(clineExtensionConfigPath));
     },
@@ -340,6 +407,7 @@ export const agents: Record<AgentType, AgentConfig> = {
     configKey: "mcpServers",
     format: "json",
     supportedTransports: ["stdio", "http", "sse"],
+    supportedFields: [],
     detectGlobalInstall: async () => {
       return existsSync(dirname(clineCliConfigPath));
     },
@@ -355,9 +423,11 @@ export const agents: Record<AgentType, AgentConfig> = {
     configKey: "mcpServers",
     format: "json",
     supportedTransports: ["stdio", "http", "sse"],
+    supportedFields: ["timeout"],
     detectGlobalInstall: async () => {
       return existsSync(join(home, ".claude"));
     },
+    transformConfig: transformStandardConfig,
   },
 
   "claude-desktop": {
@@ -368,11 +438,13 @@ export const agents: Record<AgentType, AgentConfig> = {
     configKey: "mcpServers",
     format: "json",
     supportedTransports: ["stdio"],
+    supportedFields: [],
     unsupportedTransportMessage:
       "Claude Desktop only supports local (stdio) servers via its config file. Add remote servers through Settings → Connectors in the app instead.",
     detectGlobalInstall: async () => {
       return existsSync(join(appSupport, "Claude"));
     },
+    transformConfig: transformStandardConfig,
   },
 
   codex: {
@@ -387,6 +459,7 @@ export const agents: Record<AgentType, AgentConfig> = {
     configKey: "mcp_servers",
     format: "toml",
     supportedTransports: ["stdio", "http", "sse"],
+    supportedFields: [],
     detectGlobalInstall: async () => {
       return existsSync(join(home, ".codex"));
     },
@@ -402,6 +475,7 @@ export const agents: Record<AgentType, AgentConfig> = {
     configKey: "mcpServers",
     format: "json",
     supportedTransports: ["stdio", "http", "sse"],
+    supportedFields: ["scopes"],
     detectGlobalInstall: async () => {
       return existsSync(join(home, ".cursor"));
     },
@@ -417,9 +491,11 @@ export const agents: Record<AgentType, AgentConfig> = {
     configKey: "mcpServers",
     format: "json",
     supportedTransports: ["stdio", "http", "sse"],
+    supportedFields: ["timeout", "scopes"],
     detectGlobalInstall: async () => {
       return existsSync(join(home, ".gemini"));
     },
+    transformConfig: transformGeminiConfig,
   },
 
   goose: {
@@ -430,6 +506,7 @@ export const agents: Record<AgentType, AgentConfig> = {
     configKey: "extensions",
     format: "yaml",
     supportedTransports: ["stdio", "http", "sse"],
+    supportedFields: [],
     detectGlobalInstall: async () => {
       return existsSync(gooseConfigPath);
     },
@@ -446,6 +523,7 @@ export const agents: Record<AgentType, AgentConfig> = {
     localConfigKey: "servers",
     format: "json",
     supportedTransports: ["stdio", "http", "sse"],
+    supportedFields: [],
     detectGlobalInstall: async () => {
       return existsSync(dirname(copilotConfigPath));
     },
@@ -461,10 +539,12 @@ export const agents: Record<AgentType, AgentConfig> = {
     configKey: "mcpServers",
     format: "json",
     supportedTransports: ["stdio", "http", "sse"],
+    supportedFields: [],
     detectGlobalInstall: async () => {
       return existsSync(join(home, ".mcporter"));
     },
     resolveConfigPath: resolveMcporterConfigPath,
+    transformConfig: transformStandardConfig,
   },
 
   opencode: {
@@ -476,6 +556,7 @@ export const agents: Record<AgentType, AgentConfig> = {
     configKey: "mcp",
     format: "json",
     supportedTransports: ["stdio", "http", "sse"],
+    supportedFields: [],
     detectGlobalInstall: async () => {
       return existsSync(join(home, ".config", "opencode"));
     },
@@ -491,9 +572,11 @@ export const agents: Record<AgentType, AgentConfig> = {
     configKey: "servers",
     format: "json",
     supportedTransports: ["stdio", "http", "sse"],
+    supportedFields: [],
     detectGlobalInstall: async () => {
       return existsSync(vscodePath);
     },
+    transformConfig: transformStandardConfig,
   },
 
   windsurf: {
@@ -504,6 +587,7 @@ export const agents: Record<AgentType, AgentConfig> = {
     configKey: "mcpServers",
     format: "json",
     supportedTransports: ["stdio", "http", "sse"],
+    supportedFields: [],
     detectGlobalInstall: async () => {
       return existsSync(join(home, ".codeium", "windsurf"));
     },
@@ -522,6 +606,7 @@ export const agents: Record<AgentType, AgentConfig> = {
     configKey: "context_servers",
     format: "json",
     supportedTransports: ["stdio", "http", "sse"],
+    supportedFields: [],
     detectGlobalInstall: async () => {
       const configDir =
         process.platform === "darwin" || process.platform === "win32"

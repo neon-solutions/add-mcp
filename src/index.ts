@@ -48,6 +48,7 @@ import {
   resolveArrayTemplates,
   resolveRecordTemplates,
 } from "./template.js";
+import { describeOptionalField, type OptionalField } from "./schema.js";
 
 import packageJson from "../package.json" with { type: "json" };
 
@@ -155,6 +156,9 @@ interface Options {
   header?: string[];
   env?: string[];
   args?: string[];
+  timeout?: string;
+  scopes?: string;
+  oauthScopes?: string;
   yes?: boolean;
   all?: boolean;
   gitignore?: boolean;
@@ -448,6 +452,15 @@ program
     collect,
     [],
   )
+  .option(
+    "--timeout <ms>",
+    "Request timeout in milliseconds for remote servers. Only applied to agents that support it (e.g. Claude Code, Gemini CLI); dropped with a warning elsewhere.",
+  )
+  .option(
+    "--scopes <scopes>",
+    "OAuth scopes to request for remote servers (comma-separated). Only applied to agents that support it (e.g. Cursor, Gemini CLI); dropped with a warning elsewhere.",
+  )
+  .option("--oauth-scopes <scopes>", "Alias for --scopes")
   .option("-y, --yes", "Skip confirmation prompts")
   .option("--all", "Install to all agents")
   .option("--gitignore", "Add generated project config files to .gitignore")
@@ -1418,6 +1431,44 @@ async function main(target: string | undefined, options: Options) {
     }
   }
 
+  // Handle remote-only --timeout flag
+  let resolvedTimeout: number | undefined;
+  if (options.timeout !== undefined) {
+    const parsedTimeout = Number(options.timeout);
+    if (!Number.isInteger(parsedTimeout) || parsedTimeout <= 0) {
+      p.log.error(
+        `Invalid --timeout value: ${options.timeout}. Provide a positive integer (milliseconds).`,
+      );
+      process.exit(1);
+    }
+    if (isRemote) {
+      resolvedTimeout = parsedTimeout;
+    } else {
+      p.log.warn("--timeout is only used for remote URLs, ignoring");
+    }
+  }
+
+  // Handle remote-only --scopes / --oauth-scopes flag
+  const scopesValue = options.scopes ?? options.oauthScopes;
+  let resolvedScopes: string[] | undefined;
+  if (scopesValue !== undefined) {
+    const parsedScopes = scopesValue
+      .split(",")
+      .map((scope) => scope.trim())
+      .filter((scope) => scope.length > 0);
+    if (parsedScopes.length === 0) {
+      p.log.error(
+        `Invalid --scopes value: ${scopesValue}. Provide one or more comma-separated scopes.`,
+      );
+      process.exit(1);
+    }
+    if (isRemote) {
+      resolvedScopes = parsedScopes;
+    } else {
+      p.log.warn("--scopes is only used for remote URLs, ignoring");
+    }
+  }
+
   // Build server config
   const serverConfig = buildServerConfig(parsed, {
     transport: resolvedTransport,
@@ -1430,6 +1481,8 @@ async function main(target: string | undefined, options: Options) {
         ? envForConfig
         : undefined,
     args: argsForConfig && argsForConfig.length > 0 ? argsForConfig : undefined,
+    timeout: resolvedTimeout,
+    oauthScopes: resolvedScopes,
   });
 
   // Determine target agents
@@ -1790,6 +1843,25 @@ async function main(target: string | undefined, options: Options) {
         `  ${chalk.red("✗")} ${agent.displayName}: ${chalk.dim(result.error)}`,
       );
     }
+  }
+
+  // Surface any optional fields that were dropped because an agent can't
+  // represent them, grouped by field for a concise message.
+  const droppedByField = new Map<OptionalField, string[]>();
+  for (const [agentType, result] of results) {
+    for (const field of result.droppedFields ?? []) {
+      const agentNames = droppedByField.get(field) ?? [];
+      agentNames.push(agents[agentType].displayName);
+      droppedByField.set(field, agentNames);
+    }
+  }
+
+  for (const [field, agentNames] of droppedByField) {
+    p.log.warn(
+      `${describeOptionalField(field)} is not supported by ${agentNames.join(", ")}; dropped from ${
+        agentNames.length === 1 ? "that config" : "those configs"
+      }.`,
+    );
   }
 
   if (options.gitignore && options.global) {

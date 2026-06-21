@@ -1290,6 +1290,103 @@ test("sync: prints already in sync when nothing to change", () => {
   assert.match(output, /already in sync/i);
 });
 
+test("E2E CLI: --timeout and --scopes map per agent and warn on drop", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "gemini-cli",
+      "-a",
+      "cursor",
+      "-a",
+      "vscode",
+      "-y",
+      "--name",
+      "scoped",
+      "--timeout",
+      "30000",
+      "--scopes",
+      "read,write",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  // Gemini: timeout + oauth.scopes
+  const gemini = JSON.parse(
+    readFileSync(join(projectDir, ".gemini", "settings.json"), "utf-8"),
+  );
+  const geminiServer = gemini.mcpServers.scoped as Record<string, unknown>;
+  assert.strictEqual(geminiServer.timeout, 30000);
+  assert.deepStrictEqual(geminiServer.oauth, { scopes: ["read", "write"] });
+
+  // Cursor: scopes -> auth.scopes, timeout dropped
+  const cursor = JSON.parse(
+    readFileSync(join(projectDir, ".cursor", "mcp.json"), "utf-8"),
+  );
+  const cursorServer = cursor.mcpServers.scoped as Record<string, unknown>;
+  assert.deepStrictEqual(cursorServer.auth, { scopes: ["read", "write"] });
+  assert.ok(!("timeout" in cursorServer));
+
+  // VS Code: both dropped, no raw fields
+  const vscode = JSON.parse(
+    readFileSync(join(projectDir, ".vscode", "mcp.json"), "utf-8"),
+  );
+  const vscodeServer = vscode.servers.scoped as Record<string, unknown>;
+  assert.ok(!("timeout" in vscodeServer));
+  assert.ok(!("oauthScopes" in vscodeServer));
+  assert.ok(!("auth" in vscodeServer));
+
+  // User is warned about dropped fields
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /request timeout is not supported by/i);
+  assert.match(output, /OAuth scopes is not supported by/i);
+});
+
+test("E2E CLI: --timeout with a package install warns and is ignored", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "mcp-server-postgres",
+      "-a",
+      "claude-code",
+      "-y",
+      "--name",
+      "pg",
+      "--timeout",
+      "5000",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const saved = JSON.parse(
+    readFileSync(join(projectDir, ".mcp.json"), "utf-8"),
+  );
+  const server = saved.mcpServers.pg as Record<string, unknown>;
+  assert.ok(!("timeout" in server), "timeout is remote-only");
+
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /--timeout is only used for remote URLs/i);
+});
+
 cleanup();
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);

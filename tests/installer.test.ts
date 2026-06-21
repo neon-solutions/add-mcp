@@ -20,10 +20,12 @@ import { join } from "node:path";
 import {
   buildServerConfig,
   installServer,
+  installServerForAgent,
   updateGitignoreWithPaths,
 } from "../src/installer.js";
 import { agents } from "../src/agents.js";
 import { parseSource } from "../src/source-parser.js";
+import { applyFieldSupport } from "../src/schema.js";
 import type { AgentType } from "../src/types.js";
 
 let passed = 0;
@@ -349,6 +351,167 @@ test("buildServerConfig - remote source ignores env", () => {
   assert.strictEqual(config.url, "https://mcp.example.com/api");
   assert.strictEqual(config.env, undefined);
   assert.strictEqual(config.args, undefined);
+});
+
+test("buildServerConfig - remote stores timeout and oauthScopes", () => {
+  const parsed = parseSource("https://mcp.example.com/mcp");
+  const config = buildServerConfig(parsed, {
+    timeout: 30000,
+    oauthScopes: ["read", "write"],
+  });
+
+  assert.strictEqual(config.timeout, 30000);
+  assert.deepStrictEqual(config.oauthScopes, ["read", "write"]);
+});
+
+test("buildServerConfig - package ignores timeout and oauthScopes", () => {
+  const parsed = parseSource("mcp-server-postgres");
+  const config = buildServerConfig(parsed, {
+    timeout: 30000,
+    oauthScopes: ["read"],
+  });
+
+  assert.strictEqual(config.timeout, undefined);
+  assert.strictEqual(config.oauthScopes, undefined);
+});
+
+// ============================================
+// Capability gating (applyFieldSupport)
+// ============================================
+
+test("applyFieldSupport - drops unsupported optional fields without mutating input", () => {
+  const original = {
+    type: "http" as const,
+    url: "https://mcp.example.com/mcp",
+    timeout: 30000,
+    oauthScopes: ["read", "write"],
+  };
+
+  const { config, dropped } = applyFieldSupport(original, ["scopes"]);
+
+  // timeout dropped (unsupported), scopes kept (supported)
+  assert.strictEqual(config.timeout, undefined);
+  assert.deepStrictEqual(config.oauthScopes, ["read", "write"]);
+  assert.deepStrictEqual(dropped, ["timeout"]);
+
+  // Input object is never mutated (it is reused across agents)
+  assert.strictEqual(original.timeout, 30000);
+  assert.deepStrictEqual(original.oauthScopes, ["read", "write"]);
+});
+
+test("applyFieldSupport - keeps all fields when fully supported", () => {
+  const { config, dropped } = applyFieldSupport(
+    {
+      type: "http",
+      url: "https://mcp.example.com/mcp",
+      timeout: 5000,
+      oauthScopes: ["read"],
+    },
+    ["timeout", "scopes"],
+  );
+
+  assert.strictEqual(config.timeout, 5000);
+  assert.deepStrictEqual(config.oauthScopes, ["read"]);
+  assert.deepStrictEqual(dropped, []);
+});
+
+// ============================================
+// Per-agent optional field mapping (no leaks)
+// ============================================
+
+function installRemoteWith(
+  agentType: AgentType,
+  tempDir: string,
+  extra: { timeout?: number; oauthScopes?: string[] },
+) {
+  const parsed = parseSource("https://mcp.example.com/mcp");
+  const config = buildServerConfig(parsed, extra);
+  return installServerForAgent("example", config, agentType, {
+    local: true,
+    cwd: tempDir,
+  });
+}
+
+test("installServerForAgent - Cursor maps scopes to auth.scopes", () => {
+  const tempDir = createTempDir();
+  const result = installRemoteWith("cursor", tempDir, {
+    oauthScopes: ["read", "write"],
+    timeout: 30000,
+  });
+  assert.ok(result.success);
+  // Cursor supports scopes but not timeout
+  assert.deepStrictEqual(result.droppedFields, ["timeout"]);
+
+  const saved = readJsonConfig(join(tempDir, ".cursor", "mcp.json"));
+  const server = (saved.mcpServers as Record<string, Record<string, unknown>>)
+    .example;
+  assert.ok(server);
+  assert.deepStrictEqual(server.auth, { scopes: ["read", "write"] });
+  assert.ok(!("timeout" in server), "timeout must not leak into Cursor config");
+  assert.ok(
+    !("oauthScopes" in server),
+    "raw oauthScopes must never be written",
+  );
+});
+
+test("installServerForAgent - Gemini maps scopes to oauth.scopes and keeps timeout", () => {
+  const tempDir = createTempDir();
+  const result = installRemoteWith("gemini-cli", tempDir, {
+    oauthScopes: ["https://example.com/scope"],
+    timeout: 30000,
+  });
+  assert.ok(result.success);
+  assert.strictEqual(result.droppedFields, undefined);
+
+  const saved = readJsonConfig(join(tempDir, ".gemini", "settings.json"));
+  const server = (saved.mcpServers as Record<string, Record<string, unknown>>)
+    .example;
+  assert.ok(server);
+  assert.deepStrictEqual(server.oauth, {
+    scopes: ["https://example.com/scope"],
+  });
+  assert.strictEqual(server.timeout, 30000);
+  assert.ok(
+    !("oauthScopes" in server),
+    "raw oauthScopes must never be written",
+  );
+});
+
+test("installServerForAgent - Claude Code keeps timeout, drops scopes", () => {
+  const tempDir = createTempDir();
+  const result = installRemoteWith("claude-code", tempDir, {
+    oauthScopes: ["read"],
+    timeout: 12000,
+  });
+  assert.ok(result.success);
+  assert.deepStrictEqual(result.droppedFields, ["scopes"]);
+
+  const saved = readJsonConfig(join(tempDir, ".mcp.json"));
+  const server = (saved.mcpServers as Record<string, Record<string, unknown>>)
+    .example;
+  assert.ok(server);
+  assert.strictEqual(server.timeout, 12000);
+  assert.ok(!("auth" in server));
+  assert.ok(!("oauth" in server));
+  assert.ok(!("oauthScopes" in server));
+});
+
+test("installServerForAgent - VS Code drops both timeout and scopes", () => {
+  const tempDir = createTempDir();
+  const result = installRemoteWith("vscode", tempDir, {
+    oauthScopes: ["read"],
+    timeout: 12000,
+  });
+  assert.ok(result.success);
+  assert.deepStrictEqual(result.droppedFields, ["timeout", "scopes"]);
+
+  const saved = readJsonConfig(join(tempDir, ".vscode", "mcp.json"));
+  const server = (saved.servers as Record<string, Record<string, unknown>>)
+    .example;
+  assert.ok(server);
+  assert.strictEqual(server.url, "https://mcp.example.com/mcp");
+  assert.ok(!("timeout" in server));
+  assert.ok(!("oauthScopes" in server));
 });
 
 // ============================================
