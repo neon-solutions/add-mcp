@@ -21,10 +21,9 @@ export {
   getAgentTypes,
 } from "./agents.js";
 
-export {
-  type InstallOptions,
-  type InstallResult,
-} from "./installer.js";
+export { type InstallOptions, type InstallResult } from "./installer.js";
+
+export { type OptionalField } from "./schema.js";
 
 export {
   listInstalledServers,

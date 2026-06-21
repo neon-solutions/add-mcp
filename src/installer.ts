@@ -10,6 +10,7 @@ import type {
 import { agents } from "./agents.js";
 import { writeConfig, buildConfigWithKey } from "./formats/index.js";
 import { looksLikePath } from "./source-parser.js";
+import { applyFieldSupport, type OptionalField } from "./schema.js";
 
 export interface InstallOptions {
   /** Install to local (project-level) config instead of global */
@@ -29,6 +30,11 @@ export interface InstallResult {
   success: boolean;
   path: string;
   error?: string;
+  /**
+   * Optional fields that were requested but dropped because the target agent
+   * does not support them. Empty/undefined when nothing was dropped.
+   */
+  droppedFields?: OptionalField[];
 }
 
 export interface BuildServerConfigOptions {
@@ -40,6 +46,10 @@ export interface BuildServerConfigOptions {
   env?: Record<string, string>;
   /** Extra command arguments for local stdio servers */
   args?: string[];
+  /** Request timeout in milliseconds for remote servers */
+  timeout?: number;
+  /** OAuth scopes to request for remote servers */
+  oauthScopes?: string[];
 }
 
 export interface UpdateGitignoreOptions {
@@ -64,6 +74,14 @@ export function buildServerConfig(
 
     if (options.headers && Object.keys(options.headers).length > 0) {
       config.headers = options.headers;
+    }
+
+    if (typeof options.timeout === "number") {
+      config.timeout = options.timeout;
+    }
+
+    if (options.oauthScopes && options.oauthScopes.length > 0) {
+      config.oauthScopes = options.oauthScopes;
     }
 
     return config;
@@ -217,11 +235,18 @@ export function installServerForAgent(
       mkdirSync(dir, { recursive: true });
     }
 
-    const transformedConfig = agent.transformConfig
-      ? agent.transformConfig(serverName, serverConfig, {
-          local: Boolean(options.local),
-        })
-      : serverConfig;
+    // Strip optional fields the agent can't represent, then transform the
+    // gated config into the agent's native schema. Because every transform
+    // builds a fresh object with only known keys, unsupported fields can never
+    // leak into the written config.
+    const { config: gatedConfig, dropped } = applyFieldSupport(
+      serverConfig,
+      agent.supportedFields,
+    );
+
+    const transformedConfig = agent.transformConfig(serverName, gatedConfig, {
+      local: Boolean(options.local),
+    });
 
     const configKey = getConfigKey(agent, options);
     const config = buildConfigWithKey(configKey, serverName, transformedConfig);
@@ -231,6 +256,7 @@ export function installServerForAgent(
     return {
       success: true,
       path: configPath,
+      ...(dropped.length > 0 ? { droppedFields: dropped } : {}),
     };
   } catch (error) {
     return {

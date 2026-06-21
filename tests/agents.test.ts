@@ -98,7 +98,39 @@ test("All agents have required properties", () => {
       typeof config.detectGlobalInstall === "function",
       `${type} missing detectGlobalInstall`,
     );
+    assert.ok(
+      Array.isArray(config.supportedFields),
+      `${type} missing supportedFields`,
+    );
+    assert.ok(
+      typeof config.transformConfig === "function",
+      `${type} missing required transformConfig`,
+    );
   }
+});
+
+test("Every agent declares a transformConfig so no raw config can leak", () => {
+  // transformConfig is required: a missing transform used to mean the raw
+  // McpServerConfig was written verbatim, which could leak unknown fields.
+  for (const type of getAgentTypes()) {
+    assert.strictEqual(
+      typeof agents[type].transformConfig,
+      "function",
+      `${type} must define transformConfig`,
+    );
+  }
+});
+
+test("supportedFields reflects per-client capabilities", () => {
+  assert.deepStrictEqual(agents.cursor.supportedFields, ["scopes"]);
+  assert.deepStrictEqual(agents["gemini-cli"].supportedFields, [
+    "timeout",
+    "scopes",
+  ]);
+  assert.deepStrictEqual(agents["claude-code"].supportedFields, ["timeout"]);
+  // Clients with no extra field support declare an empty list.
+  assert.deepStrictEqual(agents.vscode.supportedFields, []);
+  assert.deepStrictEqual(agents["claude-desktop"].supportedFields, []);
 });
 
 // ============================================

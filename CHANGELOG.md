@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.11.0] - 2026-06-20
+
+- add `--timeout <ms>` and `--scopes <scopes>` (alias `--oauth-scopes`) flags for remote servers. Fields are capability-gated per client and mapped to each client's native shape: `--timeout` → Claude Code / Gemini CLI `timeout`; `--scopes` → Cursor `auth.scopes` and Gemini CLI `oauth.scopes`. Agents that don't support a field have it dropped with a warning, so other agents still receive it ([#51](https://github.com/neon-solutions/add-mcp/issues/51))
+- make `transformConfig` required for every agent and gate writes through a single canonical schema, so only known fields are ever written to a client config (previously Claude Code, Claude Desktop, Gemini CLI, VS Code, and mcporter wrote the raw config and could leak unknown fields)
+
 ## [1.10.4] - 2026-05-23
 
 - add `-h` shorthand for `--header` (use `--help` for help)
