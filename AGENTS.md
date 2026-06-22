@@ -5,7 +5,7 @@ A CLI to install MCP servers for different coding agents (Claude Code, Cursor, V
 ## Dev environment
 
 - Use bun as package manager and to run package.json scripts
-- [Fallow](https://github.com/fallow-rs/fallow) is a dev dependency (`bun run fallow`). It reports unused code, duplication, and complexity across the repo. CI runs it in advisory mode (job does not fail on findings); fix what matters locally and ignore noise when appropriate.
+- [Fallow](https://github.com/fallow-rs/fallow) is a local dev dependency (`bun run fallow`). It reports unused code, duplication, and complexity across the repo; fix what matters locally and ignore noise when appropriate. It does not run in GitHub Actions.
 
 ## Changelog
 
@@ -24,7 +24,7 @@ A CLI to install MCP servers for different coding agents (Claude Code, Cursor, V
 9. **README** — update only if end users need to know about a new or changed feature.
 10. **PR** — push your branch and open a pull request against `main`.
 
-CI runs registry verification, typecheck, a subset of unit/e2e tests, build, and Fallow (advisory). Keep local runs of the full `test` script green before you rely on CI.
+CI runs registry verification, typecheck, a subset of unit/e2e tests, and build. Keep local runs of the full `test` script green before you rely on CI.
 
 ## Releasing
 
