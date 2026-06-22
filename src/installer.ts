@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import { homedir } from "os";
 import { join, dirname, isAbsolute, relative, sep } from "path";
 import type {
   AgentType,
@@ -11,6 +12,8 @@ import { agents } from "./agents.js";
 import { writeConfig, buildConfigWithKey } from "./formats/index.js";
 import { looksLikePath } from "./source-parser.js";
 import { applyFieldSupport, type OptionalField } from "./schema.js";
+
+const home = homedir();
 
 export interface InstallOptions {
   /** Install to local (project-level) config instead of global */
@@ -35,6 +38,12 @@ export interface InstallResult {
    * does not support them. Empty/undefined when nothing was dropped.
    */
   droppedFields?: OptionalField[];
+  /**
+   * Additional files written beyond the main config (e.g. a Claude Code
+   * permissions settings file for auto-approval). Surfaced so the CLI can
+   * report them and include them in `--gitignore`.
+   */
+  extraPaths?: string[];
 }
 
 export interface BuildServerConfigOptions {
@@ -50,6 +59,11 @@ export interface BuildServerConfigOptions {
   timeout?: number;
   /** OAuth scopes to request for remote servers */
   oauthScopes?: string[];
+  /**
+   * Tools to auto-approve for agents that support it. An empty array means
+   * "all tools". Applies to remote and local servers alike.
+   */
+  autoApproveTools?: string[];
 }
 
 export interface UpdateGitignoreOptions {
@@ -84,6 +98,10 @@ export function buildServerConfig(
       config.oauthScopes = options.oauthScopes;
     }
 
+    if (options.autoApproveTools) {
+      config.autoApproveTools = options.autoApproveTools;
+    }
+
     return config;
   }
 
@@ -113,6 +131,10 @@ export function buildServerConfig(
       config.env = options.env;
     }
 
+    if (options.autoApproveTools) {
+      config.autoApproveTools = options.autoApproveTools;
+    }
+
     return config;
   }
 
@@ -125,7 +147,111 @@ export function buildServerConfig(
     config.env = options.env;
   }
 
+  if (options.autoApproveTools) {
+    config.autoApproveTools = options.autoApproveTools;
+  }
+
   return config;
+}
+
+function readJsonObject(filePath: string): Record<string, unknown> {
+  if (!existsSync(filePath)) {
+    return {};
+  }
+  const parsed = JSON.parse(readFileSync(filePath, "utf-8")) as unknown;
+  return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+    ? (parsed as Record<string, unknown>)
+    : {};
+}
+
+function writeJsonObject(
+  filePath: string,
+  value: Record<string, unknown>,
+): void {
+  const dir = dirname(filePath);
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
+  }
+  writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`, "utf-8");
+}
+
+function addUniqueStrings(existing: unknown, additions: string[]): string[] {
+  const values = Array.isArray(existing)
+    ? existing.filter((value): value is string => typeof value === "string")
+    : [];
+  for (const addition of additions) {
+    if (!values.includes(addition)) {
+      values.push(addition);
+    }
+  }
+  return values;
+}
+
+/**
+ * Claude Code permission allow rules for auto-approval. An empty `tools` list
+ * means "all tools from this server" (`mcp__<server>`); otherwise each tool is
+ * its own fully-qualified rule (`mcp__<server>__<tool>`).
+ *
+ * Note: the all-tools form (`mcp__<server>`) is the documented Claude Code
+ * format, but there is a known Claude Code bug where non-fully-qualified MCP
+ * rules may still prompt at runtime (anthropics/claude-code#34739). Per-tool
+ * rules are the reliable path; we still emit the documented all-tools rule for
+ * `--auto-approve` without specific tools.
+ */
+function claudeAutoApproveRules(serverName: string, tools: string[]): string[] {
+  if (tools.length === 0) {
+    return [`mcp__${serverName}`];
+  }
+  return tools.map((tool) => `mcp__${serverName}__${tool}`);
+}
+
+function getClaudeCodeSettingsPath(options: InstallOptions = {}): string {
+  const local = Boolean(options.local);
+  const cwd = options.cwd || process.cwd();
+  // Local installs use the personal, git-ignored settings.local.json so a
+  // contributor's auto-approval choices aren't committed for the whole team.
+  return local
+    ? join(cwd, ".claude", "settings.local.json")
+    : join(home, ".claude", "settings.json");
+}
+
+interface ClaudeApprovalResult {
+  success: boolean;
+  path: string;
+  error?: string;
+}
+
+function installClaudeCodeAutoApproval(
+  serverName: string,
+  tools: string[],
+  options: InstallOptions = {},
+): ClaudeApprovalResult {
+  const settingsPath = getClaudeCodeSettingsPath(options);
+
+  try {
+    const settings = readJsonObject(settingsPath);
+    const permissions =
+      settings.permissions &&
+      typeof settings.permissions === "object" &&
+      !Array.isArray(settings.permissions)
+        ? (settings.permissions as Record<string, unknown>)
+        : {};
+
+    permissions.allow = addUniqueStrings(
+      permissions.allow,
+      claudeAutoApproveRules(serverName, tools),
+    );
+    settings.permissions = permissions;
+    writeJsonObject(settingsPath, settings);
+
+    return { success: true, path: settingsPath };
+  } catch (error) {
+    return {
+      success: false,
+      path: settingsPath,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
 }
 
 export function updateGitignoreWithPaths(
@@ -253,10 +379,31 @@ export function installServerForAgent(
 
     writeConfig(configPath, config, agent.format, configKey);
 
+    // Claude Code expresses auto-approval as permission rules in a separate
+    // settings file rather than inside the MCP server entry, so apply it as a
+    // side-effect once the (clean) server config is written.
+    const extraPaths: string[] = [];
+    if (agentType === "claude-code" && gatedConfig.autoApproveTools) {
+      const approval = installClaudeCodeAutoApproval(
+        serverName,
+        gatedConfig.autoApproveTools,
+        options,
+      );
+      if (!approval.success) {
+        return {
+          success: false,
+          path: approval.path,
+          error: approval.error,
+        };
+      }
+      extraPaths.push(approval.path);
+    }
+
     return {
       success: true,
       path: configPath,
       ...(dropped.length > 0 ? { droppedFields: dropped } : {}),
+      ...(extraPaths.length > 0 ? { extraPaths } : {}),
     };
   } catch (error) {
     return {

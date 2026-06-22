@@ -128,6 +128,12 @@ npx add-mcp https://mcp.example.com/mcp --header "Authorization: Bearer $TOKEN"
 # (each agent only keeps the fields it supports; others are dropped with a warning)
 npx add-mcp https://mcp.example.com/mcp --timeout 30000 --scopes "read,write"
 
+# Auto-approve all tools for agents that support it (Codex, Claude Code)
+npx add-mcp "executor mcp" --name executor -a codex -a claude-code --auto-approve
+
+# Auto-approve only selected tools
+npx add-mcp "executor mcp" --name executor -a codex --auto-approve --approve-tool execute
+
 # npm package (runs via npx)
 npx add-mcp @modelcontextprotocol/server-postgres
 
@@ -164,21 +170,23 @@ npx add-mcp https://mcp.example.com/mcp -a cursor -y --gitignore
 
 ### Options
 
-| Option                   | Description                                                              |
-| ------------------------ | ------------------------------------------------------------------------ |
-| `-g, --global`           | Install to user directory instead of project                             |
-| `-a, --agent <agent>`    | Target specific agents (e.g., `cursor`, `claude-code`). Can be repeated. |
-| `-t, --transport <type>` | Transport type for remote servers: `http` (default), `sse`               |
-| `--type <type>`          | Alias for `--transport`                                                  |
-| `-h, --header <header>`  | HTTP header for remote servers (repeatable, `Key: Value`)                |
-| `--env <env>`            | Env var for local stdio servers (repeatable, `KEY=VALUE`)                |
-| `--timeout <ms>`         | Request timeout (ms) for remote servers (capability-gated, see below)    |
-| `--scopes <scopes>`      | OAuth scopes for remote servers, comma-separated (capability-gated)      |
-| `--oauth-scopes <scopes>`| Alias for `--scopes`                                                     |
-| `-n, --name <name>`      | Server name (auto-inferred if not provided)                              |
-| `-y, --yes`              | Skip all confirmation prompts                                            |
-| `--all`                  | Install to all agents                                                    |
-| `--gitignore`            | Add generated config files to `.gitignore`                               |
+| Option                    | Description                                                              |
+| ------------------------- | ------------------------------------------------------------------------ |
+| `-g, --global`            | Install to user directory instead of project                             |
+| `-a, --agent <agent>`     | Target specific agents (e.g., `cursor`, `claude-code`). Can be repeated. |
+| `-t, --transport <type>`  | Transport type for remote servers: `http` (default), `sse`               |
+| `--type <type>`           | Alias for `--transport`                                                  |
+| `-h, --header <header>`   | HTTP header for remote servers (repeatable, `Key: Value`)                |
+| `--env <env>`             | Env var for local stdio servers (repeatable, `KEY=VALUE`)                |
+| `--timeout <ms>`          | Request timeout (ms) for remote servers (capability-gated, see below)    |
+| `--scopes <scopes>`       | OAuth scopes for remote servers, comma-separated (capability-gated)      |
+| `--oauth-scopes <scopes>` | Alias for `--scopes`                                                     |
+| `--auto-approve`          | Auto-approve MCP tool calls for supported agents (Codex, Claude Code)    |
+| `--approve-tool <tool>`   | Tool to auto-approve with `--auto-approve` (repeatable; defaults to all) |
+| `-n, --name <name>`       | Server name (auto-inferred if not provided)                              |
+| `-y, --yes`               | Skip all confirmation prompts                                            |
+| `--all`                   | Install to all agents                                                    |
+| `--gitignore`             | Add generated config files to `.gitignore`                               |
 
 #### Capability-gated fields (`--timeout`, `--scopes`)
 
@@ -186,15 +194,36 @@ Not every MCP client understands every field. `add-mcp` keeps one canonical
 server config and each agent declares which optional fields it supports, mapping
 them into that client's native shape:
 
-| Field      | Flag             | Supported by                | Mapped to                          |
-| ---------- | ---------------- | --------------------------- | ---------------------------------- |
-| Timeout    | `--timeout`      | Claude Code, Gemini CLI     | `timeout` (milliseconds)           |
-| OAuth scopes | `--scopes`     | Cursor, Gemini CLI          | Cursor `auth.scopes`, Gemini `oauth.scopes` |
+| Field              | Flag                                | Supported by            | Mapped to                                                |
+| ------------------ | ----------------------------------- | ----------------------- | -------------------------------------------------------- |
+| Timeout            | `--timeout`                         | Claude Code, Gemini CLI | `timeout` (milliseconds)                                 |
+| OAuth scopes       | `--scopes`                          | Cursor, Gemini CLI      | Cursor `auth.scopes`, Gemini `oauth.scopes`              |
+| Tool auto-approval | `--auto-approve` / `--approve-tool` | Codex, Claude Code      | Codex approval modes; Claude Code permission allow rules |
 
 When you target an agent that does not support a field, `add-mcp` drops it from
 that agent's config and prints a warning (e.g. _"request timeout is not
 supported by VS Code; dropped from that config."_). Other agents still receive
-it. Both flags apply to remote servers only.
+it. `--timeout` and `--scopes` apply to remote servers only; `--auto-approve`
+applies to both remote and local servers.
+
+#### Auto-approving tool calls (`--auto-approve`)
+
+`--auto-approve` preconfigures agent-level approval so the agent doesn't prompt
+before each MCP tool call — useful for servers that already gate actions
+internally. Use `--approve-tool <name>` (repeatable) to approve only specific
+tools; without it, all tools are approved.
+
+- **Codex** — writes approval modes into `config.toml`: per-tool
+  `tools.<name>.approval_mode = "approve"`, or `default_tools_approval_mode = "approve"` for all tools.
+- **Claude Code** — writes permission allow rules to a separate settings file
+  (`.claude/settings.local.json` for project installs, `~/.claude/settings.json`
+  for global), e.g. `mcp__<server>__<tool>`, or `mcp__<server>` for all tools.
+  The MCP server entry itself stays clean.
+
+> Note: Claude Code's all-tools rule (`mcp__<server>`) follows the documented
+> format, but a known Claude Code bug ([#34739](https://github.com/anthropics/claude-code/issues/34739))
+> can still prompt for non-fully-qualified MCP rules. Listing tools explicitly
+> with `--approve-tool` is the most reliable path there.
 
 ### Transport Types
 
@@ -232,14 +261,16 @@ npx add-mcp find github --all --gitignore
 
 ### Options
 
-| Option                | Description                                                              |
-| --------------------- | ------------------------------------------------------------------------ |
-| `-g, --global`        | Install to user directory instead of project                             |
-| `-a, --agent <agent>` | Target specific agents (e.g., `cursor`, `claude-code`). Can be repeated. |
-| `-n, --name <name>`   | Server name override (defaults to the selected catalog entry name)       |
-| `-y, --yes`           | Skip confirmation prompts                                                |
-| `--all`               | Install to all agents                                                    |
-| `--gitignore`         | Add generated config files to `.gitignore`                               |
+| Option                  | Description                                                              |
+| ----------------------- | ------------------------------------------------------------------------ |
+| `-g, --global`          | Install to user directory instead of project                             |
+| `-a, --agent <agent>`   | Target specific agents (e.g., `cursor`, `claude-code`). Can be repeated. |
+| `-n, --name <name>`     | Server name override (defaults to the selected catalog entry name)       |
+| `-y, --yes`             | Skip confirmation prompts                                                |
+| `--auto-approve`        | Auto-approve MCP tool calls for supported agents (Codex, Claude Code)    |
+| `--approve-tool <tool>` | Tool to auto-approve with `--auto-approve` (repeatable; defaults to all) |
+| `--all`                 | Install to all agents                                                    |
+| `--gitignore`           | Add generated config files to `.gitignore`                               |
 
 Transport for `find`/`search` is inferred from registry metadata. The CLI prefers HTTP remotes when available and only falls back to SSE when HTTP is not available for the selected install context.
 

@@ -10,7 +10,7 @@ import type { McpServerConfig } from "./types.js";
  * before its transform runs, guaranteeing that only known fields are ever
  * written to a client config.
  */
-export type OptionalField = "timeout" | "scopes";
+export type OptionalField = "timeout" | "scopes" | "autoApprove";
 
 interface OptionalFieldSpec {
   /** Human-friendly label used in user-facing "dropped" warnings. */
@@ -35,6 +35,15 @@ const OPTIONAL_FIELD_SPECS: Record<OptionalField, OptionalFieldSpec> = {
       Array.isArray(config.oauthScopes) && config.oauthScopes.length > 0,
     clear: (config) => {
       delete config.oauthScopes;
+    },
+  },
+  autoApprove: {
+    label: "tool auto-approval",
+    // An empty array is meaningful ("approve all tools"), so presence alone
+    // counts as set — unlike scopes where an empty list means "nothing".
+    isSet: (config) => Array.isArray(config.autoApproveTools),
+    clear: (config) => {
+      delete config.autoApproveTools;
     },
   },
 };
@@ -72,6 +81,7 @@ export function applyFieldSupport(
   // Defensively clone the containers we might clear so we never touch the
   // caller's nested objects/arrays.
   if (copy.oauthScopes) copy.oauthScopes = [...copy.oauthScopes];
+  if (copy.autoApproveTools) copy.autoApproveTools = [...copy.autoApproveTools];
 
   const dropped: OptionalField[] = [];
   for (const field of ALL_OPTIONAL_FIELDS) {

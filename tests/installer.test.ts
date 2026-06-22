@@ -26,6 +26,7 @@ import {
 import { agents } from "../src/agents.js";
 import { parseSource } from "../src/source-parser.js";
 import { applyFieldSupport } from "../src/schema.js";
+import * as TOML from "@iarna/toml";
 import type { AgentType } from "../src/types.js";
 
 let passed = 0;
@@ -64,6 +65,10 @@ function cleanup() {
 function readJsonConfig(filePath: string): Record<string, unknown> {
   const content = readFileSync(filePath, "utf-8");
   return JSON.parse(content);
+}
+
+function readTomlConfig(filePath: string): Record<string, unknown> {
+  return TOML.parse(readFileSync(filePath, "utf-8")) as Record<string, unknown>;
 }
 
 // buildServerConfig tests - Remote
@@ -512,6 +517,157 @@ test("installServerForAgent - VS Code drops both timeout and scopes", () => {
   assert.strictEqual(server.url, "https://mcp.example.com/mcp");
   assert.ok(!("timeout" in server));
   assert.ok(!("oauthScopes" in server));
+});
+
+// ============================================
+// Auto-approval (Codex + Claude Code)
+// ============================================
+
+test("applyFieldSupport - empty autoApproveTools (all tools) is kept when supported", () => {
+  const { config, dropped } = applyFieldSupport(
+    { command: "x", args: [], autoApproveTools: [] },
+    ["autoApprove"],
+  );
+  assert.deepStrictEqual(config.autoApproveTools, []);
+  assert.deepStrictEqual(dropped, []);
+});
+
+test("applyFieldSupport - autoApprove dropped (and reported) when unsupported, input untouched", () => {
+  const original = { command: "x", args: [], autoApproveTools: ["run"] };
+  const { config, dropped } = applyFieldSupport(original, []);
+  assert.strictEqual(config.autoApproveTools, undefined);
+  assert.deepStrictEqual(dropped, ["autoApprove"]);
+  assert.deepStrictEqual(original.autoApproveTools, ["run"]);
+});
+
+test("installServerForAgent - Codex auto-approve selected tools writes per-tool approval", () => {
+  const tempDir = createTempDir();
+  const config = buildServerConfig(parseSource("executor mcp"), {
+    autoApproveTools: ["execute"],
+  });
+  const result = installServerForAgent("executor", config, "codex", {
+    local: true,
+    cwd: tempDir,
+  });
+  assert.ok(result.success);
+  assert.strictEqual(result.droppedFields, undefined);
+
+  const saved = readTomlConfig(join(tempDir, ".codex", "config.toml"));
+  const server = (saved.mcp_servers as Record<string, Record<string, unknown>>)
+    .executor;
+  assert.ok(server);
+  assert.deepStrictEqual(server.tools, {
+    execute: { approval_mode: "approve" },
+  });
+  assert.ok(!("autoApproveTools" in server), "directive must never be written");
+});
+
+test("installServerForAgent - Codex auto-approve all tools writes server default", () => {
+  const tempDir = createTempDir();
+  const config = buildServerConfig(parseSource("executor mcp"), {
+    autoApproveTools: [],
+  });
+  const result = installServerForAgent("executor", config, "codex", {
+    local: true,
+    cwd: tempDir,
+  });
+  assert.ok(result.success);
+
+  const saved = readTomlConfig(join(tempDir, ".codex", "config.toml"));
+  const server = (saved.mcp_servers as Record<string, Record<string, unknown>>)
+    .executor;
+  assert.ok(server);
+  assert.strictEqual(server.default_tools_approval_mode, "approve");
+});
+
+test("installServerForAgent - Claude Code auto-approve writes settings.local.json + extraPaths", () => {
+  const tempDir = createTempDir();
+  const config = buildServerConfig(parseSource("executor mcp"), {
+    autoApproveTools: ["execute"],
+  });
+  const result = installServerForAgent("executor", config, "claude-code", {
+    local: true,
+    cwd: tempDir,
+  });
+  assert.ok(result.success);
+
+  // Server config stays clean (no permission/directive leakage)
+  const mcp = readJsonConfig(join(tempDir, ".mcp.json"));
+  const server = (mcp.mcpServers as Record<string, Record<string, unknown>>)
+    .executor;
+  assert.ok(server);
+  assert.ok(!("autoApproveTools" in server));
+  assert.ok(!("permissions" in server));
+
+  // Permissions live in the separate settings file, surfaced via extraPaths
+  const settingsPath = join(tempDir, ".claude", "settings.local.json");
+  assert.deepStrictEqual(result.extraPaths, [settingsPath]);
+  const settings = readJsonConfig(settingsPath);
+  const permissions = settings.permissions as Record<string, unknown>;
+  assert.deepStrictEqual(permissions.allow, ["mcp__executor__execute"]);
+});
+
+test("installServerForAgent - Claude Code auto-approve all tools uses server-level rule", () => {
+  const tempDir = createTempDir();
+  const config = buildServerConfig(parseSource("executor mcp"), {
+    autoApproveTools: [],
+  });
+  const result = installServerForAgent("executor", config, "claude-code", {
+    local: true,
+    cwd: tempDir,
+  });
+  assert.ok(result.success);
+
+  const settings = readJsonConfig(
+    join(tempDir, ".claude", "settings.local.json"),
+  );
+  const permissions = settings.permissions as Record<string, unknown>;
+  assert.deepStrictEqual(permissions.allow, ["mcp__executor"]);
+});
+
+test("installServerForAgent - Claude Code auto-approve merges into existing permissions", () => {
+  const tempDir = createTempDir();
+  const settingsPath = join(tempDir, ".claude", "settings.local.json");
+  mkdirSync(join(tempDir, ".claude"), { recursive: true });
+  writeFileSync(
+    settingsPath,
+    JSON.stringify({ permissions: { allow: ["Bash(ls)"] } }),
+  );
+
+  const config = buildServerConfig(parseSource("executor mcp"), {
+    autoApproveTools: ["execute"],
+  });
+  installServerForAgent("executor", config, "claude-code", {
+    local: true,
+    cwd: tempDir,
+  });
+
+  const settings = readJsonConfig(settingsPath);
+  const permissions = settings.permissions as Record<string, unknown>;
+  assert.deepStrictEqual(permissions.allow, [
+    "Bash(ls)",
+    "mcp__executor__execute",
+  ]);
+});
+
+test("installServerForAgent - unsupported agent drops autoApprove with no leak", () => {
+  const tempDir = createTempDir();
+  const config = buildServerConfig(parseSource("https://mcp.example.com/mcp"), {
+    autoApproveTools: ["execute"],
+  });
+  const result = installServerForAgent("example", config, "cursor", {
+    local: true,
+    cwd: tempDir,
+  });
+  assert.ok(result.success);
+  assert.deepStrictEqual(result.droppedFields, ["autoApprove"]);
+
+  const saved = readJsonConfig(join(tempDir, ".cursor", "mcp.json"));
+  const server = (saved.mcpServers as Record<string, Record<string, unknown>>)
+    .example;
+  assert.ok(server);
+  assert.ok(!("autoApproveTools" in server));
+  assert.ok(!("tools" in server));
 });
 
 // ============================================

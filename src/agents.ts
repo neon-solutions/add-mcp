@@ -204,6 +204,30 @@ function transformOpenCodeConfig(
   };
 }
 
+/**
+ * Apply Codex MCP approval config to a server table. Codex resolves approval
+ * per-tool first, then falls back to the server-level default:
+ *   - all tools  -> `default_tools_approval_mode = "approve"`
+ *   - some tools -> `tools.<name>.approval_mode = "approve"`
+ * See https://developers.openai.com/codex/mcp.
+ */
+function applyCodexApproval(
+  target: Record<string, unknown>,
+  autoApproveTools: string[] | undefined,
+): Record<string, unknown> {
+  if (!autoApproveTools) return target;
+
+  if (autoApproveTools.length === 0) {
+    target.default_tools_approval_mode = "approve";
+    return target;
+  }
+
+  target.tools = Object.fromEntries(
+    autoApproveTools.map((tool) => [tool, { approval_mode: "approve" }]),
+  );
+  return target;
+}
+
 function transformCodexConfig(
   _serverName: string,
   config: McpServerConfig,
@@ -218,14 +242,17 @@ function transformCodexConfig(
       remoteConfig.http_headers = config.headers;
     }
 
-    return remoteConfig;
+    return applyCodexApproval(remoteConfig, config.autoApproveTools);
   }
 
-  return {
-    command: config.command,
-    args: config.args || [],
-    env: config.env,
-  };
+  return applyCodexApproval(
+    {
+      command: config.command,
+      args: config.args || [],
+      env: config.env,
+    },
+    config.autoApproveTools,
+  );
 }
 
 function transformCursorConfig(
@@ -423,7 +450,7 @@ export const agents: Record<AgentType, AgentConfig> = {
     configKey: "mcpServers",
     format: "json",
     supportedTransports: ["stdio", "http", "sse"],
-    supportedFields: ["timeout"],
+    supportedFields: ["timeout", "autoApprove"],
     detectGlobalInstall: async () => {
       return existsSync(join(home, ".claude"));
     },
@@ -459,7 +486,7 @@ export const agents: Record<AgentType, AgentConfig> = {
     configKey: "mcp_servers",
     format: "toml",
     supportedTransports: ["stdio", "http", "sse"],
-    supportedFields: [],
+    supportedFields: ["autoApprove"],
     detectGlobalInstall: async () => {
       return existsSync(join(home, ".codex"));
     },

@@ -14,6 +14,7 @@ import { join, dirname } from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import yaml from "js-yaml";
+import * as TOML from "@iarna/toml";
 
 let passed = 0;
 let failed = 0;
@@ -1385,6 +1386,182 @@ test("E2E CLI: --timeout with a package install warns and is ignored", () => {
 
   const output = `${result.stdout}\n${result.stderr}`;
   assert.match(output, /--timeout is only used for remote URLs/i);
+});
+
+test("E2E CLI: Codex auto-approve selected tool writes per-tool approval", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "executor mcp",
+      "-a",
+      "codex",
+      "-y",
+      "--name",
+      "executor",
+      "--auto-approve",
+      "--approve-tool",
+      "execute",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const saved = TOML.parse(
+    readFileSync(join(projectDir, ".codex", "config.toml"), "utf-8"),
+  ) as Record<string, unknown>;
+  const executor = (
+    saved.mcp_servers as Record<string, Record<string, unknown>>
+  ).executor;
+  assert.ok(executor);
+  const tools = executor.tools as Record<string, unknown>;
+  assert.deepStrictEqual(tools.execute, { approval_mode: "approve" });
+});
+
+test("E2E CLI: Codex --auto-approve (all tools) writes server default", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "executor mcp",
+      "-a",
+      "codex",
+      "-y",
+      "--name",
+      "executor",
+      "--auto-approve",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const saved = TOML.parse(
+    readFileSync(join(projectDir, ".codex", "config.toml"), "utf-8"),
+  ) as Record<string, unknown>;
+  const executor = (
+    saved.mcp_servers as Record<string, Record<string, unknown>>
+  ).executor;
+  assert.ok(executor);
+  assert.strictEqual(executor.default_tools_approval_mode, "approve");
+});
+
+test("E2E CLI: Claude Code auto-approve selected tool writes settings.local.json", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "executor mcp",
+      "-a",
+      "claude-code",
+      "-y",
+      "--name",
+      "executor",
+      "--auto-approve",
+      "--approve-tool",
+      "execute",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  // MCP server config stays clean
+  const mcp = JSON.parse(readFileSync(join(projectDir, ".mcp.json"), "utf-8"));
+  const server = mcp.mcpServers.executor as Record<string, unknown>;
+  assert.ok(!("autoApproveTools" in server));
+
+  // Approval lands in the separate settings file
+  const settings = JSON.parse(
+    readFileSync(join(projectDir, ".claude", "settings.local.json"), "utf-8"),
+  ) as Record<string, unknown>;
+  const permissions = settings.permissions as Record<string, unknown>;
+  assert.deepStrictEqual(permissions.allow, ["mcp__executor__execute"]);
+});
+
+test("E2E CLI: Claude Code --auto-approve (all tools) writes server-level rule", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "executor mcp",
+      "-a",
+      "claude-code",
+      "-y",
+      "--name",
+      "executor",
+      "--auto-approve",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const settings = JSON.parse(
+    readFileSync(join(projectDir, ".claude", "settings.local.json"), "utf-8"),
+  ) as Record<string, unknown>;
+  const permissions = settings.permissions as Record<string, unknown>;
+  assert.deepStrictEqual(permissions.allow, ["mcp__executor"]);
+});
+
+test("E2E CLI: auto-approve on an unsupported agent warns and writes no approval", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "cursor",
+      "-y",
+      "--name",
+      "remote",
+      "--auto-approve",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const cursor = JSON.parse(
+    readFileSync(join(projectDir, ".cursor", "mcp.json"), "utf-8"),
+  );
+  const server = cursor.mcpServers.remote as Record<string, unknown>;
+  assert.ok(!("autoApproveTools" in server));
+  assert.ok(!("tools" in server));
+
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /tool auto-approval is not supported by Cursor/i);
 });
 
 cleanup();
