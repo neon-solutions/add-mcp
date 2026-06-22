@@ -127,7 +127,11 @@ test("supportedFields reflects per-client capabilities", () => {
     "timeout",
     "scopes",
   ]);
-  assert.deepStrictEqual(agents["claude-code"].supportedFields, ["timeout"]);
+  assert.deepStrictEqual(agents["claude-code"].supportedFields, [
+    "timeout",
+    "autoApprove",
+  ]);
+  assert.deepStrictEqual(agents.codex.supportedFields, ["autoApprove"]);
   // Clients with no extra field support declare an empty list.
   assert.deepStrictEqual(agents.vscode.supportedFields, []);
   assert.deepStrictEqual(agents["claude-desktop"].supportedFields, []);

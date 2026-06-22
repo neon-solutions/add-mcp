@@ -159,6 +159,8 @@ interface Options {
   timeout?: string;
   scopes?: string;
   oauthScopes?: string;
+  autoApprove?: boolean;
+  approveTool?: string[];
   yes?: boolean;
   all?: boolean;
   gitignore?: boolean;
@@ -244,6 +246,25 @@ function extractSubcommandOptionsFromArgv(): Partial<Options> {
     }
     if (arg === "--gitignore") {
       result.gitignore = true;
+      continue;
+    }
+    if (arg === "--auto-approve") {
+      result.autoApprove = true;
+      continue;
+    }
+    if (arg === "--approve-tool") {
+      const tools: string[] = result.approveTool ? [...result.approveTool] : [];
+      let j = i + 1;
+      while (j < argv.length) {
+        const value = argv[j];
+        if (!value || value.startsWith("-")) break;
+        tools.push(value);
+        j += 1;
+      }
+      if (tools.length > 0) {
+        result.approveTool = tools;
+      }
+      i = j - 1;
       continue;
     }
     if ((arg === "-h" || arg === "--header") && argv[i + 1]) {
@@ -461,6 +482,16 @@ program
     "OAuth scopes to request for remote servers (comma-separated). Only applied to agents that support it (e.g. Cursor, Gemini CLI); dropped with a warning elsewhere.",
   )
   .option("--oauth-scopes <scopes>", "Alias for --scopes")
+  .option(
+    "--auto-approve",
+    "Auto-approve MCP tool calls for agents that support it (Codex, Claude Code). Dropped with a warning for other agents.",
+  )
+  .option(
+    "--approve-tool <tool>",
+    "Tool name to auto-approve when --auto-approve is set (repeatable; defaults to all tools)",
+    collect,
+    [],
+  )
   .option("-y, --yes", "Skip confirmation prompts")
   .option("--all", "Install to all agents")
   .option("--gitignore", "Add generated project config files to .gitignore")
@@ -535,6 +566,16 @@ program
     "Server name override (defaults to catalog entry name)",
   )
   .option("-y, --yes", "Skip confirmation prompts")
+  .option(
+    "--auto-approve",
+    "Auto-approve MCP tool calls for agents that support it (Codex, Claude Code)",
+  )
+  .option(
+    "--approve-tool <tool>",
+    "Tool name to auto-approve when --auto-approve is set (repeatable; defaults to all tools)",
+    collect,
+    [],
+  )
   .option("--all", "Install to all agents")
   .option("--gitignore", "Add generated project config files to .gitignore")
   .action(
@@ -559,6 +600,16 @@ program
     "Server name override (defaults to catalog entry name)",
   )
   .option("-y, --yes", "Skip confirmation prompts")
+  .option(
+    "--auto-approve",
+    "Auto-approve MCP tool calls for agents that support it (Codex, Claude Code)",
+  )
+  .option(
+    "--approve-tool <tool>",
+    "Tool name to auto-approve when --auto-approve is set (repeatable; defaults to all tools)",
+    collect,
+    [],
+  )
   .option("--all", "Install to all agents")
   .option("--gitignore", "Add generated project config files to .gitignore")
   .action(
@@ -1469,6 +1520,12 @@ async function main(target: string | undefined, options: Options) {
     }
   }
 
+  // Handle --auto-approve / --approve-tool (applies to remote and local).
+  // An empty list means "all tools"; --approve-tool implies --auto-approve.
+  const approveTools = [...new Set(options.approveTool ?? [])];
+  const autoApproveTools =
+    options.autoApprove || approveTools.length > 0 ? approveTools : undefined;
+
   // Build server config
   const serverConfig = buildServerConfig(parsed, {
     transport: resolvedTransport,
@@ -1483,6 +1540,7 @@ async function main(target: string | undefined, options: Options) {
     args: argsForConfig && argsForConfig.length > 0 ? argsForConfig : undefined,
     timeout: resolvedTimeout,
     oauthScopes: resolvedScopes,
+    autoApproveTools,
   });
 
   // Determine target agents
@@ -1753,6 +1811,15 @@ async function main(target: string | undefined, options: Options) {
   const summaryLines: string[] = [];
   summaryLines.push(`${chalk.cyan("Server:")} ${serverName}`);
   summaryLines.push(`${chalk.cyan("Type:")} ${sourceType}`);
+  if (autoApproveTools) {
+    summaryLines.push(
+      `${chalk.cyan("Auto-approve:")} ${
+        autoApproveTools.length === 0
+          ? "All tools"
+          : autoApproveTools.join(", ")
+      }`,
+    );
+  }
 
   // Determine scope display
   const localAgents = targetAgents.filter(
@@ -1820,6 +1887,11 @@ async function main(target: string | undefined, options: Options) {
       resultLines.push(
         `${chalk.green("✓")} ${agent.displayName}: ${chalk.dim(shortPath)}`,
       );
+      for (const extraPath of result.extraPaths ?? []) {
+        resultLines.push(
+          `  ${chalk.dim("↳ permissions:")} ${chalk.dim(shortenPath(extraPath))}`,
+        );
+      }
     }
 
     p.note(
@@ -1869,7 +1941,10 @@ async function main(target: string | undefined, options: Options) {
       "--gitignore is only supported for project-scoped installations; ignoring.",
     );
   } else if (options.gitignore) {
-    const successfulPaths = successful.map(([_, result]) => result.path);
+    const successfulPaths = successful.flatMap(([_, result]) => [
+      result.path,
+      ...(result.extraPaths ?? []),
+    ]);
     const gitignoreUpdate = updateGitignoreWithPaths(successfulPaths);
     if (gitignoreUpdate.added.length > 0) {
       p.log.info(

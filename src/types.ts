@@ -108,6 +108,15 @@ export interface McpServerConfig {
    * their own native shape (e.g. Cursor `auth.scopes`, Gemini `oauth.scopes`).
    */
   oauthScopes?: string[];
+  /**
+   * Tools to auto-approve (skip the agent's per-call approval prompt). An empty
+   * array means "all tools". This is an install directive rather than a literal
+   * server-config key: capability-gated via `"autoApprove"` in `supportedFields`
+   * and each supporting agent applies it in its own way (e.g. Codex emits
+   * approval modes in its config; Claude Code writes permission allow rules to a
+   * separate settings file). It is never written into a server entry verbatim.
+   */
+  autoApproveTools?: string[];
 }
 
 export interface ConfigFile {
