@@ -48,6 +48,18 @@ const antigravityConfigPath = join(
   "antigravity",
   "mcp_config.json",
 );
+const antigravityIdeConfigPath = join(
+  home,
+  ".gemini",
+  "antigravity-ide",
+  "mcp_config.json",
+);
+const antigravityCliConfigPath = join(
+  home,
+  ".gemini",
+  "antigravity-cli",
+  "mcp_config.json",
+);
 const clineCliConfigPath = join(
   process.env.CLINE_DIR || join(home, ".cline"),
   "data",
@@ -406,7 +418,37 @@ export const agents: Record<AgentType, AgentConfig> = {
     supportedTransports: ["stdio", "http", "sse"],
     supportedFields: [],
     detectGlobalInstall: async () => {
-      return existsSync(join(home, ".gemini"));
+      return existsSync(join(home, ".gemini", "antigravity"));
+    },
+    transformConfig: transformAntigravityConfig,
+  },
+
+  "antigravity-ide": {
+    name: "antigravity-ide",
+    displayName: "Antigravity IDE",
+    configPath: antigravityIdeConfigPath,
+    projectDetectPaths: [], // Global only - no project support
+    configKey: "mcpServers",
+    format: "json",
+    supportedTransports: ["stdio", "http", "sse"],
+    supportedFields: [],
+    detectGlobalInstall: async () => {
+      return existsSync(join(home, ".gemini", "antigravity-ide"));
+    },
+    transformConfig: transformAntigravityConfig,
+  },
+
+  "antigravity-cli": {
+    name: "antigravity-cli",
+    displayName: "Antigravity CLI",
+    configPath: antigravityCliConfigPath,
+    projectDetectPaths: [], // Global only - no project support
+    configKey: "mcpServers",
+    format: "json",
+    supportedTransports: ["stdio", "http", "sse"],
+    supportedFields: [],
+    detectGlobalInstall: async () => {
+      return existsSync(join(home, ".gemini", "antigravity-cli"));
     },
     transformConfig: transformAntigravityConfig,
   },
