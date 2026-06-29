@@ -89,6 +89,10 @@ function windsurfConfigPath(homeDir: string): string {
   return join(homeDir, ".codeium", "windsurf", "mcp_config.json");
 }
 
+function antigravityConfigPath(homeDir: string): string {
+  return join(homeDir, ".gemini", "config", "mcp_config.json");
+}
+
 function seedFindRegistries(homeDir: string) {
   const configPath = join(homeDir, ".config", "add-mcp", "config.json");
   mkdirSync(dirname(configPath), { recursive: true });
@@ -567,7 +571,7 @@ test("E2E CLI: remote server to antigravity succeeds with serverUrl config", () 
     );
   }
 
-  const configPath = join(homeDir, ".gemini", "antigravity", "mcp_config.json");
+  const configPath = antigravityConfigPath(homeDir);
   assert.strictEqual(existsSync(configPath), true);
 
   const saved = JSON.parse(readFileSync(configPath, "utf-8"));
@@ -591,7 +595,7 @@ test("E2E CLI: --all includes antigravity for remote server", () => {
 
   assert.strictEqual(result.status, 0, "CLI should succeed");
 
-  const configPath = join(homeDir, ".gemini", "antigravity", "mcp_config.json");
+  const configPath = antigravityConfigPath(homeDir);
   assert.strictEqual(existsSync(configPath), true);
 
   const saved = JSON.parse(readFileSync(configPath, "utf-8"));
@@ -629,7 +633,7 @@ test("E2E CLI: stdio server to antigravity succeeds", () => {
     );
   }
 
-  const configPath = join(homeDir, ".gemini", "antigravity", "mcp_config.json");
+  const configPath = antigravityConfigPath(homeDir);
   assert.strictEqual(existsSync(configPath), true);
 
   const saved = JSON.parse(readFileSync(configPath, "utf-8"));

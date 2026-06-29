@@ -59,12 +59,10 @@ function cleanup() {
 // Agent Configuration Tests
 // ============================================
 
-test("getAgentTypes returns all 17 agents", () => {
+test("getAgentTypes returns all 15 agents", () => {
   const types = getAgentTypes();
-  assert.strictEqual(types.length, 17);
+  assert.strictEqual(types.length, 15);
   assert.ok(types.includes("antigravity"));
-  assert.ok(types.includes("antigravity-cli"));
-  assert.ok(types.includes("antigravity-ide"));
   assert.ok(types.includes("cline"));
   assert.ok(types.includes("cline-cli"));
   assert.ok(types.includes("claude-code"));
@@ -157,8 +155,6 @@ test("supportsProjectConfig - returns true for project-capable agents", () => {
 
 test("supportsProjectConfig - returns false for global-only agents", () => {
   assert.strictEqual(supportsProjectConfig("antigravity"), false);
-  assert.strictEqual(supportsProjectConfig("antigravity-cli"), false);
-  assert.strictEqual(supportsProjectConfig("antigravity-ide"), false);
   assert.strictEqual(supportsProjectConfig("cline"), false);
   assert.strictEqual(supportsProjectConfig("cline-cli"), false);
   assert.strictEqual(supportsProjectConfig("claude-desktop"), false);
@@ -180,12 +176,10 @@ test("getProjectCapableAgents returns 9 agents", () => {
   assert.ok(projectAgents.includes("zed"));
 });
 
-test("getGlobalOnlyAgents returns 8 agents", () => {
+test("getGlobalOnlyAgents returns 6 agents", () => {
   const globalAgents = getGlobalOnlyAgents();
-  assert.strictEqual(globalAgents.length, 8);
+  assert.strictEqual(globalAgents.length, 6);
   assert.ok(globalAgents.includes("antigravity"));
-  assert.ok(globalAgents.includes("antigravity-cli"));
-  assert.ok(globalAgents.includes("antigravity-ide"));
   assert.ok(globalAgents.includes("cline"));
   assert.ok(globalAgents.includes("cline-cli"));
   assert.ok(globalAgents.includes("claude-desktop"));
@@ -324,8 +318,6 @@ test("detectProjectAgents - does not detect global-only agents", () => {
   assert.ok(!detected.includes("goose"));
   assert.ok(!detected.includes("windsurf"));
   assert.ok(!detected.includes("antigravity"));
-  assert.ok(!detected.includes("antigravity-cli"));
-  assert.ok(!detected.includes("antigravity-ide"));
 });
 
 // ============================================
@@ -345,8 +337,6 @@ test("isTransportSupported - all agents support stdio", () => {
 test("isTransportSupported - most agents support http", () => {
   const httpAgents: AgentType[] = [
     "antigravity",
-    "antigravity-cli",
-    "antigravity-ide",
     "cline",
     "cline-cli",
     "claude-code",
@@ -374,8 +364,6 @@ test("isTransportSupported - most agents support http", () => {
 test("isTransportSupported - most agents support sse", () => {
   const sseAgents: AgentType[] = [
     "antigravity",
-    "antigravity-cli",
-    "antigravity-ide",
     "cline",
     "cline-cli",
     "claude-code",
@@ -400,43 +388,31 @@ test("isTransportSupported - most agents support sse", () => {
   }
 });
 
-test("antigravity variants support stdio, http, and sse", () => {
-  for (const type of [
-    "antigravity",
-    "antigravity-cli",
-    "antigravity-ide",
-  ] as const) {
-    assert.strictEqual(
-      isTransportSupported(type, "stdio"),
-      true,
-      `${type} should support stdio`,
-    );
-    assert.strictEqual(
-      isTransportSupported(type, "http"),
-      true,
-      `${type} should support http`,
-    );
-    assert.strictEqual(
-      isTransportSupported(type, "sse"),
-      true,
-      `${type} should support sse`,
-    );
-  }
+test("antigravity supports stdio, http, and sse", () => {
+  assert.strictEqual(
+    isTransportSupported("antigravity", "stdio"),
+    true,
+    "antigravity should support stdio",
+  );
+  assert.strictEqual(
+    isTransportSupported("antigravity", "http"),
+    true,
+    "antigravity should support http",
+  );
+  assert.strictEqual(
+    isTransportSupported("antigravity", "sse"),
+    true,
+    "antigravity should support sse",
+  );
 });
 
-test("antigravity variants have no unsupportedTransportMessage", () => {
-  for (const type of [
-    "antigravity",
-    "antigravity-cli",
-    "antigravity-ide",
-  ] as const) {
-    const msg = agents[type].unsupportedTransportMessage;
-    assert.strictEqual(
-      msg,
-      undefined,
-      `${type} should not have an unsupportedTransportMessage`,
-    );
-  }
+test("antigravity has no unsupportedTransportMessage", () => {
+  const msg = agents.antigravity.unsupportedTransportMessage;
+  assert.strictEqual(
+    msg,
+    undefined,
+    "antigravity should not have an unsupportedTransportMessage",
+  );
 });
 
 test("isTransportSupported - claude-desktop only supports stdio", () => {

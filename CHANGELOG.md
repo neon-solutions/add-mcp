@@ -3,6 +3,7 @@
 ## [1.12.0] - 2026-06-21
 
 - add `--auto-approve` and repeatable `--approve-tool <tool>` to preconfigure agent-level MCP tool approval. Capability-gated per client and mapped to each client's native mechanism: Codex writes approval modes to `config.toml` (`tools.<name>.approval_mode = "approve"`, or `default_tools_approval_mode` for all tools); Claude Code writes permission allow rules (`mcp__<server>__<tool>`, or `mcp__<server>` for all tools) to a separate settings file (`.claude/settings.local.json` for project installs, `~/.claude/settings.json` for global) while keeping the MCP server entry clean. Agents that don't support auto-approval have it dropped with a warning. Co-authored with @RhysSullivan ([#32](https://github.com/neon-solutions/add-mcp/pull/32))
+- update Antigravity configuration to the latest shared MCP config path at `~/.gemini/config/mcp_config.json`, used by Antigravity, Antigravity IDE, and Antigravity CLI.
 
 ## [1.11.0] - 2026-06-20
 

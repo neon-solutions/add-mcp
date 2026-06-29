@@ -2,8 +2,6 @@ import type { OptionalField } from "./schema.js";
 
 export type AgentType =
   | "antigravity"
-  | "antigravity-cli"
-  | "antigravity-ide"
   | "cline"
   | "cline-cli"
   | "claude-code"
