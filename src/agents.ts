@@ -653,6 +653,18 @@ export function supportsProjectConfig(agentType: AgentType): boolean {
   return agents[agentType].localConfigPath !== undefined;
 }
 
+export type InstallScope = "local" | "global";
+
+export function getCommonInstallScopes(
+  agentTypes: AgentType[],
+): InstallScope[] {
+  if (agentTypes.length === 0) return [];
+  if (agentTypes.some((agentType) => !supportsProjectConfig(agentType))) {
+    return ["global"];
+  }
+  return ["local", "global"];
+}
+
 export function getProjectCapableAgents(): AgentType[] {
   return (Object.keys(agents) as AgentType[]).filter((type) =>
     supportsProjectConfig(type),
