@@ -246,6 +246,70 @@ test("E2E CLI: --gitignore with --global warns and does not write project .gitig
   assert.strictEqual(existsSync(join(homeDir, ".cursor", "mcp.json")), true);
 });
 
+test("E2E CLI: -y keeps project-capable agents project-scoped by default", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "@modelcontextprotocol/server-filesystem",
+      "-a",
+      "cursor",
+      "-y",
+      "--name",
+      "project-scope",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  assert.strictEqual(existsSync(join(projectDir, ".cursor", "mcp.json")), true);
+  assert.strictEqual(existsSync(join(homeDir, ".cursor", "mcp.json")), false);
+});
+
+test("E2E CLI: global-only selections force a shared global scope", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "@modelcontextprotocol/server-filesystem",
+      "-a",
+      "cursor",
+      "-a",
+      "claude-desktop",
+      "-y",
+      "--name",
+      "shared-global-scope",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  assert.strictEqual(
+    existsSync(join(projectDir, ".cursor", "mcp.json")),
+    false,
+  );
+  assert.strictEqual(existsSync(join(homeDir, ".cursor", "mcp.json")), true);
+  assert.strictEqual(existsSync(claudeDesktopConfigPath(homeDir)), true);
+
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /Selected agents require global installation/);
+  assert.match(output, /Scope:\s*Global/);
+});
+
 test("E2E CLI: find -y without registry config asks to configure registries", () => {
   const projectDir = createTempDir();
   const homeDir = createTempDir();

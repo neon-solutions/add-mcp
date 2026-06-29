@@ -14,6 +14,7 @@ import {
   agents,
   getAgentTypes,
   supportsProjectConfig,
+  getCommonInstallScopes,
   getProjectCapableAgents,
   getGlobalOnlyAgents,
   detectProjectAgents,
@@ -196,6 +197,25 @@ test("Project + global-only agents equals all agents", () => {
   const all = [...allAgents].sort();
 
   assert.deepStrictEqual(combined, all);
+});
+
+test("getCommonInstallScopes returns project and global for project-capable agents", () => {
+  assert.deepStrictEqual(getCommonInstallScopes(["cursor", "codex"]), [
+    "local",
+    "global",
+  ]);
+});
+
+test("getCommonInstallScopes returns global for global-only agents", () => {
+  assert.deepStrictEqual(getCommonInstallScopes(["claude-desktop"]), [
+    "global",
+  ]);
+});
+
+test("getCommonInstallScopes returns global when selection mixes capabilities", () => {
+  assert.deepStrictEqual(getCommonInstallScopes(["cursor", "claude-desktop"]), [
+    "global",
+  ]);
 });
 
 // ============================================
