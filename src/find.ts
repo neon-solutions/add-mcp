@@ -224,7 +224,7 @@ export function getDefaultFindRegistries(): FindRegistrySearchConfig[] {
   return [
     {
       url: VERIFIED_ESSENTIALS_DEFAULT_SERVERS_URL,
-      label: "add-mcp curated registry",
+      label: "integrations.sh MCP registry",
     },
     {
       url: resolveOfficialRegistryServersUrl(),

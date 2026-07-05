@@ -106,7 +106,7 @@ function showBanner(): void {
     `  ${DIM}$${RESET} ${TEXT}npx add-mcp ${DIM}<url> ${TEXT}-a cursor${RESET}    ${DIM}Install to specific agent${RESET}`,
   );
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx add-mcp find ${DIM}<keyword>${RESET}     ${DIM}Search and install curated MCP servers${RESET}`,
+    `  ${DIM}$${RESET} ${TEXT}npx add-mcp find ${DIM}<keyword>${RESET}     ${DIM}Search integrations.sh MCP servers${RESET}`,
   );
   console.log();
   console.log(
@@ -556,7 +556,7 @@ async function runFindCommand(
 program
   .command("find [keyword]")
   .description(
-    "Find MCP servers from curated registry data (omit keyword to browse)",
+    "Find MCP servers from integrations.sh registry data (omit keyword to browse)",
   )
   .option(
     "-g, --global",
@@ -1329,7 +1329,7 @@ async function main(target: string | undefined, options: Options) {
       `  ${DIM}$${RESET} ${TEXT}npx add-mcp ${DIM}<url> ${TEXT}-a cursor${RESET}    ${DIM}Install to specific agent${RESET}`,
     );
     console.log(
-      `  ${DIM}$${RESET} ${TEXT}npx add-mcp find ${DIM}<keyword>${RESET}     ${DIM}Search and install curated MCP servers${RESET}`,
+      `  ${DIM}$${RESET} ${TEXT}npx add-mcp find ${DIM}<keyword>${RESET}     ${DIM}Search integrations.sh MCP servers${RESET}`,
     );
     console.log();
     console.log(

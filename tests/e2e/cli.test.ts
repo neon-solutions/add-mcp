@@ -104,7 +104,7 @@ function seedFindRegistries(homeDir: string) {
         findRegistries: [
           {
             url: "https://mcp.agent-tooling.dev/api/v1/servers",
-            label: "add-mcp curated registry",
+            label: "integrations.sh MCP registry",
           },
           {
             url: "https://registry.modelcontextprotocol.io/v0.1/servers",

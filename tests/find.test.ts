@@ -294,7 +294,7 @@ test("searchRegistry merges registries and skips failed sources", async () => {
     const result = await searchRegistry("mcp", [
       {
         url: "https://verified.local/api/v1/servers",
-        label: "add-mcp curated registry",
+        label: "integrations.sh MCP registry",
       },
       {
         url: "https://registry.modelcontextprotocol.io/v0.1/servers",
@@ -306,7 +306,7 @@ test("searchRegistry merges registries and skips failed sources", async () => {
     assert.strictEqual(result.failedRegistries.length, 1);
     assert.strictEqual(
       result.failedRegistries[0]?.registry.label,
-      "add-mcp curated registry",
+      "integrations.sh MCP registry",
     );
     assert.strictEqual(result.failedRegistries[0]?.detail, "HTTP 503");
   } finally {
@@ -897,11 +897,11 @@ test("formatRegistryFailure shows label for known registries", () => {
   const msg = formatRegistryFailure({
     registry: {
       url: "https://mcp.agent-tooling.dev/api/v1/servers",
-      label: "add-mcp curated registry",
+      label: "integrations.sh MCP registry",
     },
     detail: "HTTP 500",
   });
-  assert.strictEqual(msg.includes('"add-mcp curated registry"'), true);
+  assert.strictEqual(msg.includes('"integrations.sh MCP registry"'), true);
   assert.strictEqual(
     msg.includes("https://mcp.agent-tooling.dev/api/v1/servers"),
     true,

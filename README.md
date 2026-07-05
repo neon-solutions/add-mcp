@@ -36,13 +36,13 @@ You can add env variables and arguments (stdio) and headers (remote) to the serv
 
 ## Find an MCP Servers
 
-Find and install MCP servers from the add-mcp curated registry and/or the official Anthropic MCP registry:
+Find and install MCP servers from the integrations.sh MCP registry and/or the official Anthropic MCP registry:
 
 ```bash
 npx add-mcp find vercel
 ```
 
-When running `find`/`search` for the first time, the CLI prompts you to choose which registries to enable (add-mcp curated registry and/or official Anthropic registry). You can also add custom registries to the configuration file.
+When running `find`/`search` for the first time, the CLI prompts you to choose which registries to enable (integrations.sh MCP registry and/or official Anthropic registry). You can also add custom registries to the configuration file.
 
 ## Supported Agents
 
@@ -290,14 +290,14 @@ If you run with `-y` before this one-time registry setup is completed, the CLI e
 
 ### Built-in Registries
 
-| Registry                        | Base URL                                                | Description                                                                                                                                                                                                                        |
-| ------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **add-mcp curated registry**    | `https://mcp.agent-tooling.dev/api/v1/servers`          | A curated list of first-party, verified MCP servers from popular developer tools and SaaS services. Designed to surface high-quality, officially maintained servers instead of a long tail of unmaintained or third-party entries. |
-| **Official Anthropic registry** | `https://registry.modelcontextprotocol.io/v0.1/servers` | The community-driven MCP server registry maintained by Anthropic. Contains the broadest catalog of MCP servers.                                                                                                                    |
+| Registry                         | Base URL                                                | Description                                                                                                                                                                          |
+| -------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **integrations.sh MCP registry** | `https://mcp.agent-tooling.dev/api/v1/servers`          | MCP servers discovered by integrations.sh and exposed through an MCP registry-compatible API, with a small overlay for package-only entries that integrations.sh does not yet cover. |
+| **Official Anthropic registry**  | `https://registry.modelcontextprotocol.io/v0.1/servers` | The community-driven MCP server registry maintained by Anthropic. Contains the broadest catalog of MCP servers.                                                                      |
 
-### Missing A Server in add-mcp Curated Registry?
+### Missing A Server in integrations.sh?
 
-The source of truth for the add-mcp curated registry is [registry.json](registry.json) in this repository. You can contribute to the registry by opening a pull request to add or update a server.
+The default add-mcp registry is generated from [integrations.sh](https://integrations.sh). To be listed in add-mcp, add your MCP server to integrations.sh. Package-only entries that integrations.sh cannot represent yet can still be contributed to the `agent-tooling/mcp-registry` overlay.
 
 ### Editing or Removing Registries
 
@@ -309,7 +309,7 @@ Registry selections are stored in `~/.config/add-mcp/config.json` under the `fin
   "findRegistries": [
     {
       "url": "https://mcp.agent-tooling.dev/api/v1/servers",
-      "label": "add-mcp curated registry"
+      "label": "integrations.sh MCP registry"
     },
     {
       "url": "https://registry.modelcontextprotocol.io/v0.1/servers",
