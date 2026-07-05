@@ -1,0 +1,255 @@
+[
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "io.github.github/github-mcp-server",
+      "title": "GitHub",
+      "description": "Official GitHub MCP server",
+      "repository": {
+        "url": "https://github.com/github/github-mcp-server",
+        "source": "github"
+      },
+      "version": "0.33.0",
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://api.githubcopilot.com/mcp/"
+        }
+      ],
+      "packages": [
+        {
+          "registryType": "oci",
+          "registryBaseUrl": "https://ghcr.io",
+          "identifier": "ghcr.io/github/github-mcp-server:0.33.0",
+          "version": "0.33.0",
+          "transport": {
+            "type": "stdio"
+          },
+          "environmentVariables": [
+            {
+              "name": "GITHUB_PERSONAL_ACCESS_TOKEN",
+              "description": "GitHub personal access token.",
+              "isRequired": true,
+              "isSecret": true
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "dev.firecrawl/mcp",
+      "title": "Firecrawl",
+      "description": "Firecrawl MCP server for web crawling, scraping, search, extraction, and deep research.",
+      "repository": {
+        "url": "https://github.com/firecrawl/firecrawl-mcp-server",
+        "source": "github"
+      },
+      "version": "3.11.0",
+      "websiteUrl": "https://docs.firecrawl.dev",
+      "packages": [
+        {
+          "registryType": "npm",
+          "registryBaseUrl": "https://registry.npmjs.org",
+          "identifier": "firecrawl-mcp",
+          "version": "3.11.0",
+          "transport": {
+            "type": "stdio"
+          },
+          "environmentVariables": [
+            {
+              "name": "FIRECRAWL_API_KEY",
+              "description": "Firecrawl API key.",
+              "isRequired": true,
+              "isSecret": true
+            }
+          ]
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.firecrawl.dev/v2/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "io.elevenlabs/mcp",
+      "title": "ElevenLabs",
+      "description": "ElevenLabs MCP server for text-to-speech, voice generation, and audio workflows.",
+      "repository": {
+        "url": "https://github.com/elevenlabs/elevenlabs-mcp",
+        "source": "github"
+      },
+      "version": "0.9.1",
+      "websiteUrl": "https://elevenlabs.io",
+      "packages": [
+        {
+          "registryType": "pypi",
+          "registryBaseUrl": "https://pypi.org",
+          "identifier": "elevenlabs-mcp",
+          "version": "0.9.1",
+          "transport": {
+            "type": "stdio"
+          },
+          "environmentVariables": [
+            {
+              "name": "ELEVENLABS_API_KEY",
+              "description": "ElevenLabs API key.",
+              "isRequired": true,
+              "isSecret": true
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "io.github.mastra-ai/mcp-docs-server",
+      "title": "Mastra",
+      "description": "Mastra docs MCP server for access to Mastra documentation.",
+      "repository": {
+        "url": "https://github.com/mastra-ai/mastra",
+        "source": "github"
+      },
+      "version": "1.1.17",
+      "websiteUrl": "https://mastra.ai/docs/build-with-ai/mcp-docs-server",
+      "packages": [
+        {
+          "registryType": "npm",
+          "registryBaseUrl": "https://registry.npmjs.org",
+          "identifier": "@mastra/mcp-docs-server",
+          "version": "1.1.17",
+          "transport": {
+            "type": "stdio"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "io.github.vercel/next-devtools-mcp",
+      "title": "Next.js Devtools",
+      "description": "Next.js development tools MCP server with stdio transport.",
+      "repository": {
+        "url": "https://github.com/vercel/next-devtools-mcp",
+        "source": "github"
+      },
+      "version": "0.3.6",
+      "packages": [
+        {
+          "registryType": "npm",
+          "registryBaseUrl": "https://registry.npmjs.org",
+          "identifier": "next-devtools-mcp",
+          "version": "0.3.6",
+          "transport": {
+            "type": "stdio"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "io.github.microsoft/playwright-mcp",
+      "title": "Playwright",
+      "description": "Playwright MCP server for browser automation.",
+      "repository": {
+        "url": "https://github.com/microsoft/playwright-mcp",
+        "source": "github"
+      },
+      "version": "0.0.68",
+      "websiteUrl": "https://playwright.dev",
+      "packages": [
+        {
+          "registryType": "npm",
+          "registryBaseUrl": "https://registry.npmjs.org",
+          "identifier": "@playwright/mcp",
+          "version": "0.0.68",
+          "transport": {
+            "type": "stdio"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "io.github.hashicorp/terraform-mcp-server",
+      "title": "Terraform",
+      "description": "Terraform MCP server for Terraform Registry and Terraform Enterprise workflows.",
+      "repository": {
+        "url": "https://github.com/hashicorp/terraform-mcp-server",
+        "source": "github"
+      },
+      "version": "0.5.0",
+      "websiteUrl": "https://developer.hashicorp.com/terraform/docs/tools/mcp-server",
+      "packages": [
+        {
+          "registryType": "oci",
+          "identifier": "hashicorp/terraform-mcp-server:0.5.0",
+          "version": "0.5.0",
+          "transport": {
+            "type": "stdio"
+          },
+          "environmentVariables": [
+            {
+              "name": "TFE_TOKEN",
+              "description": "Terraform Enterprise or HCP Terraform API token.",
+              "isRequired": true,
+              "isSecret": true
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "io.github.upstash/mcp-server",
+      "title": "Upstash",
+      "description": "Official Upstash MCP server for Redis, QStash, and Vector workflows.",
+      "repository": {
+        "url": "https://github.com/upstash/mcp-server",
+        "source": "github"
+      },
+      "version": "0.2.2",
+      "packages": [
+        {
+          "registryType": "npm",
+          "registryBaseUrl": "https://registry.npmjs.org",
+          "identifier": "@upstash/mcp-server",
+          "version": "0.2.2",
+          "transport": {
+            "type": "stdio"
+          },
+          "environmentVariables": [
+            {
+              "name": "UPSTASH_EMAIL",
+              "description": "Upstash account email.",
+              "isRequired": true
+            },
+            {
+              "name": "UPSTASH_API_KEY",
+              "description": "Upstash API key.",
+              "isRequired": true,
+              "isSecret": true
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

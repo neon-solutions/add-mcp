@@ -290,14 +290,21 @@ If you run with `-y` before this one-time registry setup is completed, the CLI e
 
 ### Built-in Registries
 
-| Registry                         | Base URL                                                | Description                                                                                                                                                                          |
-| -------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **integrations.sh MCP registry** | `https://mcp.agent-tooling.dev/api/v1/servers`          | MCP servers discovered by integrations.sh and exposed through an MCP registry-compatible API, with a small overlay for package-only entries that integrations.sh does not yet cover. |
-| **Official Anthropic registry**  | `https://registry.modelcontextprotocol.io/v0.1/servers` | The community-driven MCP server registry maintained by Anthropic. Contains the broadest catalog of MCP servers.                                                                      |
+| Registry                         | Base URL                                                | Description                                                                                                                                                      |
+| -------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **integrations.sh MCP registry** | `https://mcp.agent-tooling.dev/api/v1/servers`          | MCP servers discovered by integrations.sh and exposed through an MCP registry-compatible API, using add-mcp's checked-in `registry.json` as the source of truth. |
+| **Official Anthropic registry**  | `https://registry.modelcontextprotocol.io/v0.1/servers` | The community-driven MCP server registry maintained by Anthropic. Contains the broadest catalog of MCP servers.                                                  |
 
 ### Missing A Server in integrations.sh?
 
-The default add-mcp registry is generated from [integrations.sh](https://integrations.sh). To be listed in add-mcp, add your MCP server to integrations.sh. Package-only entries that integrations.sh cannot represent yet can still be contributed to the `agent-tooling/mcp-registry` overlay.
+The default add-mcp registry is generated from [integrations.sh](https://integrations.sh). To be listed in add-mcp, add your MCP server to integrations.sh. Package-only entries that integrations.sh cannot represent yet can still be contributed to add-mcp's `registry.overlay.json`.
+
+Maintainers can refresh the checked-in registry snapshot with:
+
+```bash
+bun run registry:sync
+bun run registry:verify
+```
 
 ### Editing or Removing Registries
 
