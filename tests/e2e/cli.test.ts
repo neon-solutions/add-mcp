@@ -310,22 +310,46 @@ test("E2E CLI: global-only selections force a shared global scope", () => {
   assert.match(output, /Scope:\s*Global/);
 });
 
-test("E2E CLI: find -y without registry config asks to configure registries", () => {
+test("E2E CLI: find -y seeds the default registry and installs", () => {
   const projectDir = createTempDir();
   const homeDir = createTempDir();
 
   const result = runCli(
-    ["find", "postman", "-a", "cursor", "-y"],
+    ["find", "neon", "-a", "cursor", "-y"],
     projectDir,
     homeDir,
   );
-  assert.strictEqual(result.status, 0, "CLI should exit gracefully");
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
 
   const output = `${result.stdout}\n${result.stderr}`;
-  assert.match(output, /Find requires configuring one or more registries/);
-  assert.match(
-    output,
-    /Re-run without --yes to configure registries for find\/search/,
+  assert.match(output, /Using integrations\.sh MCP registry/);
+
+  const addMcpConfigPath = join(homeDir, ".config", "add-mcp", "config.json");
+  const addMcpConfig = JSON.parse(readFileSync(addMcpConfigPath, "utf-8")) as {
+    findRegistries?: Array<{ url: string; label?: string }>;
+  };
+  assert.deepStrictEqual(addMcpConfig.findRegistries, [
+    {
+      url: "https://mcp.agent-tooling.dev/api/v1/servers",
+      label: "integrations.sh MCP registry",
+    },
+  ]);
+
+  const cursorConfigPath = join(projectDir, ".cursor", "mcp.json");
+  assert.strictEqual(existsSync(cursorConfigPath), true);
+  const cursorConfig = JSON.parse(readFileSync(cursorConfigPath, "utf-8")) as {
+    mcpServers?: Record<string, { url?: string }>;
+  };
+  const neonConfig = Object.values(cursorConfig.mcpServers ?? {}).find(
+    (server) => server.url === "https://mcp.neon.tech/mcp",
+  );
+  assert.ok(
+    neonConfig,
+    "Neon remote should be installed from default registry",
   );
 });
 
