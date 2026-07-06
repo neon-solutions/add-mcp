@@ -168,40 +168,23 @@ interface Options {
   gitignore?: boolean;
 }
 
-async function ensureFindRegistriesConfigured(
-  yes: boolean | undefined,
-): Promise<FindRegistrySearchConfig[] | null> {
+async function ensureFindRegistriesConfigured(): Promise<
+  FindRegistrySearchConfig[] | null
+> {
   const configured = await getFindRegistries();
   if (configured.length > 0) {
     return configured;
   }
 
-  p.log.warn("Find requires configuring one or more registries");
-  if (yes) {
-    p.log.error("Re-run without --yes to configure registries for find/search");
-    return null;
+  const defaultRegistry = getDefaultFindRegistries()[0];
+  if (!defaultRegistry) {
+    throw new Error("No default find registry is configured");
   }
 
-  const defaults = getDefaultFindRegistries();
-  const selected = await p.multiselect({
-    message:
-      "[One time] Please select what MCP registries you would like to configure globally for search",
-    options: defaults.map((registry) => ({
-      value: registry.url,
-      label: registry.label ?? registry.url,
-    })),
-    required: true,
-  });
-  if (p.isCancel(selected)) {
-    return null;
-  }
-
-  const selectedRegistries = defaults.filter((registry) =>
-    (selected as string[]).includes(registry.url),
-  );
+  const selectedRegistries = [defaultRegistry];
   await saveFindRegistries(selectedRegistries);
   p.log.info(
-    `Selection has been saved to ${shortenPath(getConfigPath())} - you can remove or update it any time.`,
+    `Using ${defaultRegistry.label ?? defaultRegistry.url}. Saved to ${shortenPath(getConfigPath())} - you can remove or update it any time.`,
   );
   return selectedRegistries;
 }
@@ -518,7 +501,7 @@ async function runFindCommand(
   };
   const query = (keyword ?? "").trim();
 
-  const registries = await ensureFindRegistriesConfigured(options.yes);
+  const registries = await ensureFindRegistriesConfigured();
   if (!registries) {
     p.cancel("Find cancelled");
     process.exit(0);

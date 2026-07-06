@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.13.2] - 2026-07-06
+
+- make `find` / `search` default to the integrations.sh registry on first run instead of prompting for an initial registry selection.
+
 ## [1.13.1] - 2026-07-05
 
 - expand the `find` / `search` registry from integrations.sh data and update registry messaging to point maintainers to integrations.sh.

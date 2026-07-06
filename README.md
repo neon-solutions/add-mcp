@@ -34,15 +34,15 @@ console.log(result);
 
 You can add env variables and arguments (stdio) and headers (remote) to the server config using the `--env`, `--args` and `--header` options. With `${VAR}` placeholders, interactive installs prompt for each variable (omit skipped optional keys so empty strings are not written to config).
 
-## Find an MCP Servers
+## Find MCP Servers
 
-Find and install MCP servers from the integrations.sh MCP registry and/or the official Anthropic MCP registry:
+Find and install MCP servers from the integrations.sh MCP registry:
 
 ```bash
 npx add-mcp find vercel
 ```
 
-When running `find`/`search` for the first time, the CLI prompts you to choose which registries to enable (integrations.sh MCP registry and/or official Anthropic registry). You can also add custom registries to the configuration file.
+The first `find`/`search` run automatically saves the integrations.sh registry to `~/.config/add-mcp/config.json` (or `$XDG_CONFIG_HOME/add-mcp/config.json`). You can edit that file to replace the default registry, add the official Anthropic registry, or point at any registry-compatible server.
 
 ## Supported Agents
 
@@ -284,9 +284,7 @@ If a selected remote server defines URL variables or header inputs:
 
 ### Configuring Registries for Find / Search
 
-The first time you run `find` or `search`, the CLI prompts you to choose which registries to enable. Your selection is saved to `~/.config/add-mcp/config.json` (respects `XDG_CONFIG_HOME`) and reused on every subsequent search.
-
-If you run with `-y` before this one-time registry setup is completed, the CLI exits with guidance to rerun without `--yes`.
+The first time you run `find` or `search`, the CLI automatically saves the integrations.sh MCP registry to `~/.config/add-mcp/config.json` (respects `XDG_CONFIG_HOME`) and reuses that registry on every subsequent search.
 
 ### Built-in Registries
 
@@ -308,7 +306,37 @@ bun run registry:verify
 
 ### Editing or Removing Registries
 
-Registry selections are stored in `~/.config/add-mcp/config.json` under the `findRegistries` key. You can edit this file directly to add, remove, or reorder registries:
+Registry selections are stored in `~/.config/add-mcp/config.json` under the `findRegistries` key. You can edit this file directly to replace, add, remove, or reorder registries.
+
+Default integrations.sh registry:
+
+```json
+{
+  "version": 1,
+  "findRegistries": [
+    {
+      "url": "https://mcp.agent-tooling.dev/api/v1/servers",
+      "label": "integrations.sh MCP registry"
+    }
+  ]
+}
+```
+
+Replace the default with the official Anthropic registry:
+
+```json
+{
+  "version": 1,
+  "findRegistries": [
+    {
+      "url": "https://registry.modelcontextprotocol.io/v0.1/servers",
+      "label": "Official Anthropic registry"
+    }
+  ]
+}
+```
+
+Search both integrations.sh and the official Anthropic registry:
 
 ```json
 {
@@ -326,7 +354,7 @@ Registry selections are stored in `~/.config/add-mcp/config.json` under the `fin
 }
 ```
 
-To reset and re-trigger the interactive selection prompt, remove the `findRegistries` key (or delete the file entirely).
+To reset to the default integrations.sh registry, remove the `findRegistries` key or delete the config file.
 
 ### Adding a Custom Registry
 
