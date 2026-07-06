@@ -28,6 +28,7 @@
     "test": "tsx tests/source-parser.test.ts && tsx tests/agents.test.ts && tsx tests/config.test.ts && tsx tests/installer.test.ts && tsx tests/find.test.ts && tsx tests/package-arguments.test.ts && tsx tests/template.test.ts && tsx tests/reader.test.ts && tsx tests/formats-remove.test.ts && tsx tests/lib.test.ts && tsx tests/e2e/install.test.ts && tsx tests/e2e/cli.test.ts",
     "test:unit": "tsx tests/source-parser.test.ts && tsx tests/agents.test.ts && tsx tests/config.test.ts && tsx tests/installer.test.ts && tsx tests/find.test.ts && tsx tests/package-arguments.test.ts && tsx tests/template.test.ts && tsx tests/reader.test.ts && tsx tests/formats-remove.test.ts && tsx tests/lib.test.ts",
     "registry:sort": "tsx scripts/sort-registry.ts",
+    "registry:sync": "node scripts/sync-integrations-sh.mjs",
     "registry:verify": "tsx scripts/verify-registry.ts",
     "test:e2e": "tsx tests/e2e/install.test.ts && tsx tests/e2e/cli.test.ts",
     "typecheck": "tsc --noEmit",
