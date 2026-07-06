@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.13.3] - 2026-07-06
+
+- show registry result install targets, such as remote MCP URLs or package names, instead of reverse-domain registry IDs in `find` / `search` selection rows.
+
 ## [1.13.2] - 2026-07-06
 
 - make `find` / `search` default to the integrations.sh registry on first run instead of prompting for an initial registry selection.

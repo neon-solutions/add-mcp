@@ -392,9 +392,24 @@ function transportLabel(entry: RegistryServerEntry): string {
   return parts.length > 0 ? parts.join(", ") : "unknown";
 }
 
+function formatRemoteTarget(url: string): string {
+  return url.replace(/^[a-z][a-z0-9+.-]*:\/\//i, "").replace(/\/$/, "");
+}
+
+function formatFindResultTarget(entry: RegistryServerEntry): string {
+  const remote = pickRemote(entry);
+  if (remote) {
+    return formatRemoteTarget(remote.url);
+  }
+  if (entry.package) {
+    return formatPackageTarget(entry.package);
+  }
+  return entry.name;
+}
+
 export function formatFindResultRow(entry: RegistryServerEntry): string {
   const display = entry.title ?? entry.name;
-  return `${display} (${entry.name}) [${transportLabel(entry)}]`;
+  return `${display} (${formatFindResultTarget(entry)}) [${transportLabel(entry)}]`;
 }
 
 async function promptValue(field: PromptField): Promise<string | symbol> {
