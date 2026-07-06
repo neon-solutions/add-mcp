@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.13.1] - 2026-07-05
+
+- expand the `find` / `search` registry from integrations.sh data and update registry messaging to point maintainers to integrations.sh.
+
 ## [1.13.0] - 2026-06-29
 
 - add interactive project/global scope selection after agent selection when every selected agent supports both scopes; `-g` still forces global and `-y` stays deterministic.

@@ -1,9 +1,5 @@
 import type { AgentType, ConfigFile } from "./types.js";
-import {
-  agents,
-  detectProjectAgents,
-  detectGlobalAgents,
-} from "./agents.js";
+import { agents, detectProjectAgents, detectGlobalAgents } from "./agents.js";
 import {
   getConfigPath,
   getConfigKey,
