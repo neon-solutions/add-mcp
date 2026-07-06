@@ -390,7 +390,7 @@ test("rankRegistryEntries prioritizes official Supabase over smithery entries", 
   assert.strictEqual(ranked[0]?.name, "com.supabase/mcp");
 });
 
-test("formatFindResultRow shows title, name, and transport labels", () => {
+test("formatFindResultRow shows title, install target, and transport labels", () => {
   const row = formatFindResultRow({
     name: "com.supabase/mcp",
     title: "Supabase",
@@ -406,10 +406,10 @@ test("formatFindResultRow shows title, name, and transport labels", () => {
     },
   });
 
-  assert.strictEqual(row, "Supabase (com.supabase/mcp) [stdio, remote]");
+  assert.strictEqual(row, "Supabase (mcp.supabase.com/mcp) [stdio, remote]");
 });
 
-test("formatFindResultRow falls back to name when no title", () => {
+test("formatFindResultRow falls back to name while showing remote target", () => {
   const row = formatFindResultRow({
     name: "com.example/no-repo",
     description: "No repository metadata",
@@ -417,7 +417,7 @@ test("formatFindResultRow falls back to name when no title", () => {
     remotes: [{ type: "streamable-http", url: "https://example.com/mcp" }],
   });
 
-  assert.strictEqual(row, "com.example/no-repo (com.example/no-repo) [remote]");
+  assert.strictEqual(row, "com.example/no-repo (example.com/mcp) [remote]");
 });
 
 test("buildInstallPlanForEntry defaults to remote in -y for hybrid entries", async () => {
@@ -872,7 +872,7 @@ test("formatFindResultRow shows stdio for package-only entries", () => {
       transport: { type: "stdio" },
     },
   });
-  assert.strictEqual(row, "Sentry (io.github.getsentry/sentry-mcp) [stdio]");
+  assert.strictEqual(row, "Sentry (@sentry/mcp-server) [stdio]");
 });
 
 test("formatFindResultRow shows unknown transport when neither remote nor package", () => {

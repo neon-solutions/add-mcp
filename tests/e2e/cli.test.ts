@@ -353,7 +353,7 @@ test("E2E CLI: find -y seeds the default registry and installs", () => {
   );
 });
 
-test("E2E CLI: find -y picks best match and installs remote with placeholders", () => {
+test("E2E CLI: find -y picks best match and installs remote", () => {
   const projectDir = createTempDir();
   const homeDir = createTempDir();
   seedFindRegistries(homeDir);
@@ -374,19 +374,13 @@ test("E2E CLI: find -y picks best match and installs remote with placeholders", 
   assert.strictEqual(existsSync(configPath), true);
 
   const savedConfig = JSON.parse(readFileSync(configPath, "utf-8")) as {
-    mcpServers?: Record<
-      string,
-      { url?: string; headers?: Record<string, string> }
-    >;
+    mcpServers?: Record<string, { url?: string }>;
   };
   const postmanConfig = Object.values(savedConfig.mcpServers ?? {}).find(
-    (server) => server.url === "https://mcp.postman.com/mcp",
+    (server) => server.url === "https://mcp.postman.com/minimal",
   );
   assert.ok(postmanConfig);
-  assert.strictEqual(postmanConfig?.url, "https://mcp.postman.com/mcp");
-  assert.deepStrictEqual(postmanConfig?.headers, {
-    Authorization: "<your-header-value-here>",
-  });
+  assert.strictEqual(postmanConfig?.url, "https://mcp.postman.com/minimal");
 });
 
 test("E2E CLI: search alias defaults to HTTP endpoint when both are available", () => {
