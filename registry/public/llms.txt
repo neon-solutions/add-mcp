@@ -1,0 +1,7 @@
+MCP Registry API
+
+This is an MCP registry server based on [agent-tooling/mcp-registry](https://github.com/agent-tooling/mcp-registry).
+
+Use the API endpoints to fetch and search for MCP servers registered in this registry.
+
+Use the OpenAPI specification to discover available endpoints and response schema: /api/openapi.json

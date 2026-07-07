@@ -5,6 +5,8 @@ node_modules/
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
+# ...except the registry app, which is a standalone pnpm project
+!registry/pnpm-lock.yaml
 
 # Build output
 dist/

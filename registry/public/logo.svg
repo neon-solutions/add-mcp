@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <style>
+    .tile { fill: #09090b; }
+    .slash { stroke: #fafafa; }
+    @media (prefers-color-scheme: dark) {
+      .tile { fill: #fafafa; }
+      .slash { stroke: #09090b; }
+    }
+  </style>
+  <rect class="tile" width="64" height="64" rx="14"/>
+  <path class="slash" d="M25 46 39 18" fill="none" stroke-width="7" stroke-linecap="round"/>
+</svg>

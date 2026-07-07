@@ -1,0 +1,51 @@
+[
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "io.github.example/filesystem",
+      "description": "Filesystem MCP server",
+      "version": "1.0.0"
+    },
+    "_meta": {
+      "io.modelcontextprotocol.registry/official": {
+        "status": "active",
+        "publishedAt": "2025-03-29T00:00:00Z",
+        "updatedAt": "2025-03-29T00:00:00Z",
+        "isLatest": true
+      }
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "io.github.example/weather",
+      "description": "Weather MCP server",
+      "version": "1.2.0"
+    },
+    "_meta": {
+      "io.modelcontextprotocol.registry/official": {
+        "status": "active",
+        "publishedAt": "2025-03-29T00:00:00Z",
+        "updatedAt": "2025-03-29T00:00:00Z",
+        "isLatest": true
+      }
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "io.github.example/zeta",
+      "description": "Zeta MCP server",
+      "version": "0.1.0"
+    },
+    "_meta": {
+      "io.modelcontextprotocol.registry/official": {
+        "status": "deprecated",
+        "statusMessage": "Use io.github.example/weather",
+        "publishedAt": "2025-03-29T00:00:00Z",
+        "updatedAt": "2025-03-29T00:00:00Z",
+        "isLatest": true
+      }
+    }
+  }
+]
