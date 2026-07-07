@@ -10,6 +10,7 @@ export const BRAND = {
   githubUrl: "https://github.com/neon-solutions/add-mcp",
   npmUrl: "https://www.npmjs.com/package/add-mcp",
   blumeUrl: "https://blume-eight.vercel.app",
+  integrationsShUrl: "https://integrations.sh",
   authorUrl: "https://x.com/andrelandgraf",
   authorName: "andrelandgraf",
 } as const;

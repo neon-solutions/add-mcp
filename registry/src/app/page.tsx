@@ -19,6 +19,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { getTrendingTerms } from "@/lib/analytics/search-stats";
+import { BRAND } from "@/lib/brand";
 import { getRegistryOverview, listServersByPage } from "@/lib/registry-service";
 import { getSiteConfig } from "@/lib/site-config";
 
@@ -107,7 +108,16 @@ export default async function HomePage({ searchParams }: PageProps) {
               {site.name}
             </h1>
             <p className="text-pretty text-base text-muted-foreground md:text-lg">
-              {site.description}
+              Registry for the add-mcp CLI — a cached snapshot of the{" "}
+              <a
+                href={BRAND.integrationsShUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium text-foreground underline underline-offset-4 transition-colors hover:text-primary"
+              >
+                integrations.sh
+              </a>{" "}
+              MCP servers, ranked by searches.
             </p>
           </div>
 
