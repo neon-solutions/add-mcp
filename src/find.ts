@@ -1,4 +1,8 @@
 import * as p from "@clack/prompts";
+import {
+  DEFAULT_FIND_REGISTRY_LABEL,
+  DEFAULT_FIND_REGISTRY_URL,
+} from "./config.js";
 import type { TransportType } from "./types.js";
 import {
   type PackageArgPrompt,
@@ -217,14 +221,11 @@ export function resolveOfficialRegistryServersUrl(): string {
   return `${OFFICIAL_REGISTRY_BASE_URL}/v0.1/servers`;
 }
 
-const VERIFIED_ESSENTIALS_DEFAULT_SERVERS_URL =
-  "https://mcp.agent-tooling.dev/api/v1/servers";
-
 export function getDefaultFindRegistries(): FindRegistrySearchConfig[] {
   return [
     {
-      url: VERIFIED_ESSENTIALS_DEFAULT_SERVERS_URL,
-      label: "integrations.sh MCP registry",
+      url: DEFAULT_FIND_REGISTRY_URL,
+      label: DEFAULT_FIND_REGISTRY_LABEL,
     },
     {
       url: resolveOfficialRegistryServersUrl(),

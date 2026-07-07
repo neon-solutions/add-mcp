@@ -103,8 +103,8 @@ function seedFindRegistries(homeDir: string) {
         version: 1,
         findRegistries: [
           {
-            url: "https://mcp.agent-tooling.dev/api/v1/servers",
-            label: "integrations.sh MCP registry",
+            url: "https://add-mcp.com/registry/api/v1/servers",
+            label: "add-mcp registry",
           },
           {
             url: "https://registry.modelcontextprotocol.io/v0.1/servers",
@@ -326,7 +326,7 @@ test("E2E CLI: find -y seeds the default registry and installs", () => {
   }
 
   const output = `${result.stdout}\n${result.stderr}`;
-  assert.match(output, /Using integrations\.sh MCP registry/);
+  assert.match(output, /Using add-mcp registry/);
 
   const addMcpConfigPath = join(homeDir, ".config", "add-mcp", "config.json");
   const addMcpConfig = JSON.parse(readFileSync(addMcpConfigPath, "utf-8")) as {
@@ -334,8 +334,8 @@ test("E2E CLI: find -y seeds the default registry and installs", () => {
   };
   assert.deepStrictEqual(addMcpConfig.findRegistries, [
     {
-      url: "https://mcp.agent-tooling.dev/api/v1/servers",
-      label: "integrations.sh MCP registry",
+      url: "https://add-mcp.com/registry/api/v1/servers",
+      label: "add-mcp registry",
     },
   ]);
 

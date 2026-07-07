@@ -36,13 +36,13 @@ You can add env variables and arguments (stdio) and headers (remote) to the serv
 
 ## Find MCP Servers
 
-Find and install MCP servers from the integrations.sh MCP registry:
+Find and install MCP servers from the [add-mcp registry](https://add-mcp.com/registry):
 
 ```bash
 npx add-mcp find vercel
 ```
 
-The first `find`/`search` run automatically saves the integrations.sh registry to `~/.config/add-mcp/config.json` (or `$XDG_CONFIG_HOME/add-mcp/config.json`). You can edit that file to replace the default registry, add the official Anthropic registry, or point at any registry-compatible server.
+The first `find`/`search` run automatically saves the add-mcp registry to `~/.config/add-mcp/config.json` (or `$XDG_CONFIG_HOME/add-mcp/config.json`). You can edit that file to replace the default registry, add the official Anthropic registry, or point at any registry-compatible server.
 
 ## Supported Agents
 
@@ -284,14 +284,16 @@ If a selected remote server defines URL variables or header inputs:
 
 ### Configuring Registries for Find / Search
 
-The first time you run `find` or `search`, the CLI automatically saves the integrations.sh MCP registry to `~/.config/add-mcp/config.json` (respects `XDG_CONFIG_HOME`) and reuses that registry on every subsequent search.
+The first time you run `find` or `search`, the CLI automatically saves the add-mcp registry to `~/.config/add-mcp/config.json` (respects `XDG_CONFIG_HOME`) and reuses that registry on every subsequent search.
 
 ### Built-in Registries
 
-| Registry                         | Base URL                                                | Description                                                                                                                                                      |
-| -------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **integrations.sh MCP registry** | `https://mcp.agent-tooling.dev/api/v1/servers`          | MCP servers discovered by integrations.sh and exposed through an MCP registry-compatible API, using add-mcp's checked-in `registry.json` as the source of truth. |
-| **Official Anthropic registry**  | `https://registry.modelcontextprotocol.io/v0.1/servers` | The community-driven MCP server registry maintained by Anthropic. Contains the broadest catalog of MCP servers.                                                  |
+| Registry                        | Base URL                                                | Description                                                                                                                                                      |
+| ------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **add-mcp registry**            | `https://add-mcp.com/registry/api/v1/servers`           | MCP servers discovered by integrations.sh and exposed through an MCP registry-compatible API, using add-mcp's checked-in `registry.json` as the source of truth. |
+| **Official Anthropic registry** | `https://registry.modelcontextprotocol.io/v0.1/servers` | The community-driven MCP server registry maintained by Anthropic. Contains the broadest catalog of MCP servers.                                                  |
+
+> The add-mcp registry previously lived at `https://mcp.agent-tooling.dev/api/v1/servers`. That URL keeps working, and saved configs referencing it are migrated to the add-mcp.com address automatically on the next `find`/`search` run.
 
 ### Missing A Server in integrations.sh?
 
@@ -308,15 +310,15 @@ bun run registry:verify
 
 Registry selections are stored in `~/.config/add-mcp/config.json` under the `findRegistries` key. You can edit this file directly to replace, add, remove, or reorder registries.
 
-Default integrations.sh registry:
+Default add-mcp registry:
 
 ```json
 {
   "version": 1,
   "findRegistries": [
     {
-      "url": "https://mcp.agent-tooling.dev/api/v1/servers",
-      "label": "integrations.sh MCP registry"
+      "url": "https://add-mcp.com/registry/api/v1/servers",
+      "label": "add-mcp registry"
     }
   ]
 }
@@ -336,15 +338,15 @@ Replace the default with the official Anthropic registry:
 }
 ```
 
-Search both integrations.sh and the official Anthropic registry:
+Search both the add-mcp registry and the official Anthropic registry:
 
 ```json
 {
   "version": 1,
   "findRegistries": [
     {
-      "url": "https://mcp.agent-tooling.dev/api/v1/servers",
-      "label": "integrations.sh MCP registry"
+      "url": "https://add-mcp.com/registry/api/v1/servers",
+      "label": "add-mcp registry"
     },
     {
       "url": "https://registry.modelcontextprotocol.io/v0.1/servers",
@@ -354,7 +356,7 @@ Search both integrations.sh and the official Anthropic registry:
 }
 ```
 
-To reset to the default integrations.sh registry, remove the `findRegistries` key or delete the config file.
+To reset to the default add-mcp registry, remove the `findRegistries` key or delete the config file.
 
 ### Adding a Custom Registry
 

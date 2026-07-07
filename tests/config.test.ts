@@ -24,6 +24,7 @@ import {
   readConfig,
   saveFindRegistries,
   saveSelectedAgents,
+  type AddMcpConfig,
 } from "../src/config.js";
 
 let passed = 0;
@@ -108,8 +109,8 @@ async function run() {
     setupTempHome();
     await saveFindRegistries([
       {
-        url: "https://mcp.agent-tooling.dev/api/v1/servers",
-        label: "integrations.sh MCP registry",
+        url: "https://add-mcp.com/registry/api/v1/servers",
+        label: "add-mcp registry",
       },
       {
         url: "https://registry.modelcontextprotocol.io/v0.1/servers",
@@ -119,12 +120,83 @@ async function run() {
     const registries = await getFindRegistries();
     assert.deepStrictEqual(registries, [
       {
+        url: "https://add-mcp.com/registry/api/v1/servers",
+        label: "add-mcp registry",
+      },
+      {
+        url: "https://registry.modelcontextprotocol.io/v0.1/servers",
+        label: "Official Anthropic registry",
+      },
+    ]);
+  });
+
+  await test("getFindRegistries migrates the legacy registry URL and persists it", async () => {
+    setupTempHome();
+    await saveFindRegistries([
+      {
         url: "https://mcp.agent-tooling.dev/api/v1/servers",
         label: "integrations.sh MCP registry",
       },
       {
         url: "https://registry.modelcontextprotocol.io/v0.1/servers",
         label: "Official Anthropic registry",
+      },
+    ]);
+
+    const registries = await getFindRegistries();
+    assert.deepStrictEqual(registries, [
+      {
+        url: "https://add-mcp.com/registry/api/v1/servers",
+        label: "add-mcp registry",
+      },
+      {
+        url: "https://registry.modelcontextprotocol.io/v0.1/servers",
+        label: "Official Anthropic registry",
+      },
+    ]);
+
+    const persisted = JSON.parse(
+      readFileSync(getConfigPath(), "utf-8"),
+    ) as AddMcpConfig;
+    assert.deepStrictEqual(persisted.findRegistries, registries);
+  });
+
+  await test("getFindRegistries keeps a custom label on the migrated URL", async () => {
+    setupTempHome();
+    await saveFindRegistries([
+      {
+        url: "https://mcp.agent-tooling.dev/api/v1/servers",
+        label: "My pinned registry",
+      },
+    ]);
+
+    const registries = await getFindRegistries();
+    assert.deepStrictEqual(registries, [
+      {
+        url: "https://add-mcp.com/registry/api/v1/servers",
+        label: "My pinned registry",
+      },
+    ]);
+  });
+
+  await test("getFindRegistries dedupes when old and new URLs both exist", async () => {
+    setupTempHome();
+    await saveFindRegistries([
+      {
+        url: "https://add-mcp.com/registry/api/v1/servers",
+        label: "add-mcp registry",
+      },
+      {
+        url: "https://mcp.agent-tooling.dev/api/v1/servers",
+        label: "integrations.sh MCP registry",
+      },
+    ]);
+
+    const registries = await getFindRegistries();
+    assert.deepStrictEqual(registries, [
+      {
+        url: "https://add-mcp.com/registry/api/v1/servers",
+        label: "add-mcp registry",
       },
     ]);
   });

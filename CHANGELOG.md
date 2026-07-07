@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.14.0] - 2026-07-06
+
+- move the default `find` / `search` registry to its new home at `https://add-mcp.com/registry/api/v1/servers` (label: "add-mcp registry"). The previous `mcp.agent-tooling.dev` URL keeps working; saved configs referencing it are migrated automatically on the next `find` / `search` run (custom labels are preserved, duplicates are deduped).
+
 ## [1.13.3] - 2026-07-06
 
 - show registry result install targets, such as remote MCP URLs or package names, instead of reverse-domain registry IDs in `find` / `search` selection rows.
