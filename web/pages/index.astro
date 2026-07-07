@@ -3,6 +3,7 @@ import PageLayout from "blume/components/layout/PageLayout.astro";
 import data from "blume:data";
 
 import Footer from "../components/Footer.astro";
+import HeaderBadges from "../components/HeaderBadges.astro";
 
 const { config } = data;
 
@@ -104,6 +105,7 @@ const structuredData = JSON.stringify({
     description: config.description,
   }}
 >
+  <HeaderBadges slot="ask" />
   <script is:inline set:html={structuredData} type="application/ld+json" />
   <section class="mx-auto max-w-4xl px-6 pt-24 pb-16 text-center">
     <h1 class="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">

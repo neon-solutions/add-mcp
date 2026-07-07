@@ -1,0 +1,16 @@
+---
+// Wraps Blume's built-in header to add the GitHub/npm stat badges to the
+// action area on docs pages (registered as the Header layout slot in
+// components.ts). The landing page passes HeaderBadges to PageLayout's
+// `ask` slot directly, landing in the same spot.
+import BlumeHeader from "blume/components/layout/Header.astro";
+
+import HeaderBadges from "./HeaderBadges.astro";
+---
+
+<BlumeHeader {...Astro.props}>
+  <Fragment slot="ask">
+    <HeaderBadges />
+    <slot name="ask" />
+  </Fragment>
+</BlumeHeader>
