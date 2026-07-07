@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "blume dev",
-    "build": "blume build",
+    "build": "blume build && node scripts/patch-sitemap.mjs",
     "preview": "blume preview"
   },
   "dependencies": {

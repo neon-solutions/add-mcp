@@ -62,6 +62,26 @@ const examples = [
     code: "npx add-mcp find neon",
   },
 ];
+
+// SoftwareApplication structured data for the home page. Blume emits JSON-LD
+// for content pages automatically, but custom pages bring their own.
+const structuredData = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "add-mcp",
+  description: config.description,
+  url: config.site,
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "macOS, Linux, Windows",
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  license: "https://www.apache.org/licenses/LICENSE-2.0",
+  softwareHelp: `${config.site}/docs`,
+  downloadUrl: "https://www.npmjs.com/package/add-mcp",
+  sameAs: [
+    "https://github.com/neon-solutions/add-mcp",
+    "https://www.npmjs.com/package/add-mcp",
+  ],
+});
 ---
 
 <PageLayout
@@ -71,6 +91,7 @@ const examples = [
   analytics={config.analytics}
   navigation={data.navigation}
   favicon={config.favicon}
+  appleIcon={config.appleIcon}
   fontCssVars={data.fontCssVars}
   themeMode={config.theme.mode}
   searchEnabled={config.search.enabled}
@@ -81,6 +102,7 @@ const examples = [
     description: config.description,
   }}
 >
+  <script is:inline set:html={structuredData} type="application/ld+json" />
   <section class="mx-auto max-w-4xl px-6 pt-24 pb-16 text-center">
     <h1 class="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
       Add MCP servers to your coding agents with a single command.

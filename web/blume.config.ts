@@ -4,6 +4,7 @@ export default defineConfig({
   title: "add-mcp",
   description:
     "Add MCP servers to your favorite coding agents with a single command.",
+  logo: "/logo.svg",
 
   content: {
     root: "content",
