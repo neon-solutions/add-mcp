@@ -1,0 +1,37 @@
+---
+title: Overview
+description: Every add-mcp command at a glance.
+---
+
+The implicit default command installs a server from a URL, package name, or command. Everything else is a named subcommand:
+
+| Command                          | Description                                                  |
+| -------------------------------- | ------------------------------------------------------------ |
+| [`add-mcp <target>`](/docs/cli/add) | Install an MCP server by URL, npm package, or command     |
+| [`find`](/docs/cli/find)         | Search MCP registries and install a selected match           |
+| [`search`](/docs/cli/find)       | Alias for `find`                                             |
+| [`list`](/docs/cli/list)         | List installed MCP servers across detected agents            |
+| [`remove`](/docs/cli/remove)     | Remove an MCP server from agent configurations               |
+| [`sync`](/docs/cli/sync)         | Synchronize server names and installations across agents     |
+| [`unify`](/docs/cli/sync)        | Alias for `sync`                                             |
+| `list-agents`                    | List all supported coding agents with scope (project/global) |
+
+## Shared flags
+
+These flags work on every install-capable command:
+
+| Flag                  | Description                                                              |
+| --------------------- | ------------------------------------------------------------------------ |
+| `-g, --global`        | Install to user directory instead of project                             |
+| `-a, --agent <agent>` | Target specific agents (e.g. `cursor`, `claude-code`). Repeatable.       |
+| `-y, --yes`           | Skip all confirmation prompts                                            |
+| `--all`               | Install to all agents                                                    |
+| `--gitignore`         | Add generated config files to `.gitignore`                               |
+
+## Smart detection
+
+The CLI automatically detects agents based on your environment:
+
+- **Project mode (default)** — detects project-level config files (`.cursor/`, `.vscode/`, `.mcp.json`, ...) and preselects the detected agents.
+- **Global mode (`-g`)** — detects all globally-installed agents (including Claude Desktop, Codex, Zed) and preselects them.
+- **No agents detected** — interactive mode defaults to your last selection; with `--yes`, installs to all project-capable agents (project mode) or all global-capable agents (global mode).

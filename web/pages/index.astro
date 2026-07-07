@@ -1,0 +1,225 @@
+---
+import PageLayout from "blume/components/layout/PageLayout.astro";
+import data from "blume:data";
+
+const { config } = data;
+
+const agentNames = [
+  "Claude Code",
+  "Codex",
+  "Cursor",
+  "OpenCode",
+  "VS Code",
+  "Antigravity",
+  "Claude Desktop",
+  "Cline",
+  "Gemini CLI",
+  "GitHub Copilot CLI",
+  "Goose",
+  "MCPorter",
+  "Windsurf",
+  "Zed",
+];
+
+const features = [
+  {
+    title: "One command, every agent",
+    body: "Detects the agents in your project or machine, and writes the right config shape to each one — JSON, YAML, or TOML.",
+  },
+  {
+    title: "Find servers from the terminal",
+    body: "add-mcp find searches the registry and installs a match, prompting for required env vars and headers along the way.",
+  },
+  {
+    title: "A TypeScript SDK",
+    body: "Building your own CLI? upsertServer() gives your tool the same battle-tested install flow, agents and formats included.",
+  },
+  {
+    title: "Capability-gated configs",
+    body: "Timeouts, OAuth scopes, and tool auto-approval are mapped to each client's native mechanism — and dropped with a warning where unsupported.",
+  },
+  {
+    title: "List, remove, sync",
+    body: "Inspect installed servers across agents, remove them everywhere, or unify names and configs with a single sync.",
+  },
+  {
+    title: "Free and open source",
+    body: "Apache-2.0 licensed, no accounts, no telemetry surprises. A registry you can self-host and a config format you own.",
+  },
+];
+
+const examples = [
+  {
+    label: "Remote server",
+    code: "npx add-mcp https://mcp.context7.com/mcp",
+  },
+  {
+    label: "npm package (stdio)",
+    code: "npx add-mcp @modelcontextprotocol/server-postgres",
+  },
+  {
+    label: "Find in the registry",
+    code: "npx add-mcp find neon",
+  },
+];
+---
+
+<PageLayout
+  site={{ title: config.title, description: config.description }}
+  logo={config.logo}
+  banner={config.banner}
+  analytics={config.analytics}
+  navigation={data.navigation}
+  favicon={config.favicon}
+  fontCssVars={data.fontCssVars}
+  themeMode={config.theme.mode}
+  searchEnabled={config.search.enabled}
+  siteUrl={config.site}
+  ogEnabled={config.og.enabled}
+  page={{
+    title: "add-mcp — add MCP servers to your coding agents",
+    description: config.description,
+  }}
+>
+  <section class="mx-auto max-w-4xl px-6 pt-24 pb-16 text-center">
+    <h1 class="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
+      Add MCP servers to your coding agents with a single command.
+    </h1>
+    <p class="text-muted-foreground mx-auto mt-5 max-w-2xl text-lg text-pretty">
+      One CLI that installs any MCP server into Claude Code, Codex, Cursor,
+      OpenCode, VS Code, and 10 more — the right config file, format, and
+      fields for every agent.
+    </p>
+    <div class="mt-8 flex justify-center">
+      <code
+        class="bg-muted rounded-lg border px-5 py-3 font-mono text-sm sm:text-base"
+      >
+        npx add-mcp https://mcp.context7.com/mcp
+      </code>
+    </div>
+    <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+      <a
+        href="/docs/quickstart"
+        class="bg-foreground text-background rounded-lg px-5 py-2.5 text-sm font-medium transition-opacity hover:opacity-90"
+      >
+        Get started
+      </a>
+      <a
+        href="/registry"
+        class="hover:bg-muted rounded-lg border px-5 py-2.5 text-sm font-medium transition-colors"
+      >
+        Browse the registry
+      </a>
+      <a
+        href="https://github.com/neon-solutions/add-mcp"
+        class="hover:bg-muted rounded-lg border px-5 py-2.5 text-sm font-medium transition-colors"
+      >
+        GitHub
+      </a>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-4xl px-6 pb-16">
+    <div class="grid gap-4 sm:grid-cols-3">
+      {
+        examples.map((example) => (
+          <div class="rounded-xl border p-4 text-left">
+            <p class="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+              {example.label}
+            </p>
+            <code class="mt-2 block font-mono text-sm break-all">
+              {example.code}
+            </code>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="border-y">
+    <div class="mx-auto max-w-4xl px-6 py-10 text-center">
+      <p class="text-muted-foreground text-sm font-medium">
+        Works with every major coding agent
+      </p>
+      <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
+        {
+          agentNames.map((name) => (
+            <span class="text-muted-foreground rounded-full border px-3 py-1 text-sm">
+              {name}
+            </span>
+          ))
+        }
+      </div>
+      <a
+        href="/docs/agents"
+        class="text-foreground mt-4 inline-block text-sm underline underline-offset-4"
+      >
+        See all supported agents and config paths
+      </a>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-5xl px-6 py-20">
+    <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+      {
+        features.map((feature) => (
+          <div>
+            <h2 class="text-base font-semibold">{feature.title}</h2>
+            <p class="text-muted-foreground mt-2 text-sm leading-relaxed">
+              {feature.body}
+            </p>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-4xl px-6 pb-24 text-center">
+    <h2 class="text-2xl font-semibold tracking-tight">
+      In your own tool, too
+    </h2>
+    <p class="text-muted-foreground mx-auto mt-3 max-w-2xl text-pretty">
+      The same package is a TypeScript SDK — detect a user's agents and install
+      your MCP server for them in a few lines.
+    </p>
+    <pre
+      class="bg-muted mt-6 overflow-x-auto rounded-xl border p-5 text-left font-mono text-sm leading-relaxed"><code>{`import { upsertServer } from "add-mcp";
+
+upsertServer(
+  "cursor",
+  "context7",
+  { type: "http", url: "https://mcp.context7.com/mcp" },
+  { local: true },
+);`}</code></pre>
+    <a
+      href="/docs/sdk"
+      class="text-foreground mt-6 inline-block text-sm underline underline-offset-4"
+    >
+      Read the SDK docs
+    </a>
+  </section>
+
+  <footer slot="footer" class="border-t">
+    <div
+      class="text-muted-foreground mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 px-6 py-8 text-sm sm:flex-row"
+    >
+      <p>add-mcp — Apache-2.0, free and open source.</p>
+      <nav class="flex items-center gap-4">
+        <a href="/docs" class="hover:text-foreground">Docs</a>
+        <a href="/registry" class="hover:text-foreground">Registry</a>
+        <a
+          href="https://github.com/neon-solutions/add-mcp"
+          class="hover:text-foreground"
+        >
+          GitHub
+        </a>
+        <a
+          href="https://www.npmjs.com/package/add-mcp"
+          class="hover:text-foreground"
+        >
+          npm
+        </a>
+      </nav>
+    </div>
+  </footer>
+</PageLayout>

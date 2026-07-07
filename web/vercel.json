@@ -1,0 +1,16 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "bun install",
+  "buildCommand": "bun run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/registry",
+      "destination": "https://mcp.agent-tooling.dev/registry"
+    },
+    {
+      "source": "/registry/:path*",
+      "destination": "https://mcp.agent-tooling.dev/registry/:path*"
+    }
+  ]
+}

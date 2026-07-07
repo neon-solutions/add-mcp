@@ -1,0 +1,17 @@
+{
+  "name": "add-mcp-web",
+  "private": true,
+  "description": "Landing page and docs for add-mcp, served at add-mcp.com.",
+  "type": "module",
+  "scripts": {
+    "dev": "blume dev",
+    "build": "blume build",
+    "preview": "blume preview"
+  },
+  "dependencies": {
+    "blume": "^0.6.7"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

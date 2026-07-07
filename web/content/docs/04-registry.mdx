@@ -1,0 +1,100 @@
+---
+title: Registry
+description: The add-mcp registry — browse servers on the web, search from the CLI, or point add-mcp at your own registry.
+---
+
+The [add-mcp registry](/registry) is a searchable catalog of MCP servers, generated from [integrations.sh](https://integrations.sh) data. Browse it on the web at [add-mcp.com/registry](/registry), or search it from the terminal:
+
+```bash
+npx add-mcp find neon
+```
+
+## Built-in registries
+
+| Registry                        | Base URL                                                | Description                                                                     |
+| ------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| **add-mcp registry**            | `https://add-mcp.com/registry/api/v1/servers`           | MCP servers discovered by integrations.sh, exposed through a registry-compatible API. The default. |
+| **Official Anthropic registry** | `https://registry.modelcontextprotocol.io/v0.1/servers` | The community-driven MCP server registry maintained by Anthropic — the broadest catalog. |
+
+The first `find`/`search` run automatically saves the default registry to `~/.config/add-mcp/config.json` (respects `XDG_CONFIG_HOME`) and reuses it on every subsequent search.
+
+:::note
+The add-mcp registry previously lived at `mcp.agent-tooling.dev`. That URL keeps working — existing configs are not broken — but new installs use `add-mcp.com/registry` and the CLI migrates saved configs automatically.
+:::
+
+## Editing or removing registries
+
+Registry selections are stored under the `findRegistries` key. Edit the file directly to replace, add, remove, or reorder registries:
+
+```json title="~/.config/add-mcp/config.json"
+{
+  "version": 1,
+  "findRegistries": [
+    {
+      "url": "https://add-mcp.com/registry/api/v1/servers",
+      "label": "add-mcp registry"
+    },
+    {
+      "url": "https://registry.modelcontextprotocol.io/v0.1/servers",
+      "label": "Official Anthropic registry"
+    }
+  ]
+}
+```
+
+To reset to the default registry, remove the `findRegistries` key or delete the config file.
+
+## Missing a server?
+
+The registry is generated from [integrations.sh](https://integrations.sh). To be listed, add your MCP server there. Package-only entries that integrations.sh cannot represent yet can be contributed to add-mcp's `registry.overlay.json` on [GitHub](https://github.com/neon-solutions/add-mcp).
+
+## Adding a custom registry
+
+Any server that implements the registry API can be used. The CLI sends a `GET` request to the configured `url` with these query parameters:
+
+| Parameter | Value                                  |
+| --------- | -------------------------------------- |
+| `search`  | The user's search keyword (lowercased) |
+| `version` | `latest`                               |
+| `limit`   | `100`                                  |
+
+The endpoint must return JSON in this shape:
+
+```json
+{
+  "servers": [
+    {
+      "server": {
+        "name": "example-server",
+        "description": "An example MCP server",
+        "version": "1.0.0",
+        "remotes": [
+          {
+            "type": "streamable-http",
+            "url": "https://mcp.example.com/mcp"
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+Append an entry to `findRegistries` in `~/.config/add-mcp/config.json`:
+
+```json
+{
+  "url": "https://my-registry.example.com/api/v1/servers",
+  "label": "My custom registry"
+}
+```
+
+## Registry API
+
+The add-mcp registry itself exposes a read-only JSON API with search and cursor pagination:
+
+```bash
+curl "https://add-mcp.com/registry/api/v1/servers?search=neon&limit=10"
+```
+
+The full OpenAPI spec is served at [`/registry/api/openapi.json`](/registry/api/openapi.json). The registry server is open source and self-hostable: [agent-tooling/mcp-registry](https://github.com/agent-tooling/mcp-registry).

@@ -1,0 +1,194 @@
+---
+title: API reference
+description: Every function and type exported by the add-mcp package.
+---
+
+All exports come from the package root:
+
+```ts
+import {
+  upsertServer,
+  removeServer,
+  listInstalledServers,
+  detectProjectAgents,
+  detectGlobalAgents,
+  getAgentTypes,
+  agents,
+} from "add-mcp";
+```
+
+## upsertServer
+
+Adds or updates an MCP server in an agent's config file. Creates the config file (and parent directories) when missing.
+
+```ts
+function upsertServer(
+  agentType: AgentInput,
+  serverName: string,
+  serverConfig: McpServerConfig,
+  options?: InstallOptions,
+): InstallResult;
+```
+
+| Parameter      | Type              | Description                                                        |
+| -------------- | ----------------- | ------------------------------------------------------------------ |
+| `agentType`    | `AgentInput`      | Agent identifier, e.g. `"cursor"`, `"claude-code"`. Validated at runtime. |
+| `serverName`   | `string`          | Key the server is stored under in the agent config.                |
+| `serverConfig` | `McpServerConfig` | Canonical server definition (see below).                           |
+| `options`      | `InstallOptions`  | `{ local?: boolean; cwd?: string }` — project-level install and its working directory. |
+
+Returns [`InstallResult`](#installresult). Never throws — errors are reported via `result.error`.
+
+## removeServer
+
+Removes a server entry from an agent's config file. Succeeds (with `removed: false`) when the config or entry doesn't exist.
+
+```ts
+function removeServer(
+  agentType: AgentInput,
+  serverName: string,
+  options?: InstallOptions,
+): RemoveServerResult;
+```
+
+Returns `{ success: boolean; path: string; removed: boolean; error?: string }`.
+
+## listInstalledServers
+
+Gathers installed servers across detected (or explicitly specified) agents.
+
+```ts
+function listInstalledServers(options: {
+  global?: boolean;
+  agents?: AgentType[];
+  cwd?: string;
+}): Promise<AgentServers[]>;
+```
+
+When `agents` is provided, those agents are included even if not detected (with `detected: false`).
+
+## detectProjectAgents
+
+Detects agents with project-level config files in a directory (synchronous).
+
+```ts
+function detectProjectAgents(cwd?: string): AgentType[];
+```
+
+## detectGlobalAgents
+
+Detects globally-installed agents by their global config paths (asynchronous).
+
+```ts
+function detectGlobalAgents(): Promise<AgentType[]>;
+```
+
+## getAgentTypes
+
+Returns all supported agent identifiers.
+
+```ts
+function getAgentTypes(): AgentType[];
+```
+
+## agents
+
+The full agent capability map — `Record<AgentType, AgentConfig>` with each agent's display name, config paths, file format, supported transports, and supported optional fields.
+
+## Types
+
+### McpServerConfig
+
+The canonical server definition. add-mcp maps it into each client's native schema and strips capability-gated fields the target agent doesn't support.
+
+```ts
+interface McpServerConfig {
+  // Remote servers
+  type?: "http" | "sse";
+  url?: string;
+  headers?: Record<string, string>;
+
+  // Local stdio servers
+  command?: string;
+  args?: string[];
+  env?: Record<string, string>;
+
+  // Capability-gated optional fields
+  timeout?: number; // Claude Code, Gemini CLI
+  oauthScopes?: string[]; // Cursor, Gemini CLI
+  autoApproveTools?: string[]; // Codex, Claude Code; [] = all tools
+}
+```
+
+### InstallOptions
+
+```ts
+interface InstallOptions {
+  /** Install to local (project-level) config instead of global */
+  local?: boolean;
+  /** Current working directory for local installs */
+  cwd?: string;
+}
+```
+
+### InstallResult
+
+```ts
+interface InstallResult {
+  success: boolean;
+  path: string;
+  error?: string;
+  /** Optional fields dropped because the agent doesn't support them */
+  droppedFields?: OptionalField[];
+  /** Additional files written beyond the main config */
+  extraPaths?: string[];
+}
+```
+
+### AgentType
+
+```ts
+type AgentType =
+  | "antigravity"
+  | "cline"
+  | "cline-cli"
+  | "claude-code"
+  | "claude-desktop"
+  | "codex"
+  | "cursor"
+  | "gemini-cli"
+  | "goose"
+  | "github-copilot-cli"
+  | "mcporter"
+  | "opencode"
+  | "vscode"
+  | "windsurf"
+  | "zed";
+```
+
+`AgentInput` is `AgentType | (string & {})` — it keeps autocomplete on the known literals while accepting arbitrary strings that are validated at runtime.
+
+### AgentServers / InstalledServer
+
+Returned by `listInstalledServers`:
+
+```ts
+interface AgentServers {
+  agentType: AgentType;
+  displayName: string;
+  detected: boolean;
+  scope: "local" | "global";
+  configPath: string;
+  servers: InstalledServer[];
+}
+
+interface InstalledServer {
+  serverName: string;
+  config: Record<string, unknown>;
+  /** URL for remote servers, package/command string for stdio servers */
+  identity: string;
+  agentType: AgentType;
+  scope: "local" | "global";
+  configPath: string;
+}
+```

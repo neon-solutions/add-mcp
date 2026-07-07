@@ -1,0 +1,30 @@
+---
+title: sync
+description: Synchronize server names and installations across agents.
+---
+
+Synchronize server names and installations across all detected agents. Servers are grouped by URL or package name, and each group is unified to the shortest server name. Servers with conflicting headers, env, or args across agents are skipped with a warning. `unify` is an alias for `sync`.
+
+```bash
+npx add-mcp sync [options]
+```
+
+## Examples
+
+```bash
+# Sync project-level configs (interactive confirmation)
+npx add-mcp sync
+
+# Sync without prompting
+npx add-mcp sync -y
+
+# Sync global configs
+npx add-mcp sync -g -y
+```
+
+## Options
+
+| Option         | Description                            |
+| -------------- | -------------------------------------- |
+| `-g, --global` | Sync global configs instead of project |
+| `-y, --yes`    | Skip confirmation prompts              |
