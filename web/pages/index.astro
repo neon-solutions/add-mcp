@@ -2,6 +2,8 @@
 import PageLayout from "blume/components/layout/PageLayout.astro";
 import data from "blume:data";
 
+import Footer from "../components/Footer.astro";
+
 const { config } = data;
 
 const agentNames = [
@@ -221,27 +223,5 @@ upsertServer(
     </a>
   </section>
 
-  <footer slot="footer" class="border-t">
-    <div
-      class="text-muted-foreground mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 px-6 py-8 text-sm sm:flex-row"
-    >
-      <p>add-mcp — Apache-2.0, free and open source.</p>
-      <nav class="flex items-center gap-4">
-        <a href="/docs" class="hover:text-foreground">Docs</a>
-        <a href="/registry" class="hover:text-foreground">Registry</a>
-        <a
-          href="https://github.com/neon-solutions/add-mcp"
-          class="hover:text-foreground"
-        >
-          GitHub
-        </a>
-        <a
-          href="https://www.npmjs.com/package/add-mcp"
-          class="hover:text-foreground"
-        >
-          npm
-        </a>
-      </nav>
-    </div>
-  </footer>
+  <Footer slot="footer" />
 </PageLayout>
