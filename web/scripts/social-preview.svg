@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640">
+  <rect width="1280" height="640" fill="#fafafa"/>
+  <!-- brand mark: outlined tile + slash, matching the site logo -->
+  <g transform="translate(80, 72)">
+    <rect x="3" y="3" width="58" height="58" rx="13" fill="none" stroke="#09090b" stroke-width="5"/>
+    <path d="M25 46.5 40 17.5" stroke="#09090b" stroke-width="6" stroke-linecap="round" fill="none"/>
+  </g>
+  <text x="78" y="285" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="96" font-weight="700" fill="#09090b">add-mcp</text>
+  <text x="80" y="360" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="36" fill="#52525b">Add MCP servers to your favorite</text>
+  <text x="80" y="410" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="36" fill="#52525b">coding agents with a single command.</text>
+  <rect x="80" y="460" width="620" height="64" rx="14" fill="#f4f4f5" stroke="#e4e4e7"/>
+  <text x="104" y="501" font-family="Menlo, Consolas, monospace" font-size="26" fill="#09090b">npx add-mcp https://mcp.context7.com/mcp</text>
+  <line x1="80" y1="566" x2="1200" y2="566" stroke="#e4e4e7" stroke-width="1"/>
+  <text x="1200" y="606" text-anchor="end" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="26" fill="#a1a1aa">add-mcp.com</text>
+</svg>

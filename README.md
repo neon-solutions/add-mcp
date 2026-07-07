@@ -4,6 +4,8 @@ Add MCP servers to your favorite coding agents with a single command.
 
 Supports **Claude Code**, **Codex**, **Cursor**, **OpenCode**, **VSCode** and [10 more](#supported-agents).
 
+Docs and registry: [add-mcp.com](https://add-mcp.com)
+
 ## Install an MCP Server
 
 Install an MCP server by remote URL or package name:
