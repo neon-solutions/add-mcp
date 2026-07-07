@@ -896,14 +896,14 @@ test("resolveServerName returns 'server' as ultimate fallback", () => {
 test("formatRegistryFailure shows label for known registries", () => {
   const msg = formatRegistryFailure({
     registry: {
-      url: "https://mcp.agent-tooling.dev/api/v1/servers",
-      label: "integrations.sh MCP registry",
+      url: "https://add-mcp.com/registry/api/v1/servers",
+      label: "add-mcp registry",
     },
     detail: "HTTP 500",
   });
-  assert.strictEqual(msg.includes('"integrations.sh MCP registry"'), true);
+  assert.strictEqual(msg.includes('"add-mcp registry"'), true);
   assert.strictEqual(
-    msg.includes("https://mcp.agent-tooling.dev/api/v1/servers"),
+    msg.includes("https://add-mcp.com/registry/api/v1/servers"),
     true,
   );
   assert.strictEqual(msg.includes("HTTP 500"), true);
@@ -926,7 +926,7 @@ test("formatRegistryFailure shows only URL for custom registries", () => {
 test("getDefaultFindRegistries returns two hardcoded registries", () => {
   const defaults = getDefaultFindRegistries();
   assert.strictEqual(defaults.length, 2);
-  assert.ok(defaults[0]?.url.includes("agent-tooling.dev"));
+  assert.ok(defaults[0]?.url.includes("add-mcp.com/registry"));
   assert.ok(defaults[1]?.url.includes("modelcontextprotocol.io"));
 });
 
