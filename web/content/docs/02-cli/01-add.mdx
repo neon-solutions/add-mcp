@@ -1,0 +1,97 @@
+---
+title: add
+description: Install an MCP server by URL, npm package, or command — the implicit default command.
+---
+
+The default command. Pass a remote URL, an npm package name, or a full command:
+
+```bash
+npx add-mcp <url | package | "command"> [options]
+```
+
+## Examples
+
+```bash
+# Remote MCP server (streamable HTTP, the default transport)
+npx add-mcp https://mcp.example.com/mcp
+
+# Remote MCP server over SSE
+npx add-mcp https://mcp.example.com/sse --transport sse
+
+# Remote server with an auth header
+npx add-mcp https://mcp.example.com/mcp --header 'Authorization: Bearer ${TOKEN}'
+
+# Remote server with a request timeout and OAuth scopes (capability-gated)
+npx add-mcp https://mcp.example.com/mcp --timeout 30000 --scopes "read,write"
+
+# npm package (runs via npx)
+npx add-mcp @modelcontextprotocol/server-postgres
+
+# Full command with arguments
+npx add-mcp "npx -y @org/mcp-server --flag value"
+
+# Node.js script
+npx add-mcp "node /path/to/server.js --port 3000"
+
+# Local stdio server with environment variables (repeatable)
+npx add-mcp @modelcontextprotocol/server-filesystem --env "API_KEY=secret" --env "DATABASE_URL=postgres://localhost/app"
+
+# Auto-approve all tools for agents that support it (Codex, Claude Code)
+npx add-mcp "executor mcp" --name executor -a codex -a claude-code --auto-approve
+
+# Non-interactive install to the global Claude Code config
+npx add-mcp https://mcp.example.com/mcp -g -a claude-code -y
+```
+
+## Options
+
+| Option                    | Description                                                              |
+| ------------------------- | ------------------------------------------------------------------------ |
+| `-g, --global`            | Install to user directory instead of project                             |
+| `-a, --agent <agent>`     | Target specific agents (e.g. `cursor`, `claude-code`). Repeatable.       |
+| `-t, --transport <type>`  | Transport type for remote servers: `http` (default), `sse`               |
+| `--type <type>`           | Alias for `--transport`                                                  |
+| `-h, --header <header>`   | HTTP header for remote servers (repeatable, `Key: Value`)                |
+| `--env <env>`             | Env var for local stdio servers (repeatable, `KEY=VALUE`)                |
+| `--args <args>`           | Arguments for local stdio servers                                        |
+| `--timeout <ms>`          | Request timeout (ms) for remote servers (capability-gated)               |
+| `--scopes <scopes>`       | OAuth scopes for remote servers, comma-separated (capability-gated)      |
+| `--oauth-scopes <scopes>` | Alias for `--scopes`                                                     |
+| `--auto-approve`          | Auto-approve MCP tool calls for supported agents (Codex, Claude Code)    |
+| `--approve-tool <tool>`   | Tool to auto-approve with `--auto-approve` (repeatable; defaults to all) |
+| `-n, --name <name>`       | Server name (auto-inferred if not provided)                              |
+| `-y, --yes`               | Skip all confirmation prompts                                            |
+| `--all`                   | Install to all agents                                                    |
+| `--gitignore`             | Add generated config files to `.gitignore`                               |
+
+## Transports
+
+| Transport | Flag               | Description                                           |
+| --------- | ------------------ | ----------------------------------------------------- |
+| **HTTP**  | `--transport http` | Streamable HTTP (default)                             |
+| **SSE**   | `--transport sse`  | Server-Sent Events (deprecated by MCP but still used) |
+
+Local servers (npm packages, commands) always use **stdio** transport. Most agents (Cursor, OpenCode, ...) don't need the transport type spelled out; add-mcp sets it where required.
+
+## Capability-gated fields
+
+Not every MCP client understands every field. add-mcp keeps one canonical server config; each agent declares which optional fields it supports and maps them into its native shape:
+
+| Field              | Flag                                | Supported by            | Mapped to                                                |
+| ------------------ | ----------------------------------- | ----------------------- | -------------------------------------------------------- |
+| Timeout            | `--timeout`                         | Claude Code, Gemini CLI | `timeout` (milliseconds)                                 |
+| OAuth scopes       | `--scopes`                          | Cursor, Gemini CLI      | Cursor `auth.scopes`, Gemini `oauth.scopes`              |
+| Tool auto-approval | `--auto-approve` / `--approve-tool` | Codex, Claude Code      | Codex approval modes; Claude Code permission allow rules |
+
+When a targeted agent doesn't support a field, add-mcp drops it from that agent's config and prints a warning — other agents still receive it.
+
+## Auto-approving tool calls
+
+`--auto-approve` preconfigures agent-level approval so the agent doesn't prompt before each MCP tool call. Use `--approve-tool <name>` (repeatable) to approve only specific tools; without it, all tools are approved.
+
+- **Codex** — writes approval modes into `config.toml`: per-tool `tools.<name>.approval_mode = "approve"`, or `default_tools_approval_mode = "approve"` for all tools.
+- **Claude Code** — writes permission allow rules to a separate settings file (`.claude/settings.local.json` for project installs, `~/.claude/settings.json` for global), e.g. `mcp__<server>__<tool>`. The MCP server entry itself stays clean.
+
+:::warning
+Claude Code's all-tools rule (`mcp__<server>`) follows the documented format, but a known Claude Code bug ([#34739](https://github.com/anthropics/claude-code/issues/34739)) can still prompt for non-fully-qualified MCP rules. Listing tools explicitly with `--approve-tool` is the most reliable path there.
+:::

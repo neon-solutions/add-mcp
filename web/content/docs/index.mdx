@@ -1,0 +1,34 @@
+---
+title: Introduction
+description: add-mcp adds MCP servers to your favorite coding agents with a single command.
+---
+
+`add-mcp` is an open-source CLI (and TypeScript SDK) that installs [Model Context Protocol](https://modelcontextprotocol.io) servers into the config files of your coding agents — Claude Code, Codex, Cursor, OpenCode, VS Code, and [10 more](/docs/agents) — with a single command.
+
+```bash
+npx add-mcp https://mcp.context7.com/mcp
+```
+
+One command handles the whole flow: it detects which agents you use, asks which ones to install to (or takes flags for non-interactive use), and writes the right config shape to each agent's own file format — JSON, YAML, or TOML.
+
+:::note
+add-mcp is free and open source under the Apache-2.0 license. The code lives at [neon-solutions/add-mcp](https://github.com/neon-solutions/add-mcp).
+:::
+
+## What it does
+
+- **Install remote or local servers** — by URL (streamable HTTP or SSE), npm package, or arbitrary command.
+- **Find servers** — search the [add-mcp registry](/registry) right from the terminal with `add-mcp find` and install a match interactively.
+- **Manage installs** — `list`, `remove`, and `sync` server configs across all your agents.
+- **Programmatic use** — the [`add-mcp` npm package](https://www.npmjs.com/package/add-mcp) exposes an [SDK](/docs/sdk) so your own CLI or tool can install MCP servers for its users.
+
+## Why not configure agents by hand?
+
+Every agent stores MCP servers in a different file, format, and shape: Cursor uses `.cursor/mcp.json`, Codex uses TOML at `.codex/config.toml`, Goose uses YAML, Claude Code splits project and global configs. Fields like timeouts, OAuth scopes, and tool auto-approval differ per client — some don't support them at all. add-mcp keeps one canonical server definition and maps it into each client's native schema, dropping unsupported fields with a warning instead of writing broken config.
+
+## Next steps
+
+- [Quickstart](/docs/quickstart) — install your first MCP server.
+- [CLI reference](/docs/cli) — every command and flag.
+- [SDK](/docs/sdk) — programmatic use from your own tools.
+- [Registry](/docs/registry) — find servers and host your own registry.

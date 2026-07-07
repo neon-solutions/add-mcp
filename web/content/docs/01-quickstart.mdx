@@ -1,0 +1,74 @@
+---
+title: Quickstart
+description: Install your first MCP server with add-mcp in under a minute.
+---
+
+add-mcp runs with `npx` (or `bunx`) — there's nothing to install first. Node.js 18 or newer is required.
+
+## Install a remote MCP server
+
+Pass a server URL and add-mcp does the rest:
+
+```bash
+npx add-mcp https://mcp.context7.com/mcp
+```
+
+The CLI detects the agents configured in your project (`.cursor/`, `.vscode/`, `.mcp.json`, ...), preselects them, and lets you confirm or adjust the selection. It then writes the server into each agent's own config file and format.
+
+## Install an npm package (stdio server)
+
+Local stdio servers work the same way — pass the package name:
+
+```bash
+npx add-mcp @modelcontextprotocol/server-postgres
+```
+
+The server is registered to run via `npx` in each agent's config.
+
+## Find a server by keyword
+
+Don't know the URL? Search the [registry](/registry) from the terminal:
+
+```bash
+npx add-mcp find neon
+```
+
+Pick a result, and add-mcp installs it with the right transport (it prefers streamable HTTP remotes and falls back to packages) — including prompting for any required environment variables or headers.
+
+## Common variations
+
+```bash
+# Install globally (user-level config) instead of the project
+npx add-mcp https://mcp.example.com/mcp -g
+
+# Target specific agents
+npx add-mcp https://mcp.example.com/mcp -a cursor -a claude-code
+
+# Non-interactive (CI-friendly): no prompts
+npx add-mcp https://mcp.example.com/mcp -y
+
+# With an auth header
+npx add-mcp https://mcp.example.com/mcp --header 'Authorization: Bearer ${TOKEN}'
+
+# With env vars for a stdio server
+npx add-mcp @modelcontextprotocol/server-filesystem --env "API_KEY=secret"
+```
+
+:::tip
+Use single quotes around values with `${VAR}` placeholders so your shell doesn't expand them. Interactive installs prompt for each placeholder value.
+:::
+
+## Project vs. global scope
+
+| Scope       | Flag      | Written to                | Use case                                       |
+| ----------- | --------- | ------------------------- | ---------------------------------------------- |
+| **Project** | (default) | `.cursor/mcp.json`, etc.  | Committed with your project, shared with team  |
+| **Global**  | `-g`      | `~/.cursor/mcp.json` etc. | Available across all projects                  |
+
+When every selected agent supports both scopes, interactive mode asks which one you want. `-g` always forces global, and `-y` stays deterministic.
+
+## Next steps
+
+- [CLI reference](/docs/cli) — all commands: `add`, `find`, `list`, `remove`, `sync`.
+- [Supported agents](/docs/agents) — the full agent table with config paths.
+- [SDK](/docs/sdk) — install MCP servers from your own tool.

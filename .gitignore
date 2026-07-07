@@ -33,3 +33,6 @@ coverage/
 # Environment
 .env
 .env.local
+
+# Vercel project link
+.vercel/

@@ -1,0 +1,37 @@
+---
+// Site-wide footer, shared by the landing page and (via the Footer layout
+// slot in components.ts) every docs page.
+---
+
+<footer class="border-t">
+  <div
+    class="text-muted-foreground mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 px-6 py-8 text-sm sm:flex-row"
+  >
+    <div class="flex flex-col items-center gap-1.5 sm:items-start">
+      <p>add-mcp — Apache-2.0, free and open source.</p>
+      <p class="text-xs">
+        Made by <a
+          href="https://x.com/andrelandgraf"
+          class="hover:text-foreground underline underline-offset-4">andrelandgraf</a> · Docs powered by <a
+          href="https://blume-eight.vercel.app"
+          class="hover:text-foreground underline underline-offset-4">Blume</a>
+      </p>
+    </div>
+    <nav class="flex items-center gap-4">
+      <a href="/docs" class="hover:text-foreground">Docs</a>
+      <a href="/registry" class="hover:text-foreground">Registry</a>
+      <a
+        href="https://github.com/neon-solutions/add-mcp"
+        class="hover:text-foreground"
+      >
+        GitHub
+      </a>
+      <a
+        href="https://www.npmjs.com/package/add-mcp"
+        class="hover:text-foreground"
+      >
+        npm
+      </a>
+    </nav>
+  </div>
+</footer>
