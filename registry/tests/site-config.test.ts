@@ -1,14 +1,13 @@
 import { describe, expect, it } from "vitest";
 
+import { BRAND } from "../src/lib/brand";
 import { getSiteConfig } from "../src/lib/site-config";
 
 describe("getSiteConfig", () => {
-  it("returns the add-mcp registry branding", () => {
+  it("returns baked-in add-mcp registry branding", () => {
     const site = getSiteConfig();
-    expect(site.name).toBe("add-mcp registry");
-    expect(site.repositoryUrl).toBe(
-      "https://github.com/neon-solutions/add-mcp",
-    );
-    expect(site.logoUrl).toBeNull();
+    expect(site.name).toBe(BRAND.registryName);
+    expect(site.description).toBe(BRAND.description);
+    expect(site.repositoryUrl).toBe(BRAND.githubUrl);
   });
 });
