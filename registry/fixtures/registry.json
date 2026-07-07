@@ -1,0 +1,18 @@
+[
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "io.github.example/weather",
+      "description": "Weather data MCP server",
+      "version": "1.0.0"
+    },
+    "_meta": {
+      "io.modelcontextprotocol.registry/official": {
+        "status": "active",
+        "publishedAt": "2025-03-29T00:00:00Z",
+        "updatedAt": "2025-03-29T00:00:00Z",
+        "isLatest": true
+      }
+    }
+  }
+]

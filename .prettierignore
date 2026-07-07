@@ -1,0 +1,4 @@
+# Standalone apps with their own formatting setup
+registry/
+web/dist/
+web/.blume/
