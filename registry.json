@@ -2172,7 +2172,7 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "io.apollo/mcp",
       "title": "Apollo",
-      "description": "Apollo.io is a sales intelligence and engagement platform for searching and enriching people and company data and managing go-to-market workflows. It also provides CRM, sequencing, analytics, and related sales operations features.",
+      "description": "Apollo.io is a sales intelligence and engagement platform for searching and enriching company and contact data and managing go-to-market workflows. It also provides tools for CRM records, sequences, conversations, calls, tasks, and analytics.",
       "version": "1.0.0",
       "websiteUrl": "https://docs.apollo.io/docs/apollo-mcp",
       "icons": [
@@ -2382,9 +2382,9 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.asana/mcp",
       "title": "Asana",
-      "description": "Asana is a work management platform for organizing projects, tasks, teams, and workflows. Its APIs and MCP server expose Asana workspace data and actions for integrations and AI assistants.",
+      "description": "Asana is a work management platform for organizing goals, projects, tasks, and workflows across teams. It also provides AI and developer features for integrating with the Asana Work Graph and workspace data.",
       "version": "1.0.0",
-      "websiteUrl": "https://developers.asana.com/docs/using-asanas-mcp-server",
+      "websiteUrl": "https://developers.asana.com/docs/mcp-server",
       "icons": [
         {
           "src": "https://integrations.sh/logo/asana.com"
@@ -4274,10 +4274,10 @@
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "io.builder/mcp",
-      "title": "Builder  Publish",
-      "description": "Builder.io is a visual headless CMS and development platform for creating, managing, and publishing digital content and frontend experiences. It provides tools for content delivery, programmatic content management, and code-generation workflows.",
+      "title": "Builder",
+      "description": "Builder.io is a visual development and content management platform for building and publishing digital experiences. It provides content delivery, content management, asset upload, and AI-assisted tooling for websites and applications.",
       "version": "1.0.0",
-      "websiteUrl": "https://mcp.builder.io/.well-known/oauth-protected-resource",
+      "websiteUrl": "https://www.builder.io/c/docs/mcp-builder-server",
       "icons": [
         {
           "src": "https://integrations.sh/logo/builder.io"
@@ -4286,7 +4286,7 @@
       "remotes": [
         {
           "type": "streamable-http",
-          "url": "https://mcp.builder.io/mcp/publish"
+          "url": "https://mcp.builder.io"
         }
       ]
     }
@@ -4758,9 +4758,9 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.canva/mcp",
       "title": "Canva",
-      "description": "Canva is an online visual design platform for creating, editing, organizing, and exporting designs and brand assets. It also offers enterprise administration features such as SCIM user provisioning and audit log delivery.",
+      "description": "Canva is a visual design and collaboration platform for creating and managing designs, assets, templates, and team workflows. It also offers enterprise administration features such as SCIM-based user provisioning and audit log export.",
       "version": "1.0.0",
-      "websiteUrl": "https://www.canva.dev/docs/mcp/",
+      "websiteUrl": "https://canva.dev/docs/mcp/",
       "icons": [
         {
           "src": "https://integrations.sh/logo/canva.com"
@@ -6210,9 +6210,9 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.cloudflare/mcp",
       "title": "Cloudflare Developer Platform",
-      "description": "Cloudflare provides a global cloud platform for web delivery, security, serverless compute, storage, networking, and related developer services. Its products include APIs and tooling for managing zones, security features, Workers, storage, analytics, and other platform resources.",
+      "description": "Cloudflare is a cloud connectivity platform offering developer infrastructure, security, Zero Trust, and network services. It provides products including Workers, storage and AI services, CDN and DNS, and application and network protection.",
       "version": "1.0.0",
-      "websiteUrl": "https://github.com/cloudflare/mcp",
+      "websiteUrl": "https://developers.cloudflare.com/agents/model-context-protocol/cloudflare/servers-for-cloudflare/",
       "icons": [
         {
           "src": "https://integrations.sh/logo/cloudflare.com"
@@ -6757,9 +6757,9 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.context7/mcp",
+      "name": "com.context7/context7",
       "title": "Context7",
-      "description": "Context7 provides up-to-date library and documentation context for developers and coding assistants. It indexes documentation sources and serves search, context retrieval, and MCP-based access to that content.",
+      "description": "Context7 indexes software-library and internal documentation sources and delivers version-specific documentation snippets and code examples for AI coding agents and developer tools. It supports documentation lookup over HTTP, through a hosted MCP server, and from a terminal CLI.",
       "version": "1.0.0",
       "websiteUrl": "https://context7.com/docs/resources/all-clients",
       "icons": [
@@ -6779,6 +6779,27 @@
               "isSecret": true
             }
           ]
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.context7/context7-mcp-oauth-endpoint",
+      "title": "Context7  OAuth endpoint",
+      "description": "Context7 indexes software-library and internal documentation sources and delivers version-specific documentation snippets and code examples for AI coding agents and developer tools. It supports documentation lookup over HTTP, through a hosted MCP server, and from a terminal CLI.",
+      "version": "1.0.0",
+      "websiteUrl": "https://context7.com/docs/howto/oauth",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/context7.com"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.context7.com/mcp/oauth"
         }
       ]
     }
@@ -9430,27 +9451,6 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.figma/mcp",
-      "title": "Figma",
-      "description": "Figma is a collaborative design and interface-development platform for creating files, components, prototypes, and related design-system assets. It also provides organization and developer features such as automation APIs, analytics, and AI-agent access to design context.",
-      "version": "1.0.0",
-      "websiteUrl": "https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/figma.com"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://mcp.figma.com/mcp"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "io.intercom/fin-agent-api-mcp-server",
       "title": "Fin Agent API",
       "description": "Intercom is a customer service platform for support teams, with messaging, inbox, help center, ticketing, and AI agent features. It provides APIs and MCP servers for accessing workspace data and Fin capabilities.",
@@ -11228,9 +11228,9 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "ai.granola/mcp",
       "title": "Granola",
-      "description": "Granola MCP server discovered by integrations.sh.",
+      "description": "Granola is an AI notepad for meetings that captures transcripts and generates notes, summaries, and meeting context without using a meeting bot. It offers desktop and mobile apps plus workspace features for sharing, search, and integrations.",
       "version": "1.0.0",
-      "websiteUrl": "https://help.granola.ai/article/granola-mcp#set-up-guide",
+      "websiteUrl": "https://docs.granola.ai/help-center/sharing/integrations/mcp",
       "icons": [
         {
           "src": "https://integrations.sh/logo/granola.ai"
@@ -12194,9 +12194,9 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.hubspot/mcp",
       "title": "HubSpot",
-      "description": "HubSpot MCP server discovered by integrations.sh.",
+      "description": "HubSpot is a customer platform and CRM that includes APIs and developer tooling for CRM data, apps, CMS content, and automation. It also provides AI integration surfaces such as a remote MCP server and agent-oriented command-line tools.",
       "version": "1.0.0",
-      "websiteUrl": "https://knowledge.hubspot.com/integrations/set-up-and-use-the-hubspot-connector-for-claude",
+      "websiteUrl": "https://developers.hubspot.com/docs/apps/developer-platform/build-apps/integrate-with-the-remote-hubspot-mcp-server",
       "icons": [
         {
           "src": "https://integrations.sh/logo/hubspot.com"
@@ -12702,7 +12702,7 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "sh.integrations/mcp",
       "title": "integrations.sh",
-      "description": "integrations.sh is an open-source registry that catalogs APIs, GraphQL endpoints, MCP servers, and CLIs across many services. It helps developers and AI agents discover available integration surfaces and their authentication requirements.",
+      "description": "integrations.sh is an open-source registry of integration surfaces across many services, cataloging APIs, GraphQL endpoints, MCP servers, and CLIs along with authentication details. Its own site provides public API and MCP endpoints for accessing that registry data.",
       "version": "1.0.0",
       "websiteUrl": "https://integrations.sh/integrations.sh/",
       "icons": [
@@ -14643,9 +14643,9 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "app.linear/mcp",
       "title": "Linear",
-      "description": "Linear is a product planning and issue-tracking platform for software teams. It lets teams manage issues, projects, roadmaps, and related workflow data.",
+      "description": "Linear is a product development and issue-tracking platform for planning, building, and managing software work across issues, projects, roadmaps, and teams. It also supports integrations, automation, agents, and webhooks around workspace data.",
       "version": "1.0.0",
-      "websiteUrl": "https://linear.app/docs/mcp",
+      "websiteUrl": "https://linear.app/docs/mcp.md",
       "icons": [
         {
           "src": "https://integrations.sh/logo/linear.app"
@@ -17896,7 +17896,7 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.notion/mcp",
       "title": "Notion",
-      "description": "Notion is a workspace and knowledge-management platform for documents, databases, collaboration, and automation. Its developer platform lets builders integrate with workspace content, deploy Notion Workers, and connect AI tools through MCP.",
+      "description": "Notion is a collaborative workspace for documents, wikis, projects, databases, and team knowledge management. It also provides AI features, calendar, forms, and enterprise administration capabilities.",
       "version": "1.0.0",
       "websiteUrl": "https://developers.notion.com/guides/mcp/overview",
       "icons": [
@@ -21119,7 +21119,7 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.ramp/ramp-mcp",
       "title": "Ramp",
-      "description": "Ramp is a financial operations platform for corporate cards, expense management, bill pay, procurement, travel, and related finance workflows. It also provides developer tooling so customers and partners can automate Ramp data access and actions.",
+      "description": "Ramp is a financial operations platform for corporate cards, expense management, bill pay, procurement, travel, treasury, and related business finance workflows. It also publishes developer tooling for integrating with Ramp data and actions from applications, terminals, and AI assistants.",
       "version": "1.0.0",
       "websiteUrl": "https://docs.ramp.com/developer-api/v1/ramp-mcp",
       "icons": [
@@ -21140,7 +21140,7 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.ramp/ramp-data-mcp",
       "title": "Ramp Data",
-      "description": "Ramp is a financial operations platform for corporate cards, expense management, bill pay, procurement, travel, and related finance workflows. It also provides developer tooling so customers and partners can automate Ramp data access and actions.",
+      "description": "Ramp is a financial operations platform for corporate cards, expense management, bill pay, procurement, travel, treasury, and related business finance workflows. It also publishes developer tooling for integrating with Ramp data and actions from applications, terminals, and AI assistants.",
       "version": "1.0.0",
       "websiteUrl": "https://docs.ramp.com/developer-api/v1/ramp-data-mcp",
       "icons": [
@@ -21152,27 +21152,6 @@
         {
           "type": "streamable-http",
           "url": "https://mcp.ramp.com/ramp-data/mcp"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.ramp/ramp-developer-mcp",
-      "title": "Ramp Developer",
-      "description": "Ramp is a financial operations platform for corporate cards, expense management, bill pay, procurement, travel, and related finance workflows. It also provides developer tooling so customers and partners can automate Ramp data access and actions.",
-      "version": "1.0.0",
-      "websiteUrl": "https://docs.ramp.com/developer-api/v1/developer-mcp",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/ramp.com"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://mcp.ramp.com/developer/mcp"
         }
       ]
     }
@@ -22012,7 +21991,7 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.resend/mcp",
       "title": "Resend",
-      "description": "Resend is an email platform for developers for sending and receiving email, managing domains, contacts, broadcasts, templates, webhooks, and related email infrastructure. It also provides AI-oriented tooling such as a hosted MCP server and a command-line interface.",
+      "description": "Resend is an email platform for developers for sending, receiving, and managing transactional and marketing email. It also provides tooling for AI agents through a hosted MCP server and a command-line interface.",
       "version": "1.0.0",
       "websiteUrl": "https://resend.com/docs/mcp-server",
       "icons": [
@@ -22023,7 +22002,7 @@
       "remotes": [
         {
           "type": "streamable-http",
-          "url": "https://mcp.resend.com"
+          "url": "https://mcp.resend.com/mcp"
         }
       ]
     }
@@ -23809,9 +23788,9 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.slack/mcp-server",
       "title": "Slack",
-      "description": "Slack is a workplace messaging and collaboration platform for channels, direct messages, files, workflows, and enterprise administration. It also provides APIs and AI connectivity features so apps and agents can read and act on Slack data.",
+      "description": "Slack is a workplace messaging and collaboration platform for teams and organizations. It provides channels, messaging, automation, search, canvases, and app integrations for working inside Slack workspaces and Enterprise organizations.",
       "version": "1.0.0",
-      "websiteUrl": "https://integrations.sh/slack.com/mcp-server/",
+      "websiteUrl": "https://docs.slack.dev/ai/slack-mcp-server",
       "icons": [
         {
           "src": "https://integrations.sh/logo/slack.com"
@@ -23830,9 +23809,9 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.slack/slack-mcp-server",
       "title": "Slack",
-      "description": "Slack is a workplace messaging and collaboration platform for channels, direct messages, files, workflows, and enterprise administration. It also provides APIs and AI connectivity features so apps and agents can read and act on Slack data.",
+      "description": "Slack is a workplace messaging and collaboration platform for teams and organizations. It provides channels, messaging, automation, search, canvases, and app integrations for working inside Slack workspaces and Enterprise organizations.",
       "version": "1.0.0",
-      "websiteUrl": "https://slack.com/help/articles/48855576908307-Guide-to-Model-Context-Protocol-in-Slack",
+      "websiteUrl": "https://docs.slack.dev/ai/slack-mcp-server",
       "icons": [
         {
           "src": "https://integrations.sh/logo/slack.com"
@@ -24701,7 +24680,7 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.stripe/mcp",
       "title": "Stripe",
-      "description": "Stripe provides online payment processing, billing, payouts, and related financial infrastructure for internet businesses. Its platform also includes tools for developers to manage payments, subscriptions, connected accounts, and other commerce workflows.",
+      "description": "Stripe provides financial infrastructure for businesses, including online and in-person payments, billing, payouts, and related money-management products. Its platform supports businesses building payment, subscription, marketplace, treasury, and other financial workflows.",
       "version": "1.0.0",
       "websiteUrl": "https://docs.stripe.com/mcp",
       "icons": [
@@ -24717,6 +24696,12 @@
             {
               "name": "Authorization",
               "description": "Stripe API key. Use Bearer <token>.",
+              "isRequired": true,
+              "isSecret": true
+            },
+            {
+              "name": "Stripe-Account",
+              "description": "Stripe API key. Use <token>.",
               "isRequired": true,
               "isSecret": true
             }
@@ -27429,7 +27414,7 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.vercel/mcp",
       "title": "Vercel",
-      "description": "Vercel is a cloud platform for building, deploying, and operating web applications and AI-powered workloads. It provides hosting, deployment, project management, and related developer tooling for teams and individual developers.",
+      "description": "Vercel is a cloud platform for building, deploying, and operating web applications and AI workloads. It provides hosting, deployment automation, domains, observability, and AI gateway capabilities.",
       "version": "1.0.0",
       "websiteUrl": "https://vercel.com/docs/agent-resources/vercel-mcp",
       "icons": [
@@ -28275,10 +28260,10 @@
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "ai.windsor/mcp",
-      "title": "Windsor.ai",
-      "description": "Windsor.ai MCP server discovered by integrations.sh.",
+      "title": "Windsor",
+      "description": "Windsor.ai is a marketing and business data integration platform that connects hundreds of advertising, analytics, CRM, e-commerce, and warehouse sources to BI tools, databases, spreadsheets, and AI assistants. It standardizes and syncs that data so users can query, analyze, and in some cases take write actions from connected tools.",
       "version": "1.0.0",
-      "websiteUrl": "https://windsor.ai/introducing-windsor-mcp/#method-1-using-claude-desktop-3",
+      "websiteUrl": "https://mcp.windsor.ai/",
       "icons": [
         {
           "src": "https://integrations.sh/logo/windsor.ai"
@@ -28287,7 +28272,7 @@
       "remotes": [
         {
           "type": "streamable-http",
-          "url": "https://mcp.windsor.ai"
+          "url": "https://mcp.windsor.ai/"
         }
       ]
     }
