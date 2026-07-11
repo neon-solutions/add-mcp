@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- add `lm-studio` support with global installs written to `~/.lmstudio/mcp.json` (`mcpServers`)
+
 ## [1.14.0] - 2026-07-06
 
 - move the default `find` / `search` registry to its new home at `https://add-mcp.com/registry/api/v1/servers` (label: "add-mcp registry"). The previous `mcp.agent-tooling.dev` URL keeps working; saved configs referencing it are migrated automatically on the next `find` / `search` run (custom labels are preserved, duplicates are deduped).

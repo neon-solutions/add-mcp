@@ -89,6 +89,10 @@ function windsurfConfigPath(homeDir: string): string {
   return join(homeDir, ".codeium", "windsurf", "mcp_config.json");
 }
 
+function lmStudioConfigPath(homeDir: string): string {
+  return join(homeDir, ".lmstudio", "mcp.json");
+}
+
 function antigravityConfigPath(homeDir: string): string {
   return join(homeDir, ".gemini", "config", "mcp_config.json");
 }
@@ -844,6 +848,77 @@ test("E2E CLI: windsurf aliases (codeium, cascade) install to windsurf config", 
     const servers = saved.mcpServers as Record<string, unknown>;
     assert.ok(servers.remote, `${alias} should write remote server config`);
   }
+});
+
+test("E2E CLI: remote server to lm-studio succeeds with url config", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "lm-studio",
+      "-y",
+      "--name",
+      "remote",
+      "--header",
+      "Authorization: Bearer token",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const configPath = lmStudioConfigPath(homeDir);
+  assert.strictEqual(existsSync(configPath), true);
+
+  const saved = JSON.parse(readFileSync(configPath, "utf-8"));
+  const servers = saved.mcpServers as Record<string, unknown>;
+  const server = servers.remote as Record<string, unknown>;
+  assert.strictEqual(server.url, "https://mcp.example.com/mcp");
+  assert.deepStrictEqual(server.headers, {
+    Authorization: "Bearer token",
+  });
+});
+
+test("E2E CLI: stdio server to lm-studio succeeds", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "@modelcontextprotocol/server-filesystem",
+      "-a",
+      "lm-studio",
+      "-y",
+      "--name",
+      "filesystem",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const configPath = lmStudioConfigPath(homeDir);
+  assert.strictEqual(existsSync(configPath), true);
+
+  const saved = JSON.parse(readFileSync(configPath, "utf-8"));
+  const servers = saved.mcpServers as Record<string, unknown>;
+  assert.ok(servers.filesystem, "filesystem server should be configured");
+
+  const server = servers.filesystem as Record<string, unknown>;
+  assert.strictEqual(server.command, "npx");
 });
 
 test("E2E CLI: local stdio install supports repeated --env", () => {
