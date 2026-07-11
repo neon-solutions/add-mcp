@@ -255,6 +255,30 @@ function transformCodexConfig(
   );
 }
 
+/**
+ * Grok Build stores MCP servers in config.toml under [mcp_servers.<name>].
+ * Remote servers use url + optional headers (no type field). Stdio uses
+ * command / args / env. See Grok user guide: MCP Servers.
+ */
+function transformGrokBuildConfig(
+  _serverName: string,
+  config: McpServerConfig,
+): unknown {
+  if (config.url) {
+    const remoteConfig: Record<string, unknown> = {
+      url: config.url,
+    };
+
+    if (config.headers && Object.keys(config.headers).length > 0) {
+      remoteConfig.headers = config.headers;
+    }
+
+    return remoteConfig;
+  }
+
+  return buildStandardLocal(config);
+}
+
 function transformCursorConfig(
   _serverName: string,
   config: McpServerConfig,
@@ -555,6 +579,22 @@ export const agents: Record<AgentType, AgentConfig> = {
       return existsSync(dirname(copilotConfigPath));
     },
     transformConfig: transformGitHubCopilotCliConfig,
+  },
+
+  "grok-build": {
+    name: "grok-build",
+    displayName: "Grok Build",
+    configPath: join(home, ".grok", "config.toml"),
+    localConfigPath: ".grok/config.toml",
+    projectDetectPaths: [".grok"],
+    configKey: "mcp_servers",
+    format: "toml",
+    supportedTransports: ["stdio", "http", "sse"],
+    supportedFields: [],
+    detectGlobalInstall: async () => {
+      return existsSync(join(home, ".grok"));
+    },
+    transformConfig: transformGrokBuildConfig,
   },
 
   mcporter: {
