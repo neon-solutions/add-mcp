@@ -873,6 +873,101 @@ test("E2E: Re-install replaces server entry instead of merging (JSON)", () => {
 });
 
 // ============================================
+// E2E Tests: Grok Build (TOML format)
+// ============================================
+
+test("E2E: Grok Build config transformation - remote", () => {
+  const parsed = parseSource("https://mcp.example.com/api");
+  const config = buildServerConfig(parsed);
+
+  const grokAgent = agents["grok-build"];
+  const transformed = grokAgent.transformConfig!("example", config) as Record<
+    string,
+    unknown
+  >;
+
+  assert.strictEqual(transformed.url, "https://mcp.example.com/api");
+  assert.strictEqual("type" in transformed, false);
+});
+
+test("E2E: Grok Build config transformation with headers", () => {
+  const parsed = parseSource("https://mcp.example.com/api");
+  const config = buildServerConfig(parsed, {
+    headers: {
+      Authorization: "Bearer token",
+    },
+  });
+
+  const grokAgent = agents["grok-build"];
+  const transformed = grokAgent.transformConfig!("example", config) as Record<
+    string,
+    unknown
+  >;
+
+  assert.deepStrictEqual(transformed.headers, {
+    Authorization: "Bearer token",
+  });
+  assert.strictEqual(transformed.url, "https://mcp.example.com/api");
+});
+
+test("E2E: Grok Build config transformation - local server", () => {
+  const parsed = parseSource("mcp-server-postgres");
+  const config = buildServerConfig(parsed);
+
+  const grokAgent = agents["grok-build"];
+  const transformed = grokAgent.transformConfig!("postgres", config) as Record<
+    string,
+    unknown
+  >;
+
+  assert.strictEqual(transformed.command, "npx");
+  assert.deepStrictEqual(transformed.args, ["-y", "mcp-server-postgres"]);
+});
+
+test("E2E: Grok Build config transformation - local server includes env", () => {
+  const parsed = parseSource("mcp-server-postgres");
+  const config = buildServerConfig(parsed, {
+    env: {
+      OPENAI_API_KEY: "secret",
+    },
+  });
+
+  const grokAgent = agents["grok-build"];
+  const transformed = grokAgent.transformConfig!("postgres", config) as Record<
+    string,
+    unknown
+  >;
+
+  assert.deepStrictEqual(transformed.env, {
+    OPENAI_API_KEY: "secret",
+  });
+});
+
+test("E2E: Write TOML config file (Grok Build format)", () => {
+  const tempDir = createTempDir();
+  const grokConfigPath = join(tempDir, ".grok", "config.toml");
+
+  const parsed = parseSource("mcp-server-postgres");
+  const serverConfig = buildServerConfig(parsed);
+
+  const grokAgent = agents["grok-build"];
+  const transformed = grokAgent.transformConfig!("postgres", serverConfig);
+
+  const config = buildConfigWithKey("mcp_servers", "postgres", transformed);
+  writeConfig(grokConfigPath, config, "toml", "mcp_servers");
+
+  assert.strictEqual(existsSync(grokConfigPath), true);
+
+  const savedConfig = readTomlConfig(grokConfigPath);
+  const mcpServers = savedConfig.mcp_servers as Record<string, unknown>;
+  assert.ok(mcpServers);
+
+  const serverEntry = mcpServers.postgres as Record<string, unknown>;
+  assert.strictEqual(serverEntry.command, "npx");
+  assert.deepStrictEqual(serverEntry.args, ["-y", "mcp-server-postgres"]);
+});
+
+// ============================================
 // E2E Tests: Multiple agents at once
 // ============================================
 

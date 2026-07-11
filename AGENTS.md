@@ -1,6 +1,6 @@
 # add-mcp
 
-A CLI to install MCP servers for different coding agents (Claude Code, Cursor, VS Code, OpenCode, Codex) with a single command.
+A CLI to install MCP servers for different coding agents (Claude Code, Cursor, VS Code, OpenCode, Codex, Grok Build) with a single command.
 
 ## Dev environment
 

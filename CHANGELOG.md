@@ -1,9 +1,13 @@
 # Changelog
 
+## [1.15.0] - 2026-07-22
+
+- replace an existing server entry wholesale when re-installing under the same name, instead of deep-merging the new config into the old one. Previously, stale fields from a prior install survived the merge — most damaging when an old stdio entry (`command`/`args`/`env`) was combined with a new remote install (`type`/`url`), producing a hybrid entry that Codex rejects wholesale with `invalid configuration: url is not supported for stdio`, breaking every chat until the config is edited by hand. Applies to the TOML, JSON, and YAML writers; everything else in the config file still merges as before ([#83](https://github.com/neon-solutions/add-mcp/pull/83))
+- add `grok-build` support with project installs to `.grok/config.toml` and global installs to `~/.grok/config.toml` (`mcp_servers` TOML tables); alias: `grok`
+
 ## [1.14.1] - 2026-07-22
 
 - recognize Gemini CLI's legacy `httpUrl` field across `list`, `remove`, and `sync`, preserving the endpoint and headers when syncing the server to other agents. Co-authored with @preciousimo ([#33](https://github.com/neon-solutions/add-mcp/issues/33), [#79](https://github.com/neon-solutions/add-mcp/pull/79))
-- replace an existing server entry wholesale when re-installing under the same name, instead of deep-merging the new config into the old one. Previously, stale fields from a prior install survived the merge — most damaging when an old stdio entry (`command`/`args`/`env`) was combined with a new remote install (`type`/`url`), producing a hybrid entry that Codex rejects wholesale with `invalid configuration: url is not supported for stdio`, breaking every chat until the config is edited by hand. Applies to the TOML, JSON, and YAML writers; everything else in the config file still merges as before ([#83](https://github.com/neon-solutions/add-mcp/pull/83))
 
 ## [1.14.0] - 2026-07-06
 
