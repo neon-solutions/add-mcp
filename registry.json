@@ -9451,6 +9451,26 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.figma.mcp/mcp",
+      "title": "Figma",
+      "description": "The Figma MCP server brings Figma design context directly into your AI workflow.",
+      "repository": {
+        "url": "https://github.com/figma/mcp-server-guide",
+        "source": "github"
+      },
+      "version": "1.0.3",
+      "websiteUrl": "https://www.figma.com",
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.figma.com/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "io.intercom/fin-agent-api-mcp-server",
       "title": "Fin Agent API",
       "description": "Intercom is a customer service platform for support teams, with messaging, inbox, help center, ticketing, and AI agent features. It provides APIs and MCP servers for accessing workspace data and Fin capabilities.",
