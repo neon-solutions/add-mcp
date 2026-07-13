@@ -53,15 +53,18 @@ const features = [
 
 const examples = [
   {
+    id: "remote",
     label: "Remote server",
     code: "npx add-mcp https://mcp.context7.com/mcp",
   },
   {
-    label: "npm package (stdio)",
+    id: "npm",
+    label: "npm package",
     code: "npx add-mcp @modelcontextprotocol/server-postgres",
   },
   {
-    label: "Find in the registry",
+    id: "find",
+    label: "Find in registry",
     code: "npx add-mcp find neon",
   },
 ];
@@ -107,21 +110,87 @@ const structuredData = JSON.stringify({
 >
   <HeaderBadges slot="ask" />
   <script is:inline set:html={structuredData} type="application/ld+json" />
-  <section class="mx-auto max-w-4xl px-6 pt-24 pb-16 text-center">
+  <section class="mx-auto max-w-4xl px-6 pt-24 pb-20 text-center">
     <h1 class="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
       Add MCP servers to your coding agents with a single command.
     </h1>
-    <p class="text-muted-foreground mx-auto mt-5 max-w-2xl text-lg text-pretty">
-      One CLI that installs any MCP server into Claude Code, Codex, Cursor,
-      OpenCode, VS Code, and 10 more — the right config file, format, and
-      fields for every agent.
+    <p class="text-muted-foreground mx-auto mt-5 max-w-xl text-lg text-pretty">
+      One CLI that writes the right config file, format, and fields for every
+      agent.
     </p>
-    <div class="mt-8 flex justify-center">
-      <code
-        class="bg-muted rounded-lg border px-5 py-3 font-mono text-sm sm:text-base"
+    <div class="mx-auto mt-8 max-w-2xl" data-install-tabs>
+      <div
+        aria-label="Install command examples"
+        class="flex flex-wrap justify-center gap-0.5 sm:gap-1"
+        role="tablist"
       >
-        npx add-mcp https://mcp.context7.com/mcp
-      </code>
+        {
+          examples.map((example, index) => (
+            <button
+              aria-controls={`install-panel-${example.id}`}
+              aria-selected={index === 0 ? "true" : "false"}
+              class="text-muted-foreground aria-selected:bg-muted aria-selected:text-foreground hover:text-foreground rounded-t-lg px-1.5 py-1.5 text-xs font-medium whitespace-nowrap transition-colors sm:px-3 sm:text-sm"
+              id={`install-tab-${example.id}`}
+              role="tab"
+              type="button"
+            >
+              {example.label}
+            </button>
+          ))
+        }
+      </div>
+      {
+        examples.map((example, index) => (
+          <div
+            aria-labelledby={`install-tab-${example.id}`}
+            class:list={["bg-muted rounded-lg border", { hidden: index !== 0 }]}
+            id={`install-panel-${example.id}`}
+            role="tabpanel"
+          >
+            <div class="flex items-center justify-between gap-3 px-4 py-3 sm:px-5">
+              <code class="text-left font-mono text-sm break-all sm:text-base">
+                {example.code}
+              </code>
+              <button
+                aria-label={`Copy command: ${example.code}`}
+                class="text-muted-foreground hover:text-foreground shrink-0 rounded-md border bg-transparent p-2 transition-colors"
+                data-copy={example.code}
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="copy-icon"
+                  fill="none"
+                  height="16"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="16"
+                >
+                  <rect height="13" rx="2" width="13" x="9" y="9" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+                <svg
+                  aria-hidden="true"
+                  class="check-icon hidden"
+                  fill="none"
+                  height="16"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="16"
+                >
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        ))
+      }
     </div>
     <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
       <a
@@ -136,36 +205,53 @@ const structuredData = JSON.stringify({
       >
         Browse the registry
       </a>
-      <a
-        href="https://github.com/neon-solutions/add-mcp"
-        class="hover:bg-muted rounded-lg border px-5 py-2.5 text-sm font-medium transition-colors"
-      >
-        GitHub
-      </a>
     </div>
   </section>
 
-  <section class="mx-auto max-w-4xl px-6 pb-16">
-    <div class="grid gap-4 sm:grid-cols-3">
-      {
-        examples.map((example) => (
-          <div class="rounded-xl border p-4 text-left">
-            <p class="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-              {example.label}
-            </p>
-            <code class="mt-2 block font-mono text-sm break-all">
-              {example.code}
-            </code>
-          </div>
-        ))
-      }
-    </div>
-  </section>
+  <script is:inline>
+    (() => {
+      const root = document.querySelector("[data-install-tabs]");
+      if (!root) return;
+
+      const tabs = Array.from(root.querySelectorAll("[role='tab']"));
+      tabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+          tabs.forEach((other) => {
+            other.setAttribute("aria-selected", String(other === tab));
+            const panel = document.getElementById(
+              other.getAttribute("aria-controls"),
+            );
+            if (panel) panel.classList.toggle("hidden", other !== tab);
+          });
+        });
+      });
+
+      root.querySelectorAll("[data-copy]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(button.dataset.copy);
+          } catch {
+            return;
+          }
+          button.querySelector(".copy-icon")?.classList.add("hidden");
+          button.querySelector(".check-icon")?.classList.remove("hidden");
+          setTimeout(() => {
+            button.querySelector(".copy-icon")?.classList.remove("hidden");
+            button.querySelector(".check-icon")?.classList.add("hidden");
+          }, 1500);
+        });
+      });
+    })();
+  </script>
 
   <section class="border-y">
     <div class="mx-auto max-w-4xl px-6 py-10 text-center">
-      <p class="text-muted-foreground text-sm font-medium">
-        Works with every major coding agent
+      <p class="text-sm font-semibold">Works with every major coding agent</p>
+      <p
+        class="text-muted-foreground mx-auto mt-2 max-w-2xl text-sm text-pretty"
+      >
+        add-mcp installs any MCP server into Claude Code, Codex, Cursor,
+        OpenCode, VS Code, and 10 more coding agents from the same command.
       </p>
       <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
         {
