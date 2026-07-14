@@ -11,6 +11,7 @@ export type AgentType =
   | "gemini-cli"
   | "goose"
   | "github-copilot-cli"
+  | "lm-studio"
   | "mcporter"
   | "opencode"
   | "vscode"
