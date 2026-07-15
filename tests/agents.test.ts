@@ -70,6 +70,7 @@ test("getAgentTypes returns all 15 agents", () => {
   assert.ok(types.includes("claude-desktop"));
   assert.ok(types.includes("codex"));
   assert.ok(types.includes("cursor"));
+  assert.ok(types.includes("factory-droid"));
   assert.ok(types.includes("gemini-cli"));
   assert.ok(types.includes("goose"));
   assert.ok(types.includes("github-copilot-cli"));
@@ -145,6 +146,7 @@ test("supportedFields reflects per-client capabilities", () => {
 test("supportsProjectConfig - returns true for project-capable agents", () => {
   assert.strictEqual(supportsProjectConfig("claude-code"), true);
   assert.strictEqual(supportsProjectConfig("cursor"), true);
+  assert.strictEqual(supportsProjectConfig("factory-droid"), true);
   assert.strictEqual(supportsProjectConfig("vscode"), true);
   assert.strictEqual(supportsProjectConfig("opencode"), true);
   assert.strictEqual(supportsProjectConfig("gemini-cli"), true);
@@ -163,11 +165,12 @@ test("supportsProjectConfig - returns false for global-only agents", () => {
   assert.strictEqual(supportsProjectConfig("windsurf"), false);
 });
 
-test("getProjectCapableAgents returns 9 agents", () => {
+test("getProjectCapableAgents returns 10 agents", () => {
   const projectAgents = getProjectCapableAgents();
-  assert.strictEqual(projectAgents.length, 9);
+  assert.strictEqual(projectAgents.length, 10);
   assert.ok(projectAgents.includes("claude-code"));
   assert.ok(projectAgents.includes("cursor"));
+  assert.ok(projectAgents.includes("factory-droid"));
   assert.ok(projectAgents.includes("vscode"));
   assert.ok(projectAgents.includes("opencode"));
   assert.ok(projectAgents.includes("gemini-cli"));
@@ -293,6 +296,14 @@ test("detectProjectAgents - detects .codex directory", () => {
   assert.ok(detected.includes("codex"));
 });
 
+test("detectProjectAgents - detects .factory directory", () => {
+  const tempDir = createTempDir();
+  mkdirSync(join(tempDir, ".factory"));
+
+  const detected = detectProjectAgents(tempDir);
+  assert.ok(detected.includes("factory-droid"));
+});
+
 test("detectProjectAgents - detects .zed directory", () => {
   const tempDir = createTempDir();
   mkdirSync(join(tempDir, ".zed"));
@@ -362,6 +373,7 @@ test("isTransportSupported - most agents support http", () => {
     "claude-code",
     "codex",
     "cursor",
+    "factory-droid",
     "gemini-cli",
     "github-copilot-cli",
     "goose",
@@ -389,6 +401,7 @@ test("isTransportSupported - most agents support sse", () => {
     "claude-code",
     "codex",
     "cursor",
+    "factory-droid",
     "gemini-cli",
     "github-copilot-cli",
     "goose",
