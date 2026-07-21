@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import { dirname } from "path";
 import yaml from "js-yaml";
 import type { ConfigFile } from "../types.js";
-import { deepMerge } from "./utils.js";
+import { deepMerge, dropReplacedServers } from "./utils.js";
 
 export function readYamlConfig(filePath: string): ConfigFile {
   if (!existsSync(filePath)) {
@@ -47,7 +47,11 @@ export function removeYamlConfigKey(
   writeFileSync(filePath, content);
 }
 
-export function writeYamlConfig(filePath: string, config: ConfigFile): void {
+export function writeYamlConfig(
+  filePath: string,
+  config: ConfigFile,
+  configKey: string,
+): void {
   const dir = dirname(filePath);
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true });
@@ -58,6 +62,7 @@ export function writeYamlConfig(filePath: string, config: ConfigFile): void {
     existingConfig = readYamlConfig(filePath);
   }
 
+  dropReplacedServers(existingConfig, config, configKey);
   const mergedConfig = deepMerge(existingConfig, config);
 
   const content = yaml.dump(mergedConfig, {

@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.14.1] - 2026-07-21
+
+- replace an existing server entry wholesale when re-installing under the same name, instead of deep-merging the new config into the old one. Previously, stale fields from a prior install survived the merge — most damaging when an old stdio entry (`command`/`args`/`env`) was combined with a new remote install (`type`/`url`), producing a hybrid entry that Codex rejects wholesale with `invalid configuration: url is not supported for stdio`, breaking every chat until the config is edited by hand. Applies to the TOML, JSON, and YAML writers; everything else in the config file still merges as before ([#83](https://github.com/neon-solutions/add-mcp/pull/83))
+
 ## [1.14.0] - 2026-07-06
 
 - move the default `find` / `search` registry to its new home at `https://add-mcp.com/registry/api/v1/servers` (label: "add-mcp registry"). The previous `mcp.agent-tooling.dev` URL keeps working; saved configs referencing it are migrated automatically on the next `find` / `search` run (custom labels are preserved, duplicates are deduped).

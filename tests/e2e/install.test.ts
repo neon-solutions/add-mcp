@@ -537,6 +537,48 @@ test("E2E: Write YAML config file (Goose format)", () => {
   assert.strictEqual(serverEntry.type, "stdio");
 });
 
+test("E2E: Re-install replaces server entry instead of merging (Goose YAML)", () => {
+  const tempDir = createTempDir();
+  const gooseConfigPath = join(tempDir, ".config", "goose", "config.yaml");
+  const gooseAgent = agents.goose;
+
+  // First install: local stdio server
+  const stdioParsed = parseSource("mcp-server-postgres");
+  const stdioConfig = buildServerConfig(stdioParsed, {
+    env: { DATABASE_URL: "postgres://localhost" },
+  });
+  const stdioTransformed = gooseAgent.transformConfig!("postgres", stdioConfig);
+  writeConfig(
+    gooseConfigPath,
+    buildConfigWithKey("extensions", "postgres", stdioTransformed),
+    "yaml",
+    "extensions",
+  );
+
+  // Second install under the same name: remote http server
+  const remoteParsed = parseSource("https://mcp.example.com/api");
+  const remoteConfig = buildServerConfig(remoteParsed);
+  const remoteTransformed = gooseAgent.transformConfig!(
+    "postgres",
+    remoteConfig,
+  );
+  writeConfig(
+    gooseConfigPath,
+    buildConfigWithKey("extensions", "postgres", remoteTransformed),
+    "yaml",
+    "extensions",
+  );
+
+  const savedConfig = readYamlConfig(gooseConfigPath);
+  const extensions = savedConfig.extensions as Record<string, unknown>;
+  const serverEntry = extensions.postgres as Record<string, unknown>;
+  assert.strictEqual(serverEntry.type, "streamable_http");
+  assert.strictEqual(serverEntry.uri, "https://mcp.example.com/api");
+  assert.strictEqual("cmd" in serverEntry, false);
+  assert.strictEqual("args" in serverEntry, false);
+  assert.strictEqual("envs" in serverEntry, false);
+});
+
 // ============================================
 // E2E Tests: Zed (transformed format)
 // ============================================
@@ -761,6 +803,73 @@ test("E2E: Write TOML config file (Codex format)", () => {
   const serverEntry = mcpServers.postgres as Record<string, unknown>;
   assert.strictEqual(serverEntry.command, "npx");
   assert.deepStrictEqual(serverEntry.args, ["-y", "mcp-server-postgres"]);
+});
+
+test("E2E: Re-install replaces server entry instead of merging (Codex TOML)", () => {
+  const tempDir = createTempDir();
+
+  // First install: local stdio server (the pre-1.x firecrawl setup shape)
+  const stdioParsed = parseSource("firecrawl-mcp");
+  const stdioConfig = buildServerConfig(stdioParsed, {
+    env: { FIRECRAWL_API_KEY: "fc-test" },
+  });
+  const first = installServerForAgent("firecrawl", stdioConfig, "codex", {
+    local: true,
+    cwd: tempDir,
+  });
+  assert.strictEqual(first.success, true);
+
+  // Second install under the same name: remote http server
+  const remoteParsed = parseSource("https://mcp.firecrawl.dev/fc-test/v2/mcp");
+  const remoteConfig = buildServerConfig(remoteParsed);
+  const second = installServerForAgent("firecrawl", remoteConfig, "codex", {
+    local: true,
+    cwd: tempDir,
+  });
+  assert.strictEqual(second.success, true);
+
+  // The entry must be purely remote: leftover stdio keys make Codex reject
+  // the whole config with "url is not supported for stdio".
+  const savedConfig = readTomlConfig(join(tempDir, ".codex", "config.toml"));
+  const mcpServers = savedConfig.mcp_servers as Record<string, unknown>;
+  const serverEntry = mcpServers.firecrawl as Record<string, unknown>;
+  assert.strictEqual(
+    serverEntry.url,
+    "https://mcp.firecrawl.dev/fc-test/v2/mcp",
+  );
+  assert.strictEqual("command" in serverEntry, false);
+  assert.strictEqual("args" in serverEntry, false);
+  assert.strictEqual("env" in serverEntry, false);
+});
+
+test("E2E: Re-install replaces server entry instead of merging (JSON)", () => {
+  const tempDir = createTempDir();
+
+  const stdioParsed = parseSource("mcp-server-postgres");
+  const stdioConfig = buildServerConfig(stdioParsed, {
+    env: { DATABASE_URL: "postgres://localhost" },
+  });
+  const first = installServerForAgent("postgres", stdioConfig, "cursor", {
+    local: true,
+    cwd: tempDir,
+  });
+  assert.strictEqual(first.success, true);
+
+  const remoteParsed = parseSource("https://mcp.example.com/api");
+  const remoteConfig = buildServerConfig(remoteParsed);
+  const second = installServerForAgent("postgres", remoteConfig, "cursor", {
+    local: true,
+    cwd: tempDir,
+  });
+  assert.strictEqual(second.success, true);
+
+  const savedConfig = readJsonConfig(join(tempDir, ".cursor", "mcp.json"));
+  const servers = savedConfig.mcpServers as Record<string, unknown>;
+  const serverEntry = servers.postgres as Record<string, unknown>;
+  assert.strictEqual(serverEntry.url, "https://mcp.example.com/api");
+  assert.strictEqual("command" in serverEntry, false);
+  assert.strictEqual("args" in serverEntry, false);
+  assert.strictEqual("env" in serverEntry, false);
 });
 
 // ============================================

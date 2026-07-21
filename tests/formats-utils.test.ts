@@ -7,7 +7,11 @@
  */
 
 import assert from "node:assert";
-import { deepMerge, getNestedValue } from "../src/formats/index.js";
+import {
+  deepMerge,
+  dropReplacedServers,
+  getNestedValue,
+} from "../src/formats/index.js";
 
 let passed = 0;
 let failed = 0;
@@ -84,6 +88,65 @@ test("getNestedValue returns undefined when path hits non-object", () => {
   };
 
   assert.strictEqual(getNestedValue(obj, "a.b"), undefined);
+});
+
+test("dropReplacedServers removes incoming server names so merge replaces them", () => {
+  const existing = {
+    mcp_servers: {
+      firecrawl: {
+        command: "npx",
+        args: ["-y", "firecrawl-mcp"],
+        env: { FIRECRAWL_API_KEY: "fc-test" },
+      },
+      other: { url: "https://other.example.com/mcp" },
+    },
+  };
+  const incoming = {
+    mcp_servers: {
+      firecrawl: { type: "http", url: "https://mcp.firecrawl.dev/v2/mcp" },
+    },
+  };
+
+  dropReplacedServers(existing, incoming, "mcp_servers");
+  const merged = deepMerge(existing, incoming);
+
+  assert.deepStrictEqual(
+    (merged.mcp_servers as Record<string, unknown>).firecrawl,
+    { type: "http", url: "https://mcp.firecrawl.dev/v2/mcp" },
+  );
+  assert.deepStrictEqual(
+    (merged.mcp_servers as Record<string, unknown>).other,
+    { url: "https://other.example.com/mcp" },
+  );
+});
+
+test("dropReplacedServers walks dotted config keys", () => {
+  const existing = {
+    a: { servers: { example: { command: "npx", args: ["-y", "example"] } } },
+  };
+  const incoming = {
+    a: { servers: { example: { url: "https://example.com/mcp" } } },
+  };
+
+  dropReplacedServers(existing, incoming, "a.servers");
+  const merged = deepMerge(existing, incoming);
+
+  assert.deepStrictEqual(
+    ((merged.a as Record<string, unknown>).servers as Record<string, unknown>)
+      .example,
+    { url: "https://example.com/mcp" },
+  );
+});
+
+test("dropReplacedServers is a no-op when the config key is missing", () => {
+  const existing = { unrelated: true };
+  const incoming = {
+    mcp_servers: { example: { url: "https://example.com/mcp" } },
+  };
+
+  dropReplacedServers(existing, incoming, "mcp_servers");
+
+  assert.deepStrictEqual(existing, { unrelated: true });
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
