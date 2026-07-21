@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import { dirname } from "path";
 import * as jsonc from "jsonc-parser";
 import type { ConfigFile } from "../types.js";
-import { deepMerge, getNestedValue } from "./utils.js";
+import { deepMerge, dropReplacedServers, getNestedValue } from "./utils.js";
 
 function detectIndent(text: string): {
   tabSize: number;
@@ -61,6 +61,7 @@ export function writeJsonConfig(
     existingConfig = jsonc.parse(originalContent) as ConfigFile;
   }
 
+  dropReplacedServers(existingConfig, config, configKey);
   const mergedConfig = deepMerge(existingConfig, config);
 
   if (originalContent) {

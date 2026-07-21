@@ -17,7 +17,7 @@ import {
 } from "./toml.js";
 
 export { setNestedValue } from "./json.js";
-export { deepMerge, getNestedValue } from "./utils.js";
+export { deepMerge, dropReplacedServers, getNestedValue } from "./utils.js";
 
 export function readConfig(filePath: string, format: ConfigFormat): ConfigFile {
   switch (format) {
@@ -64,10 +64,10 @@ export function writeConfig(
       writeJsonConfig(filePath, config, configKey);
       break;
     case "yaml":
-      writeYamlConfig(filePath, config);
+      writeYamlConfig(filePath, config, configKey);
       break;
     case "toml":
-      writeTomlConfig(filePath, config);
+      writeTomlConfig(filePath, config, configKey);
       break;
     default:
       throw new Error(`Unsupported config format: ${format}`);
