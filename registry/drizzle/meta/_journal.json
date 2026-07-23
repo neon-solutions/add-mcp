@@ -15,6 +15,13 @@
       "when": 1783296112161,
       "tag": "0001_make_search_index_partial",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784778313628,
+      "tag": "0002_new_riptide",
+      "breakpoints": true
     }
   ]
 }

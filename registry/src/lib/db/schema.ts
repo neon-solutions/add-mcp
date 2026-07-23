@@ -21,6 +21,7 @@ export const apiRequests = pgTable(
     route: text("route").notNull(),
     status: integer("status").notNull(),
     search: text("search"),
+    searchSource: text("search_source").notNull().default("api"),
     limitValue: integer("limit_value"),
     cursorPresent: boolean("cursor_present").notNull().default(false),
     userAgent: text("user_agent"),
@@ -35,6 +36,10 @@ export const apiRequests = pgTable(
       .where(sql`${table.search} is not null and ${table.search} <> ''`),
     index("api_requests_route_created_at_idx").on(
       table.route,
+      table.createdAt.desc(),
+    ),
+    index("api_requests_search_source_created_at_idx").on(
+      table.searchSource,
       table.createdAt.desc(),
     ),
   ],

@@ -61,14 +61,14 @@ DATABASE_URL=postgres://...
 ANALYTICS_SALT=replace-with-a-stable-random-secret
 ```
 
-When enabled, the registry creates an `api_requests` table if it does not already exist. It stores request metadata such as method, path, status, duration, search term, pagination flags, user agent, referrer, and a salted hash of the client IP address. Raw IP addresses are not stored.
+When enabled, the registry stores request metadata such as method, path, status, duration, search term, search source (`web`, `cli`, or `api`), pagination flags, user agent, referrer, and a salted hash of the client IP address. Raw IP addresses are not stored. Apply the checked-in Drizzle migrations before deploying schema changes.
 
 ### Search-based popularity
 
 When `DATABASE_URL` is set, recorded search terms power additional features:
 
 - The default (unfiltered) server listing in the UI and API is sorted by search popularity instead of alphabetically. A search term counts towards every server it matches, and overly generic terms (matching more than 25 servers) are ignored.
-- The home page shows registry stats (total searches all time and this week) and trending search terms.
+- The home page shows combined website, CLI, and API search stats (total searches all time and this week) and trending search terms.
 - Server cards show per-server search counts.
 
 Without a database, the registry falls back to alphabetical sorting and hides the analytics UI.

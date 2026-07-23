@@ -64,8 +64,12 @@ async function fetchSearchStats(): Promise<SearchStats | null> {
       from api_requests
       where search is not null
         and trim(search) <> ''
-        and route = '/api/v1/servers'
-        and status < 500
+        and (
+          (route = '/api/v1/servers' and method = 'GET')
+          or (route = '/api/v1/searches' and method = 'POST')
+        )
+        and status >= 200
+        and status < 400
       group by lower(trim(search))
       order by all_time desc
     `),
@@ -77,8 +81,12 @@ async function fetchSearchStats(): Promise<SearchStats | null> {
       from api_requests
       where search is not null
         and trim(search) <> ''
-        and route = '/api/v1/servers'
-        and status < 500
+        and (
+          (route = '/api/v1/servers' and method = 'GET')
+          or (route = '/api/v1/searches' and method = 'POST')
+        )
+        and status >= 200
+        and status < 400
         and created_at >= now() - make_interval(days => ${DAILY_WINDOW_DAYS})
       group by 1, 2
     `),
