@@ -81,6 +81,23 @@ test("extractServerIdentity: Antigravity serverUrl field", () => {
   assert.strictEqual(identity, "https://mcp.example.com/api");
 });
 
+test("extractServerIdentity: Gemini CLI httpUrl field", () => {
+  const identity = extractServerIdentity({
+    httpUrl: "https://mcp.context7.com/mcp",
+    headers: { CONTEXT7_API_KEY: "test" },
+  });
+  assert.strictEqual(identity, "https://mcp.context7.com/mcp");
+});
+
+test("extractServerIdentity: Gemini CLI httpUrl takes priority over url", () => {
+  const identity = extractServerIdentity({
+    httpUrl: "https://legacy.example.com/mcp",
+    url: "https://new.example.com/mcp",
+    type: "http",
+  });
+  assert.strictEqual(identity, "https://legacy.example.com/mcp");
+});
+
 test("extractServerIdentity: npx package detection", () => {
   const identity = extractServerIdentity({
     command: "npx",

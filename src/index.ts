@@ -1145,18 +1145,23 @@ function normalizeTransportType(
 function buildServerConfigFromStored(
   config: Record<string, unknown>,
 ): import("./types.js").McpServerConfig {
+  const httpUrl =
+    typeof config.httpUrl === "string" && config.httpUrl.length > 0
+      ? config.httpUrl
+      : undefined;
   const url =
-    typeof config.url === "string"
+    httpUrl ??
+    (typeof config.url === "string"
       ? config.url
       : typeof config.uri === "string"
         ? config.uri
         : typeof config.serverUrl === "string"
           ? config.serverUrl
-          : undefined;
+          : undefined);
 
   if (url) {
     const result: import("./types.js").McpServerConfig = {
-      type: normalizeTransportType(config.type),
+      type: httpUrl ? "http" : normalizeTransportType(config.type),
       url,
     };
 

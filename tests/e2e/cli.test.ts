@@ -1066,6 +1066,43 @@ test("list: shows servers for detected agents in project", () => {
   assert.match(output, /context7/);
 });
 
+test("list: shows Gemini CLI httpUrl and honors its precedence", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+
+  const geminiDir = join(projectDir, ".gemini");
+  mkdirSync(geminiDir, { recursive: true });
+  writeFileSync(
+    join(geminiDir, "settings.json"),
+    JSON.stringify({
+      mcpServers: {
+        context7: {
+          httpUrl: "https://mcp.context7.com/mcp",
+          headers: { CONTEXT7_API_KEY: "test" },
+        },
+        migrating: {
+          httpUrl: "https://legacy.example.com/mcp",
+          url: "https://new.example.com/mcp",
+          type: "http",
+        },
+      },
+    }),
+  );
+
+  const result = runCli(["list", "-a", "gemini-cli"], projectDir, homeDir);
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /context7.*https:\/\/mcp\.context7\.com\/mcp/);
+  assert.match(output, /migrating.*https:\/\/legacy\.example\.com\/mcp/);
+  assert.doesNotMatch(output, /https:\/\/new\.example\.com\/mcp/);
+});
+
 test("list: shows 'no servers configured' when agent detected but empty", () => {
   const homeDir = createTempDir();
   const projectDir = createTempDir();
@@ -1168,6 +1205,40 @@ test("remove: matches by URL identity with -y", () => {
 
   const config = JSON.parse(readFileSync(configPath, "utf-8"));
   assert.strictEqual(config.mcpServers["my-neon"], undefined);
+});
+
+test("remove: matches Gemini CLI httpUrl identity with -y", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+
+  const geminiDir = join(projectDir, ".gemini");
+  mkdirSync(geminiDir, { recursive: true });
+  const configPath = join(geminiDir, "settings.json");
+  writeFileSync(
+    configPath,
+    JSON.stringify({
+      mcpServers: {
+        context7: {
+          httpUrl: "https://mcp.context7.com/mcp",
+        },
+      },
+    }),
+  );
+
+  const result = runCli(
+    ["remove", "https://mcp.context7.com/mcp", "-y"],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const config = JSON.parse(readFileSync(configPath, "utf-8"));
+  assert.strictEqual(config.mcpServers.context7, undefined);
 });
 
 test("remove: prints message when no matches found", () => {
@@ -1306,6 +1377,55 @@ test("sync: reconstructs required fields when syncing Cursor -> Claude Code", ()
     claudeConfig.mcpServers.neon.url,
     "https://mcp.neon.tech/mcp",
   );
+});
+
+test("sync: preserves Gemini CLI httpUrl and headers", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+
+  const geminiDir = join(projectDir, ".gemini");
+  mkdirSync(geminiDir, { recursive: true });
+  writeFileSync(
+    join(geminiDir, "settings.json"),
+    JSON.stringify({
+      mcpServers: {
+        context7: {
+          httpUrl: "https://mcp.context7.com/mcp",
+          headers: {
+            CONTEXT7_API_KEY: "test",
+            Accept: "application/json, text/event-stream",
+          },
+        },
+      },
+    }),
+  );
+
+  const cursorDir = join(projectDir, ".cursor");
+  mkdirSync(cursorDir, { recursive: true });
+  const cursorConfigPath = join(cursorDir, "mcp.json");
+  writeFileSync(
+    cursorConfigPath,
+    JSON.stringify({
+      mcpServers: {},
+    }),
+  );
+
+  const result = runCli(["sync", "-y"], projectDir, homeDir);
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const cursorConfig = JSON.parse(readFileSync(cursorConfigPath, "utf-8"));
+  assert.deepStrictEqual(cursorConfig.mcpServers.context7, {
+    url: "https://mcp.context7.com/mcp",
+    headers: {
+      CONTEXT7_API_KEY: "test",
+      Accept: "application/json, text/event-stream",
+    },
+  });
 });
 
 test("sync: skips servers with header conflicts", () => {
