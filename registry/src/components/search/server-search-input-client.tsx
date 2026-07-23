@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { Loader2Icon, SearchIcon, XIcon } from "lucide-react";
 import { debounce, parseAsInteger, parseAsString, useQueryState } from "nuqs";
 
 import { Input } from "@/components/ui/input";
+import { withBasePath } from "@/lib/base-path";
 import { cn } from "@/lib/utils";
 
 type ServerSearchInputClientProps = {
@@ -37,6 +38,8 @@ export function ServerSearchInputClient({
   // Local state keeps typing responsive; the query state (and server
   // round-trip) follows debounced behind it.
   const [value, setValue] = useState(search);
+  const mounted = useRef(false);
+  const lastTrackedSearch = useRef(search.trim().toLowerCase());
 
   function handleChange(next: string) {
     setValue(next);
@@ -50,6 +53,31 @@ export function ServerSearchInputClient({
     setLastSearch(search);
     setValue(search);
   }
+
+  useEffect(() => {
+    if (!mounted.current) {
+      mounted.current = true;
+      return;
+    }
+
+    const normalized = value.trim().toLowerCase();
+    if (!normalized || normalized === lastTrackedSearch.current) {
+      lastTrackedSearch.current = normalized;
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      lastTrackedSearch.current = normalized;
+      void fetch(withBasePath("/api/v1/searches"), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ search: normalized }),
+        keepalive: true,
+      }).catch(() => undefined);
+    }, 300);
+
+    return () => window.clearTimeout(timeout);
+  }, [value]);
 
   return (
     <div className={cn("relative", className)}>

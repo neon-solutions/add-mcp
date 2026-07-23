@@ -7,6 +7,7 @@ import { z } from "zod";
 
 import { getPopularityScores } from "./analytics/popularity";
 import { recordApiRequest } from "./analytics/postgres";
+import { apiSearchSource, type SearchSource } from "./analytics/search-source";
 import { basePath, stripBasePath } from "./base-path";
 import { loadRegistryFromFile } from "./load-registry";
 import { queryServers } from "./query-servers";
@@ -18,7 +19,17 @@ const querySchema = z.object({
   cursor: z.string().optional(),
   limit: z.string().optional(),
 });
+const webSearchEventSchema = z.object({
+  search: z.string().trim().min(1).max(200),
+});
 const healthResponseSchema = z.object({ status: z.literal("ok") });
+
+type ApiEnv = {
+  Variables: {
+    analyticsSearch?: string;
+    analyticsSearchSource?: SearchSource;
+  };
+};
 
 function getSourcePath(): string {
   return (
@@ -37,7 +48,7 @@ async function getRegistryEntries(): Promise<ServerEntry[]> {
 
 // Next strips the configured basePath before invoking route handlers, so the
 // Hono app always mounts at /api regardless of NEXT_PUBLIC_BASE_PATH.
-export const apiApp = new Hono().basePath("/api");
+export const apiApp = new Hono<ApiEnv>().basePath("/api");
 
 apiApp.use(async (c, next) => {
   const startedAt = performance.now();
@@ -49,7 +60,9 @@ apiApp.use(async (c, next) => {
     path: stripBasePath(c.req.path),
     method: c.req.method,
     status: c.res.status,
-    search: c.req.query("search"),
+    search: c.get("analyticsSearch") ?? c.req.query("search"),
+    searchSource:
+      c.get("analyticsSearchSource") ?? apiSearchSource(c.req.query("source")),
     limit: c.req.query("limit"),
     cursorPresent: Boolean(c.req.query("cursor")),
     userAgent: c.req.header("user-agent"),
@@ -116,6 +129,14 @@ apiApp.get(
         schema: { type: "string" },
         description: "Maximum number of servers per page.",
       },
+      {
+        in: "query",
+        name: "source",
+        required: false,
+        schema: { type: "string", enum: ["cli"] },
+        description:
+          "Identifies searches initiated by the add-mcp CLI for analytics attribution.",
+      },
     ],
     responses: {
       200: {
@@ -147,6 +168,59 @@ apiApp.get(
       const detail = error instanceof Error ? error.message : "Invalid query";
       throw new HTTPException(400, { message: detail });
     }
+  },
+);
+
+apiApp.post(
+  "/v1/searches",
+  describeRoute({
+    tags: ["analytics"],
+    summary: "Record a registry website search",
+    description:
+      "Records an active search from the registry website. Search statistics combine these events with API and CLI searches.",
+    requestBody: {
+      required: true,
+      content: {
+        "application/json": {
+          schema: {
+            type: "object",
+            required: ["search"],
+            properties: {
+              search: {
+                type: "string",
+                minLength: 1,
+                maxLength: 200,
+              },
+            },
+          },
+        },
+      },
+    },
+    responses: {
+      204: {
+        description: "Search recorded.",
+      },
+      400: {
+        description: "Invalid search event.",
+      },
+    },
+  }),
+  async (c) => {
+    let body: unknown;
+    try {
+      body = await c.req.json();
+    } catch {
+      throw new HTTPException(400, { message: "Invalid JSON body." });
+    }
+
+    const parsed = webSearchEventSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new HTTPException(400, { message: "Invalid search event." });
+    }
+
+    c.set("analyticsSearch", parsed.data.search);
+    c.set("analyticsSearchSource", "web");
+    return c.body(null, 204);
   },
 );
 

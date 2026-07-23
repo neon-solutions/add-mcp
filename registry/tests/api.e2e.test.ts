@@ -30,6 +30,27 @@ describe("mcp-registry api", () => {
     expect(body.servers[0]?.server.name).toBe("io.github.example/filesystem");
   });
 
+  it("accepts website search events", async () => {
+    const response = await apiApp.request("http://localhost/api/v1/searches", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ search: "  Neon  " }),
+    });
+
+    expect(response.status).toBe(204);
+    expect(await response.text()).toBe("");
+  });
+
+  it("rejects empty website search events", async () => {
+    const response = await apiApp.request("http://localhost/api/v1/searches", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ search: "   " }),
+    });
+
+    expect(response.status).toBe(400);
+  });
+
   it("generates openapi spec", async () => {
     const response = await apiApp.request("http://localhost/api/openapi.json");
     expect(response.status).toBe(200);
@@ -43,5 +64,6 @@ describe("mcp-registry api", () => {
     expect(body.openapi).toBe("3.1.0");
     expect(body.info.title).toBe("add-mcp registry API");
     expect(body.paths["/api/v1/servers"]).toBeTruthy();
+    expect(body.paths["/api/v1/searches"]).toBeTruthy();
   });
 });

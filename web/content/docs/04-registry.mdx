@@ -11,10 +11,10 @@ npx add-mcp find neon
 
 ## Built-in registries
 
-| Registry                        | Base URL                                                | Description                                                                     |
-| ------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Registry                        | Base URL                                                | Description                                                                                        |
+| ------------------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | **add-mcp registry**            | `https://add-mcp.com/registry/api/v1/servers`           | MCP servers discovered by integrations.sh, exposed through a registry-compatible API. The default. |
-| **Official Anthropic registry** | `https://registry.modelcontextprotocol.io/v0.1/servers` | The community-driven MCP server registry maintained by Anthropic — the broadest catalog. |
+| **Official Anthropic registry** | `https://registry.modelcontextprotocol.io/v0.1/servers` | The community-driven MCP server registry maintained by Anthropic — the broadest catalog.           |
 
 The first `find`/`search` run automatically saves the default registry to `~/.config/add-mcp/config.json` (respects `XDG_CONFIG_HOME`) and reuses it on every subsequent search.
 
@@ -57,6 +57,7 @@ Any server that implements the registry API can be used. The CLI sends a `GET` r
 | `search`  | The user's search keyword (lowercased) |
 | `version` | `latest`                               |
 | `limit`   | `100`                                  |
+| `source`  | `cli`                                  |
 
 The endpoint must return JSON in this shape:
 
@@ -98,3 +99,7 @@ curl "https://add-mcp.com/registry/api/v1/servers?search=neon&limit=10"
 ```
 
 The full OpenAPI spec is served at [`/registry/api/openapi.json`](/registry/api/openapi.json). The registry server is open source and self-hostable: [agent-tooling/mcp-registry](https://github.com/agent-tooling/mcp-registry).
+
+## Search analytics
+
+The hosted add-mcp registry records search terms from the website and registry API. The add-mcp CLI identifies its searches separately, so usage can be analyzed by website, CLI, or generic API traffic. The public all-time and weekly totals, trending terms, rankings, and per-server search counts combine every source.

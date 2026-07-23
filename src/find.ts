@@ -292,6 +292,7 @@ function buildRegistryRequestUrl(registryUrl: string, query: string): string {
   });
   if (query.length > 0) {
     params.set("search", query);
+    params.set("source", "cli");
   }
   const url = new URL(registryUrl);
   for (const [key, value] of params.entries()) {

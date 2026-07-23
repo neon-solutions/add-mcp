@@ -1,0 +1,2 @@
+ALTER TABLE "api_requests" ADD COLUMN "search_source" text DEFAULT 'api' NOT NULL;--> statement-breakpoint
+CREATE INDEX "api_requests_search_source_created_at_idx" ON "api_requests" USING btree ("search_source","created_at" DESC NULLS LAST);

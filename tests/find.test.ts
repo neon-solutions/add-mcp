@@ -180,13 +180,18 @@ function toApiServerShape(entry: RegistryServerEntry) {
 
 test("searchRegistry maps API response entries", async () => {
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = (async () =>
-    ({
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    const url = new URL(String(input));
+    assert.strictEqual(url.searchParams.get("search"), "supabase");
+    assert.strictEqual(url.searchParams.get("source"), "cli");
+
+    return {
       ok: true,
       json: async () => ({
         servers: officialServersFixture.map(toApiServerShape),
       }),
-    }) as Response) as typeof fetch;
+    } as Response;
+  }) as typeof fetch;
 
   try {
     const result = await searchRegistry("supabase", [
@@ -612,6 +617,11 @@ test("searchRegistry fetches entries for blank query (browse mode)", async () =>
       url.includes("search="),
       false,
       "browse request should not include search param",
+    );
+    assert.strictEqual(
+      url.includes("source="),
+      false,
+      "browse request should not include analytics source",
     );
     return {
       ok: true,

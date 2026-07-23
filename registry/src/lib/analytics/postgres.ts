@@ -2,12 +2,14 @@ import { createHash } from "node:crypto";
 
 import { apiRequests } from "../db/schema";
 import { getAnalyticsDb } from "./db";
+import type { SearchSource } from "./search-source";
 
 type ApiRequestAnalytics = {
   method: string;
   path: string;
   status: number;
   search?: string;
+  searchSource: SearchSource;
   limit?: string;
   cursorPresent: boolean;
   userAgent?: string;
@@ -59,6 +61,7 @@ export async function recordApiRequest(
       route: routeForPath(event.path),
       status: event.status,
       search: event.search?.trim() || null,
+      searchSource: event.searchSource,
       limitValue: parseLimit(event.limit),
       cursorPresent: event.cursorPresent,
       userAgent: event.userAgent || null,
