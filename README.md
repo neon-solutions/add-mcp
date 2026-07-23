@@ -2,7 +2,7 @@
 
 Add MCP servers to your favorite coding agents with a single command.
 
-Supports **Claude Code**, **Codex**, **Cursor**, **OpenCode**, **VSCode** and [10 more](#supported-agents).
+Supports **Claude Code**, **Codex**, **Cursor**, **OpenCode**, **VS Code**, **Grok Build** and [10 more](#supported-agents).
 
 Docs and registry: [add-mcp.com](https://add-mcp.com)
 
@@ -62,13 +62,14 @@ MCP servers can be installed to any of these agents:
 | Gemini CLI             | `gemini-cli`         | `.gemini/settings.json` | `~/.gemini/settings.json`                                                                                       |
 | Goose                  | `goose`              | `.goose/config.yaml`    | `~/.config/goose/config.yaml`                                                                                   |
 | GitHub Copilot CLI     | `github-copilot-cli` | `.vscode/mcp.json`      | `~/.copilot/mcp-config.json`                                                                                    |
+| Grok Build             | `grok-build`         | `.grok/config.toml`     | `$GROK_HOME/config.toml` (defaults to `~/.grok/config.toml`)                                                    |
 | MCPorter               | `mcporter`           | `config/mcporter.json`  | `~/.mcporter/mcporter.json` (or existing `~/.mcporter/mcporter.jsonc`)                                          |
 | OpenCode               | `opencode`           | `opencode.json`         | `~/.config/opencode/opencode.json`                                                                              |
 | VS Code                | `vscode`             | `.vscode/mcp.json`      | `~/Library/Application Support/Code/User/mcp.json`                                                              |
 | Windsurf               | `windsurf`           | -                       | `~/.codeium/windsurf/mcp_config.json`                                                                           |
 | Zed                    | `zed`                | `.zed/settings.json`    | `~/Library/Application Support/Zed/settings.json`                                                               |
 
-**Aliases:** `codeium`, `cascade` → `windsurf`, `cline-vscode` → `cline`, `gemini` → `gemini-cli`, `github-copilot` → `vscode`
+**Aliases:** `codeium`, `cascade` → `windsurf`, `cline-vscode` → `cline`, `gemini` → `gemini-cli`, `github-copilot` → `vscode`, `grok` → `grok-build`
 
 ## Installation Scope
 

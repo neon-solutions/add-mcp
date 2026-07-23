@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.0.0] - 2026-07-22
+
+- **BREAKING:** re-installing a server under an existing name now replaces that server's entire entry instead of deep-merging the new fields into the old entry. Callers that relied on omitted fields surviving a re-install must now pass the complete desired server configuration. This prevents stale fields from producing invalid hybrid configs — most damaging when an old stdio entry (`command`/`args`/`env`) was combined with a new remote install (`type`/`url`). Applies to the TOML, JSON, and YAML writers; unrelated servers and all other config sections are still preserved ([#83](https://github.com/neon-solutions/add-mcp/pull/83))
+- add `grok-build` support with project installs to `.grok/config.toml` and global installs to `$GROK_HOME/config.toml` (default `~/.grok/config.toml`), using native `mcp_servers` TOML tables and `tool_timeout_sec`; alias: `grok`. Co-authored with @franjorub
+
 ## [1.14.1] - 2026-07-22
 
 - recognize Gemini CLI's legacy `httpUrl` field across `list`, `remove`, and `sync`, preserving the endpoint and headers when syncing the server to other agents. Co-authored with @preciousimo ([#33](https://github.com/neon-solutions/add-mcp/issues/33), [#79](https://github.com/neon-solutions/add-mcp/pull/79))

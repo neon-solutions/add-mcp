@@ -537,6 +537,48 @@ test("E2E: Write YAML config file (Goose format)", () => {
   assert.strictEqual(serverEntry.type, "stdio");
 });
 
+test("E2E: Re-install replaces server entry instead of merging (Goose YAML)", () => {
+  const tempDir = createTempDir();
+  const gooseConfigPath = join(tempDir, ".config", "goose", "config.yaml");
+  const gooseAgent = agents.goose;
+
+  // First install: local stdio server
+  const stdioParsed = parseSource("mcp-server-postgres");
+  const stdioConfig = buildServerConfig(stdioParsed, {
+    env: { DATABASE_URL: "postgres://localhost" },
+  });
+  const stdioTransformed = gooseAgent.transformConfig!("postgres", stdioConfig);
+  writeConfig(
+    gooseConfigPath,
+    buildConfigWithKey("extensions", "postgres", stdioTransformed),
+    "yaml",
+    "extensions",
+  );
+
+  // Second install under the same name: remote http server
+  const remoteParsed = parseSource("https://mcp.example.com/api");
+  const remoteConfig = buildServerConfig(remoteParsed);
+  const remoteTransformed = gooseAgent.transformConfig!(
+    "postgres",
+    remoteConfig,
+  );
+  writeConfig(
+    gooseConfigPath,
+    buildConfigWithKey("extensions", "postgres", remoteTransformed),
+    "yaml",
+    "extensions",
+  );
+
+  const savedConfig = readYamlConfig(gooseConfigPath);
+  const extensions = savedConfig.extensions as Record<string, unknown>;
+  const serverEntry = extensions.postgres as Record<string, unknown>;
+  assert.strictEqual(serverEntry.type, "streamable_http");
+  assert.strictEqual(serverEntry.uri, "https://mcp.example.com/api");
+  assert.strictEqual("cmd" in serverEntry, false);
+  assert.strictEqual("args" in serverEntry, false);
+  assert.strictEqual("envs" in serverEntry, false);
+});
+
 // ============================================
 // E2E Tests: Zed (transformed format)
 // ============================================
@@ -761,6 +803,253 @@ test("E2E: Write TOML config file (Codex format)", () => {
   const serverEntry = mcpServers.postgres as Record<string, unknown>;
   assert.strictEqual(serverEntry.command, "npx");
   assert.deepStrictEqual(serverEntry.args, ["-y", "mcp-server-postgres"]);
+});
+
+test("E2E: Re-install replaces server entry instead of merging (Codex TOML)", () => {
+  const tempDir = createTempDir();
+
+  // First install: local stdio server (the pre-1.x firecrawl setup shape)
+  const stdioParsed = parseSource("firecrawl-mcp");
+  const stdioConfig = buildServerConfig(stdioParsed, {
+    env: { FIRECRAWL_API_KEY: "fc-test" },
+  });
+  const first = installServerForAgent("firecrawl", stdioConfig, "codex", {
+    local: true,
+    cwd: tempDir,
+  });
+  assert.strictEqual(first.success, true);
+
+  // Second install under the same name: remote http server
+  const remoteParsed = parseSource("https://mcp.firecrawl.dev/fc-test/v2/mcp");
+  const remoteConfig = buildServerConfig(remoteParsed);
+  const second = installServerForAgent("firecrawl", remoteConfig, "codex", {
+    local: true,
+    cwd: tempDir,
+  });
+  assert.strictEqual(second.success, true);
+
+  // The entry must be purely remote: leftover stdio keys make Codex reject
+  // the whole config with "url is not supported for stdio".
+  const savedConfig = readTomlConfig(join(tempDir, ".codex", "config.toml"));
+  const mcpServers = savedConfig.mcp_servers as Record<string, unknown>;
+  const serverEntry = mcpServers.firecrawl as Record<string, unknown>;
+  assert.strictEqual(
+    serverEntry.url,
+    "https://mcp.firecrawl.dev/fc-test/v2/mcp",
+  );
+  assert.strictEqual("command" in serverEntry, false);
+  assert.strictEqual("args" in serverEntry, false);
+  assert.strictEqual("env" in serverEntry, false);
+});
+
+test("E2E: Re-install replaces server entry instead of merging (JSON)", () => {
+  const tempDir = createTempDir();
+
+  const stdioParsed = parseSource("mcp-server-postgres");
+  const stdioConfig = buildServerConfig(stdioParsed, {
+    env: { DATABASE_URL: "postgres://localhost" },
+  });
+  const first = installServerForAgent("postgres", stdioConfig, "cursor", {
+    local: true,
+    cwd: tempDir,
+  });
+  assert.strictEqual(first.success, true);
+
+  const remoteParsed = parseSource("https://mcp.example.com/api");
+  const remoteConfig = buildServerConfig(remoteParsed);
+  const second = installServerForAgent("postgres", remoteConfig, "cursor", {
+    local: true,
+    cwd: tempDir,
+  });
+  assert.strictEqual(second.success, true);
+
+  const savedConfig = readJsonConfig(join(tempDir, ".cursor", "mcp.json"));
+  const servers = savedConfig.mcpServers as Record<string, unknown>;
+  const serverEntry = servers.postgres as Record<string, unknown>;
+  assert.strictEqual(serverEntry.url, "https://mcp.example.com/api");
+  assert.strictEqual("command" in serverEntry, false);
+  assert.strictEqual("args" in serverEntry, false);
+  assert.strictEqual("env" in serverEntry, false);
+});
+
+// ============================================
+// E2E Tests: Grok Build (TOML format)
+// ============================================
+
+test("E2E: Grok Build config transformation - remote", () => {
+  const parsed = parseSource("https://mcp.example.com/api");
+  const config = buildServerConfig(parsed);
+
+  const grokAgent = agents["grok-build"];
+  const transformed = grokAgent.transformConfig!("example", config) as Record<
+    string,
+    unknown
+  >;
+
+  assert.strictEqual(transformed.url, "https://mcp.example.com/api");
+  assert.strictEqual("type" in transformed, false);
+});
+
+test("E2E: Grok Build config transformation with headers", () => {
+  const parsed = parseSource("https://mcp.example.com/api");
+  const config = buildServerConfig(parsed, {
+    headers: {
+      Authorization: "Bearer token",
+    },
+  });
+
+  const grokAgent = agents["grok-build"];
+  const transformed = grokAgent.transformConfig!("example", config) as Record<
+    string,
+    unknown
+  >;
+
+  assert.deepStrictEqual(transformed.headers, {
+    Authorization: "Bearer token",
+  });
+  assert.strictEqual(transformed.url, "https://mcp.example.com/api");
+});
+
+test("E2E: Grok Build config transformation - local server", () => {
+  const parsed = parseSource("mcp-server-postgres");
+  const config = buildServerConfig(parsed);
+
+  const grokAgent = agents["grok-build"];
+  const transformed = grokAgent.transformConfig!("postgres", config) as Record<
+    string,
+    unknown
+  >;
+
+  assert.strictEqual(transformed.command, "npx");
+  assert.deepStrictEqual(transformed.args, ["-y", "mcp-server-postgres"]);
+});
+
+test("E2E: Grok Build config transformation - local server includes env", () => {
+  const parsed = parseSource("mcp-server-postgres");
+  const config = buildServerConfig(parsed, {
+    env: {
+      OPENAI_API_KEY: "secret",
+    },
+  });
+
+  const grokAgent = agents["grok-build"];
+  const transformed = grokAgent.transformConfig!("postgres", config) as Record<
+    string,
+    unknown
+  >;
+
+  assert.deepStrictEqual(transformed.env, {
+    OPENAI_API_KEY: "secret",
+  });
+});
+
+test("E2E: Write TOML config file (Grok Build format)", () => {
+  const tempDir = createTempDir();
+  const grokConfigPath = join(tempDir, ".grok", "config.toml");
+
+  const parsed = parseSource("mcp-server-postgres");
+  const serverConfig = buildServerConfig(parsed);
+
+  const grokAgent = agents["grok-build"];
+  const transformed = grokAgent.transformConfig!("postgres", serverConfig);
+
+  const config = buildConfigWithKey("mcp_servers", "postgres", transformed);
+  writeConfig(grokConfigPath, config, "toml", "mcp_servers");
+
+  assert.strictEqual(existsSync(grokConfigPath), true);
+
+  const savedConfig = readTomlConfig(grokConfigPath);
+  const mcpServers = savedConfig.mcp_servers as Record<string, unknown>;
+  assert.ok(mcpServers);
+
+  const serverEntry = mcpServers.postgres as Record<string, unknown>;
+  assert.strictEqual(serverEntry.command, "npx");
+  assert.deepStrictEqual(serverEntry.args, ["-y", "mcp-server-postgres"]);
+});
+
+test("E2E: Grok re-installs replace the server and preserve other settings", () => {
+  const tempDir = createTempDir();
+  const configPath = join(tempDir, ".grok", "config.toml");
+
+  writeConfig(
+    configPath,
+    {
+      models: { default: "grok-build" },
+      mcp_servers: {
+        keep: { url: "https://mcp.example.com/keep" },
+      },
+    },
+    "toml",
+    "mcp_servers",
+  );
+
+  const stdioConfig = buildServerConfig(parseSource("mcp-server-postgres"), {
+    env: { DATABASE_URL: "${DATABASE_URL}" },
+  });
+  const first = installServerForAgent(
+    "switch-transport",
+    stdioConfig,
+    "grok-build",
+    { local: true, cwd: tempDir },
+  );
+  assert.strictEqual(first.success, true);
+
+  const remoteConfig = buildServerConfig(
+    parseSource("https://mcp.example.com/mcp"),
+    {
+      headers: { Authorization: "Bearer ${API_TOKEN}" },
+      timeout: 2000,
+    },
+  );
+  const second = installServerForAgent(
+    "switch-transport",
+    remoteConfig,
+    "grok-build",
+    { local: true, cwd: tempDir },
+  );
+  assert.strictEqual(second.success, true);
+
+  let saved = readTomlConfig(configPath);
+  let servers = saved.mcp_servers as Record<string, Record<string, unknown>>;
+  let switched = servers["switch-transport"];
+  let kept = servers.keep;
+  assert.ok(switched);
+  assert.ok(kept);
+  assert.strictEqual(switched.url, "https://mcp.example.com/mcp");
+  assert.deepStrictEqual(switched.headers, {
+    Authorization: "Bearer ${API_TOKEN}",
+  });
+  assert.strictEqual(switched.tool_timeout_sec, 2);
+  assert.strictEqual("command" in switched, false);
+  assert.strictEqual("args" in switched, false);
+  assert.strictEqual("env" in switched, false);
+  assert.strictEqual(kept.url, "https://mcp.example.com/keep");
+  assert.deepStrictEqual(saved.models, { default: "grok-build" });
+
+  const third = installServerForAgent(
+    "switch-transport",
+    stdioConfig,
+    "grok-build",
+    { local: true, cwd: tempDir },
+  );
+  assert.strictEqual(third.success, true);
+
+  saved = readTomlConfig(configPath);
+  servers = saved.mcp_servers as Record<string, Record<string, unknown>>;
+  switched = servers["switch-transport"];
+  kept = servers.keep;
+  assert.ok(switched);
+  assert.ok(kept);
+  assert.strictEqual(switched.command, "npx");
+  assert.deepStrictEqual(switched.args, ["-y", "mcp-server-postgres"]);
+  assert.deepStrictEqual(switched.env, {
+    DATABASE_URL: "${DATABASE_URL}",
+  });
+  assert.strictEqual("url" in switched, false);
+  assert.strictEqual("headers" in switched, false);
+  assert.strictEqual("tool_timeout_sec" in switched, false);
+  assert.strictEqual(kept.url, "https://mcp.example.com/keep");
+  assert.deepStrictEqual(saved.models, { default: "grok-build" });
 });
 
 // ============================================
