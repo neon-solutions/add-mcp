@@ -54,7 +54,12 @@ const repoRoot = join(testFileDir, "..", "..");
 const indexPath = join(repoRoot, "src", "index.ts");
 const tsxBin = join(repoRoot, "node_modules", ".bin", "tsx");
 
-function runCli(args: string[], cwd: string, homeDir: string) {
+function runCli(
+  args: string[],
+  cwd: string,
+  homeDir: string,
+  extraEnv: NodeJS.ProcessEnv = {},
+) {
   return spawnSync(tsxBin, [indexPath, ...args], {
     cwd,
     encoding: "utf-8",
@@ -64,6 +69,7 @@ function runCli(args: string[], cwd: string, homeDir: string) {
       XDG_CONFIG_HOME: join(homeDir, ".config"),
       CODEX_HOME: join(homeDir, ".codex"),
       NO_COLOR: "1",
+      ...extraEnv,
     },
   });
 }
@@ -1495,6 +1501,139 @@ test("sync: prints already in sync when nothing to change", () => {
 
   const output = `${result.stdout}\n${result.stderr}`;
   assert.match(output, /already in sync/i);
+});
+
+test("E2E CLI: Grok alias honors GROK_HOME and maps native remote fields", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+  const grokHome = createTempDir();
+
+  const result = runCli(
+    [
+      "https://mcp.example.com/sse",
+      "-a",
+      "grok",
+      "-g",
+      "-y",
+      "--name",
+      "grok-remote",
+      "--transport",
+      "sse",
+      "--header",
+      "Authorization: Bearer ${API_TOKEN}",
+      "--timeout",
+      "2000",
+    ],
+    projectDir,
+    homeDir,
+    { GROK_HOME: grokHome },
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const configPath = join(grokHome, "config.toml");
+  assert.strictEqual(existsSync(configPath), true);
+  assert.strictEqual(existsSync(join(homeDir, ".grok", "config.toml")), false);
+
+  const saved = TOML.parse(readFileSync(configPath, "utf-8")) as Record<
+    string,
+    unknown
+  >;
+  const server = (saved.mcp_servers as Record<string, Record<string, unknown>>)[
+    "grok-remote"
+  ];
+  assert.ok(server);
+  assert.strictEqual(server.url, "https://mcp.example.com/sse");
+  assert.deepStrictEqual(server.headers, {
+    Authorization: "Bearer ${API_TOKEN}",
+  });
+  assert.strictEqual(server.tool_timeout_sec, 2);
+  assert.strictEqual("type" in server, false);
+});
+
+test("E2E CLI: Grok global install falls back to ~/.grok", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "grok-build",
+      "-g",
+      "-y",
+      "--name",
+      "grok-default-home",
+    ],
+    projectDir,
+    homeDir,
+    { GROK_HOME: "" },
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const configPath = join(homeDir, ".grok", "config.toml");
+  assert.strictEqual(existsSync(configPath), true);
+  const saved = TOML.parse(readFileSync(configPath, "utf-8")) as Record<
+    string,
+    unknown
+  >;
+  const server = (saved.mcp_servers as Record<string, Record<string, unknown>>)[
+    "grok-default-home"
+  ];
+  assert.ok(server);
+  assert.strictEqual(server.url, "https://mcp.example.com/mcp");
+});
+
+test("E2E CLI: Grok project install ignores GROK_HOME", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+  const grokHome = createTempDir();
+
+  const result = runCli(
+    [
+      "https://mcp.example.com/sse",
+      "-a",
+      "grok-build",
+      "-y",
+      "--name",
+      "grok-project",
+      "--transport",
+      "sse",
+    ],
+    projectDir,
+    homeDir,
+    { GROK_HOME: grokHome },
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const configPath = join(projectDir, ".grok", "config.toml");
+  assert.strictEqual(existsSync(configPath), true);
+  assert.strictEqual(existsSync(join(grokHome, "config.toml")), false);
+
+  const saved = TOML.parse(readFileSync(configPath, "utf-8")) as Record<
+    string,
+    unknown
+  >;
+  const server = (saved.mcp_servers as Record<string, Record<string, unknown>>)[
+    "grok-project"
+  ];
+  assert.ok(server);
+  assert.strictEqual(server.url, "https://mcp.example.com/sse");
+  assert.strictEqual("type" in server, false);
 });
 
 test("E2E CLI: --timeout and --scopes map per agent and warn on drop", () => {

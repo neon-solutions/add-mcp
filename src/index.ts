@@ -460,7 +460,7 @@ program
   )
   .option(
     "--timeout <ms>",
-    "Request timeout in milliseconds for remote servers. Only applied to agents that support it (e.g. Claude Code, Gemini CLI); dropped with a warning elsewhere.",
+    "Request timeout in milliseconds for remote servers. Only applied to agents that support it (e.g. Claude Code, Gemini CLI, Grok Build); dropped with a warning elsewhere.",
   )
   .option(
     "--scopes <scopes>",

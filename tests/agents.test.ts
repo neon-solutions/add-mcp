@@ -134,6 +134,7 @@ test("supportedFields reflects per-client capabilities", () => {
     "autoApprove",
   ]);
   assert.deepStrictEqual(agents.codex.supportedFields, ["autoApprove"]);
+  assert.deepStrictEqual(agents["grok-build"].supportedFields, ["timeout"]);
   // Clients with no extra field support declare an empty list.
   assert.deepStrictEqual(agents.vscode.supportedFields, []);
   assert.deepStrictEqual(agents["claude-desktop"].supportedFields, []);

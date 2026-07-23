@@ -967,6 +967,91 @@ test("E2E: Write TOML config file (Grok Build format)", () => {
   assert.deepStrictEqual(serverEntry.args, ["-y", "mcp-server-postgres"]);
 });
 
+test("E2E: Grok re-installs replace the server and preserve other settings", () => {
+  const tempDir = createTempDir();
+  const configPath = join(tempDir, ".grok", "config.toml");
+
+  writeConfig(
+    configPath,
+    {
+      models: { default: "grok-build" },
+      mcp_servers: {
+        keep: { url: "https://mcp.example.com/keep" },
+      },
+    },
+    "toml",
+    "mcp_servers",
+  );
+
+  const stdioConfig = buildServerConfig(parseSource("mcp-server-postgres"), {
+    env: { DATABASE_URL: "${DATABASE_URL}" },
+  });
+  const first = installServerForAgent(
+    "switch-transport",
+    stdioConfig,
+    "grok-build",
+    { local: true, cwd: tempDir },
+  );
+  assert.strictEqual(first.success, true);
+
+  const remoteConfig = buildServerConfig(
+    parseSource("https://mcp.example.com/mcp"),
+    {
+      headers: { Authorization: "Bearer ${API_TOKEN}" },
+      timeout: 2000,
+    },
+  );
+  const second = installServerForAgent(
+    "switch-transport",
+    remoteConfig,
+    "grok-build",
+    { local: true, cwd: tempDir },
+  );
+  assert.strictEqual(second.success, true);
+
+  let saved = readTomlConfig(configPath);
+  let servers = saved.mcp_servers as Record<string, Record<string, unknown>>;
+  let switched = servers["switch-transport"];
+  let kept = servers.keep;
+  assert.ok(switched);
+  assert.ok(kept);
+  assert.strictEqual(switched.url, "https://mcp.example.com/mcp");
+  assert.deepStrictEqual(switched.headers, {
+    Authorization: "Bearer ${API_TOKEN}",
+  });
+  assert.strictEqual(switched.tool_timeout_sec, 2);
+  assert.strictEqual("command" in switched, false);
+  assert.strictEqual("args" in switched, false);
+  assert.strictEqual("env" in switched, false);
+  assert.strictEqual(kept.url, "https://mcp.example.com/keep");
+  assert.deepStrictEqual(saved.models, { default: "grok-build" });
+
+  const third = installServerForAgent(
+    "switch-transport",
+    stdioConfig,
+    "grok-build",
+    { local: true, cwd: tempDir },
+  );
+  assert.strictEqual(third.success, true);
+
+  saved = readTomlConfig(configPath);
+  servers = saved.mcp_servers as Record<string, Record<string, unknown>>;
+  switched = servers["switch-transport"];
+  kept = servers.keep;
+  assert.ok(switched);
+  assert.ok(kept);
+  assert.strictEqual(switched.command, "npx");
+  assert.deepStrictEqual(switched.args, ["-y", "mcp-server-postgres"]);
+  assert.deepStrictEqual(switched.env, {
+    DATABASE_URL: "${DATABASE_URL}",
+  });
+  assert.strictEqual("url" in switched, false);
+  assert.strictEqual("headers" in switched, false);
+  assert.strictEqual("tool_timeout_sec" in switched, false);
+  assert.strictEqual(kept.url, "https://mcp.example.com/keep");
+  assert.deepStrictEqual(saved.models, { default: "grok-build" });
+});
+
 // ============================================
 // E2E Tests: Multiple agents at once
 // ============================================
