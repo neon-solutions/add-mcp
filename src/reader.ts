@@ -33,8 +33,8 @@ export interface AgentServers {
 export function extractServerIdentity(
   serverConfig: Record<string, unknown>,
 ): string {
-  // Remote: check url, uri, serverUrl
-  for (const key of ["url", "uri", "serverUrl"]) {
+  // Remote: Gemini CLI gives legacy httpUrl priority when both URL fields exist.
+  for (const key of ["httpUrl", "url", "uri", "serverUrl"]) {
     const value = serverConfig[key];
     if (typeof value === "string" && value.length > 0) {
       return value;
