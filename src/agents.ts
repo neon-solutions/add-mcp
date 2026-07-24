@@ -624,10 +624,9 @@ export const agents: Record<AgentType, AgentConfig> = {
     name: "lmstudio",
     displayName: "LM Studio",
     configPath: lmstudioConfigPath,
-    projectDetectPaths: [], // Global only - no project support
+    projectDetectPaths: [],
     configKey: "mcpServers",
     format: "json",
-    // LM Studio follows Cursor's mcp.json notation for both stdio and remote.
     supportedTransports: ["stdio", "http", "sse"],
     supportedFields: [],
     detectGlobalInstall: async () => {
