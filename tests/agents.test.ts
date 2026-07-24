@@ -60,9 +60,9 @@ function cleanup() {
 // Agent Configuration Tests
 // ============================================
 
-test("getAgentTypes returns all 16 agents", () => {
+test("getAgentTypes returns all 17 agents", () => {
   const types = getAgentTypes();
-  assert.strictEqual(types.length, 16);
+  assert.strictEqual(types.length, 17);
   assert.ok(types.includes("antigravity"));
   assert.ok(types.includes("cline"));
   assert.ok(types.includes("cline-cli"));
@@ -74,6 +74,7 @@ test("getAgentTypes returns all 16 agents", () => {
   assert.ok(types.includes("goose"));
   assert.ok(types.includes("github-copilot-cli"));
   assert.ok(types.includes("grok-build"));
+  assert.ok(types.includes("lmstudio"));
   assert.ok(types.includes("mcporter"));
   assert.ok(types.includes("opencode"));
   assert.ok(types.includes("vscode"));
@@ -164,6 +165,7 @@ test("supportsProjectConfig - returns false for global-only agents", () => {
   assert.strictEqual(supportsProjectConfig("claude-desktop"), false);
   assert.strictEqual(supportsProjectConfig("goose"), false);
   assert.strictEqual(supportsProjectConfig("windsurf"), false);
+  assert.strictEqual(supportsProjectConfig("lmstudio"), false);
 });
 
 test("getProjectCapableAgents returns 10 agents", () => {
@@ -181,15 +183,16 @@ test("getProjectCapableAgents returns 10 agents", () => {
   assert.ok(projectAgents.includes("zed"));
 });
 
-test("getGlobalOnlyAgents returns 6 agents", () => {
+test("getGlobalOnlyAgents returns 7 agents", () => {
   const globalAgents = getGlobalOnlyAgents();
-  assert.strictEqual(globalAgents.length, 6);
+  assert.strictEqual(globalAgents.length, 7);
   assert.ok(globalAgents.includes("antigravity"));
   assert.ok(globalAgents.includes("cline"));
   assert.ok(globalAgents.includes("cline-cli"));
   assert.ok(globalAgents.includes("claude-desktop"));
   assert.ok(globalAgents.includes("goose"));
   assert.ok(globalAgents.includes("windsurf"));
+  assert.ok(globalAgents.includes("lmstudio"));
 });
 
 test("Project + global-only agents equals all agents", () => {
@@ -349,6 +352,7 @@ test("detectProjectAgents - does not detect global-only agents", () => {
   assert.ok(!detected.includes("claude-desktop"));
   assert.ok(!detected.includes("goose"));
   assert.ok(!detected.includes("windsurf"));
+  assert.ok(!detected.includes("lmstudio"));
   assert.ok(!detected.includes("antigravity"));
 });
 
@@ -378,6 +382,7 @@ test("isTransportSupported - most agents support http", () => {
     "github-copilot-cli",
     "goose",
     "grok-build",
+    "lmstudio",
     "mcporter",
     "opencode",
     "vscode",
@@ -406,6 +411,7 @@ test("isTransportSupported - most agents support sse", () => {
     "github-copilot-cli",
     "goose",
     "grok-build",
+    "lmstudio",
     "mcporter",
     "opencode",
     "vscode",

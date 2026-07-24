@@ -76,6 +76,7 @@ const windsurfConfigPath = join(
   "windsurf",
   "mcp_config.json",
 );
+const lmstudioConfigPath = join(home, ".lmstudio", "mcp.json");
 
 /**
  * Build the spec-aligned remote shape shared by clients that consume MCP
@@ -617,6 +618,22 @@ export const agents: Record<AgentType, AgentConfig> = {
     },
     resolveConfigPath: resolveGrokBuildConfigPath,
     transformConfig: transformGrokBuildConfig,
+  },
+
+  lmstudio: {
+    name: "lmstudio",
+    displayName: "LM Studio",
+    configPath: lmstudioConfigPath,
+    projectDetectPaths: [], // Global only - no project support
+    configKey: "mcpServers",
+    format: "json",
+    // LM Studio follows Cursor's mcp.json notation for both stdio and remote.
+    supportedTransports: ["stdio", "http", "sse"],
+    supportedFields: [],
+    detectGlobalInstall: async () => {
+      return existsSync(join(home, ".lmstudio"));
+    },
+    transformConfig: transformCursorConfig,
   },
 
   mcporter: {
