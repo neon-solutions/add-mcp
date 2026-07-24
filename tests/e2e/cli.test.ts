@@ -1385,6 +1385,47 @@ test("sync: reconstructs required fields when syncing Cursor -> Claude Code", ()
   );
 });
 
+test("sync: reconstructs OpenCode local array command into standard stdio", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+
+  writeFileSync(
+    join(projectDir, "opencode.json"),
+    JSON.stringify({
+      mcp: {
+        postgres: {
+          type: "local",
+          command: ["npx", "-y", "mcp-server-postgres"],
+          enabled: true,
+          environment: { DATABASE_URL: "postgres://localhost/db" },
+        },
+      },
+    }),
+  );
+
+  const cursorDir = join(projectDir, ".cursor");
+  mkdirSync(cursorDir, { recursive: true });
+  const cursorConfigPath = join(cursorDir, "mcp.json");
+  writeFileSync(cursorConfigPath, JSON.stringify({ mcpServers: {} }));
+
+  const result = runCli(["sync", "-y"], projectDir, homeDir);
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const cursorConfig = JSON.parse(readFileSync(cursorConfigPath, "utf-8"));
+  const server = cursorConfig.mcpServers.postgres as Record<string, unknown>;
+  assert.ok(server, "Cursor should receive the OpenCode local server");
+  assert.strictEqual(server.command, "npx");
+  assert.deepStrictEqual(server.args, ["-y", "mcp-server-postgres"]);
+  assert.deepStrictEqual(server.env, {
+    DATABASE_URL: "postgres://localhost/db",
+  });
+});
+
 test("sync: preserves Gemini CLI httpUrl and headers", () => {
   const homeDir = createTempDir();
   const projectDir = createTempDir();

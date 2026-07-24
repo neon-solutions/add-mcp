@@ -33,7 +33,6 @@ export interface AgentServers {
 export function extractServerIdentity(
   serverConfig: Record<string, unknown>,
 ): string {
-  // Remote: Gemini CLI gives legacy httpUrl priority when both URL fields exist.
   for (const key of ["httpUrl", "url", "uri", "serverUrl"]) {
     const value = serverConfig[key];
     if (typeof value === "string" && value.length > 0) {
@@ -41,27 +40,31 @@ export function extractServerIdentity(
     }
   }
 
-  // Stdio: reconstruct from command/cmd + args
-  const command =
-    typeof serverConfig.command === "string"
-      ? serverConfig.command
-      : typeof serverConfig.cmd === "string"
-        ? serverConfig.cmd
-        : undefined;
+  let command: string | undefined;
+  let rawArgs: string[] = [];
+
+  if (typeof serverConfig.command === "string") {
+    command = serverConfig.command;
+    rawArgs = Array.isArray(serverConfig.args)
+      ? serverConfig.args.filter((a): a is string => typeof a === "string")
+      : [];
+  } else if (typeof serverConfig.cmd === "string") {
+    command = serverConfig.cmd;
+    rawArgs = Array.isArray(serverConfig.args)
+      ? serverConfig.args.filter((a): a is string => typeof a === "string")
+      : [];
+  } else if (Array.isArray(serverConfig.command)) {
+    const parts = serverConfig.command.filter(
+      (part): part is string => typeof part === "string",
+    );
+    command = parts[0];
+    rawArgs = parts.slice(1);
+  }
 
   if (!command) {
     return "";
   }
 
-  const rawArgs = Array.isArray(serverConfig.args)
-    ? serverConfig.args.filter((a): a is string => typeof a === "string")
-    : Array.isArray(serverConfig.command)
-      ? (serverConfig.command as unknown[])
-          .slice(1)
-          .filter((a): a is string => typeof a === "string")
-      : [];
-
-  // Detect npx -y <package> pattern
   if (command === "npx" || command === "bunx") {
     const yIndex = rawArgs.indexOf("-y");
     const pkgIndex = yIndex >= 0 ? yIndex + 1 : 0;
@@ -69,11 +72,6 @@ export function extractServerIdentity(
     if (pkg && !pkg.startsWith("-")) {
       return pkg;
     }
-  }
-
-  // OpenCode uses command as array: ["node", "server.js"]
-  if (Array.isArray(serverConfig.command)) {
-    return (serverConfig.command as string[]).join(" ");
   }
 
   if (rawArgs.length > 0) {

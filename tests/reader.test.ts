@@ -151,6 +151,43 @@ test("extractServerIdentity: prefers url over command", () => {
   assert.strictEqual(identity, "https://example.com/mcp");
 });
 
+test("extractServerIdentity: OpenCode array command with npx -y package", () => {
+  const identity = extractServerIdentity({
+    type: "local",
+    command: ["npx", "-y", "mcp-server-postgres"],
+    enabled: true,
+    environment: {},
+  });
+  assert.strictEqual(identity, "mcp-server-postgres");
+});
+
+test("extractServerIdentity: OpenCode array command with bunx package", () => {
+  const identity = extractServerIdentity({
+    type: "local",
+    command: ["bunx", "-y", "@org/mcp-server"],
+    enabled: true,
+  });
+  assert.strictEqual(identity, "@org/mcp-server");
+});
+
+test("extractServerIdentity: OpenCode array command without package manager", () => {
+  const identity = extractServerIdentity({
+    type: "local",
+    command: ["node", "server.js", "--port", "3000"],
+    enabled: true,
+  });
+  assert.strictEqual(identity, "node server.js --port 3000");
+});
+
+test("extractServerIdentity: OpenCode array command with single entry", () => {
+  const identity = extractServerIdentity({
+    type: "local",
+    command: ["my-server"],
+    enabled: true,
+  });
+  assert.strictEqual(identity, "my-server");
+});
+
 // ── readServersForAgent ──────────────────────────────────────────────────
 
 test("readServersForAgent: reads JSON config for cursor", () => {
@@ -240,6 +277,32 @@ test("readServersForAgent: reads VS Code config with 'servers' key", () => {
 
   assert.strictEqual(result.servers.length, 1);
   assert.strictEqual(result.servers[0]!.serverName, "myserver");
+});
+
+test("readServersForAgent: reads OpenCode local array command identity", () => {
+  const tempDir = createTempDir();
+  writeFileSync(
+    join(tempDir, "opencode.json"),
+    JSON.stringify({
+      mcp: {
+        postgres: {
+          type: "local",
+          command: ["npx", "-y", "mcp-server-postgres"],
+          enabled: true,
+          environment: { DATABASE_URL: "postgres://localhost/db" },
+        },
+      },
+    }),
+  );
+
+  const result = readServersForAgent("opencode", {
+    scope: "local",
+    cwd: tempDir,
+  });
+
+  assert.strictEqual(result.servers.length, 1);
+  assert.strictEqual(result.servers[0]!.serverName, "postgres");
+  assert.strictEqual(result.servers[0]!.identity, "mcp-server-postgres");
 });
 
 // ── findMatchingServers ──────────────────────────────────────────────────

@@ -1179,16 +1179,26 @@ function buildServerConfigFromStored(
     return result;
   }
 
-  const command =
-    typeof config.command === "string"
-      ? config.command
-      : typeof config.cmd === "string"
-        ? config.cmd
-        : undefined;
+  let command: string | undefined;
+  let args: string[] = [];
 
-  const args = Array.isArray(config.args)
-    ? config.args.filter((a): a is string => typeof a === "string")
-    : [];
+  if (typeof config.command === "string") {
+    command = config.command;
+    args = Array.isArray(config.args)
+      ? config.args.filter((a): a is string => typeof a === "string")
+      : [];
+  } else if (typeof config.cmd === "string") {
+    command = config.cmd;
+    args = Array.isArray(config.args)
+      ? config.args.filter((a): a is string => typeof a === "string")
+      : [];
+  } else if (Array.isArray(config.command)) {
+    const parts = config.command.filter(
+      (part): part is string => typeof part === "string",
+    );
+    command = parts[0];
+    args = parts.slice(1);
+  }
 
   const env =
     config.env && typeof config.env === "object"
