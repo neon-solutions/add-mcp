@@ -12,6 +12,7 @@ export type AgentType =
   | "goose"
   | "github-copilot-cli"
   | "grok-build"
+  | "lmstudio"
   | "mcporter"
   | "opencode"
   | "vscode"
@@ -25,6 +26,7 @@ export const agentAliases: Record<string, AgentType> = {
   gemini: "gemini-cli",
   "github-copilot": "vscode",
   grok: "grok-build",
+  "lm-studio": "lmstudio",
 };
 
 export type ConfigFormat = "json" | "yaml" | "toml";
