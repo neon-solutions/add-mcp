@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.1.0] - 2026-08-02
+
+- let `find` / `search` install OCI registry packages with `docker run`; required environment variables are forwarded into the container.
+
 ## [2.0.0] - 2026-07-22
 
 - **BREAKING:** re-installing a server under an existing name now replaces that server's entire entry instead of deep-merging the new fields into the old entry. Callers that relied on omitted fields surviving a re-install must now pass the complete desired server configuration. This prevents stale fields from producing invalid hybrid configs — most damaging when an old stdio entry (`command`/`args`/`env`) was combined with a new remote install (`type`/`url`). Applies to the TOML, JSON, and YAML writers; unrelated servers and all other config sections are still preserved ([#83](https://github.com/neon-solutions/add-mcp/pull/83))

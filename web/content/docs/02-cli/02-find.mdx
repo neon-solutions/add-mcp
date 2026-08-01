@@ -45,6 +45,8 @@ npx add-mcp find github --all --gitignore
 
 Transport is inferred from registry metadata. The CLI prefers HTTP remotes when available and only falls back to SSE when HTTP isn't available for the selected install context. When a server offers both remote and stdio package options, interactive mode lets you choose one (remote is the default); with `-y`, it auto-selects remote.
 
+Stdio registry packages can use npm or OCI (`docker run`). Install Docker before selecting an OCI package.
+
 If a selected remote server defines URL variables or header inputs:
 
 - required values must be provided,
