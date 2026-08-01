@@ -699,6 +699,44 @@ test("buildInstallPlanForEntry returns package target for package-only entry", a
   assert.strictEqual(plan?.args, undefined);
 });
 
+test("buildInstallPlanForEntry runs OCI packages with Docker and forwards env", async () => {
+  const plan = await buildInstallPlanForEntry(
+    {
+      name: "io.github.hashicorp/terraform-mcp-server",
+      description: "Terraform MCP server",
+      version: "0.5.0",
+      package: {
+        registryType: "oci",
+        identifier: "hashicorp/terraform-mcp-server:0.5.0",
+        version: "0.5.0",
+        transport: { type: "stdio" },
+        environmentVariables: [
+          { name: "TFE_TOKEN", isRequired: true, isSecret: true },
+        ],
+        packageArguments: [
+          { type: "named", name: "--log-level", value: "debug" },
+        ],
+      },
+    },
+    { yes: true },
+  );
+
+  assert.ok(plan);
+  assert.strictEqual(plan?.target, "docker run");
+  assert.deepStrictEqual(plan?.env, {
+    TFE_TOKEN: "<your-variable-value-here>",
+  });
+  assert.deepStrictEqual(plan?.args, [
+    "--rm",
+    "-i",
+    "-e",
+    "TFE_TOKEN",
+    "hashicorp/terraform-mcp-server:0.5.0",
+    "--log-level",
+    "debug",
+  ]);
+});
+
 test("buildInstallPlanForEntry includes only required package env/header/args placeholders in -y mode", async () => {
   const plan = await buildInstallPlanForEntry(
     {
@@ -993,7 +1031,7 @@ test("buildInstallPlanForEntry falls back to available remote when preferred tra
   assert.strictEqual(plan?.transport, "http");
 });
 
-test("searchRegistry filters out non-installable entries (no npm package and no remotes)", async () => {
+test("searchRegistry keeps supported package runtimes and filters unsupported entries", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = (async () =>
     ({
@@ -1017,6 +1055,21 @@ test("searchRegistry filters out non-installable entries (no npm package and no 
           },
           {
             server: {
+              name: "com.example/nuget-only",
+              description: "Unsupported NuGet-only server",
+              version: "1.0.0",
+              packages: [
+                {
+                  registryType: "nuget",
+                  identifier: "Example.Mcp",
+                  version: "1.0.0",
+                  transport: { type: "stdio" },
+                },
+              ],
+            },
+          },
+          {
+            server: {
               name: "com.example/metadata-only",
               description: "Just metadata, no transports",
               version: "0.1.0",
@@ -1028,6 +1081,12 @@ test("searchRegistry filters out non-installable entries (no npm package and no 
               description: "NPM server",
               version: "1.0.0",
               packages: [
+                {
+                  registryType: "oci",
+                  identifier: "ghcr.io/example/hybrid:1.0.0",
+                  version: "1.0.0",
+                  transport: { type: "stdio" },
+                },
                 {
                   registryType: "npm",
                   identifier: "@example/mcp-server",
@@ -1083,12 +1142,17 @@ test("searchRegistry filters out non-installable entries (no npm package and no 
       },
     ]);
     const names = result.entries.map((e) => e.name);
-    assert.strictEqual(result.entries.length, 3);
+    assert.strictEqual(result.entries.length, 4);
     assert.strictEqual(names.includes("com.example/npm-server"), true);
     assert.strictEqual(names.includes("com.example/remote-only"), true);
     assert.strictEqual(names.includes("com.example/hybrid"), true);
-    assert.strictEqual(names.includes("com.example/oci-only"), false);
+    assert.strictEqual(names.includes("com.example/oci-only"), true);
+    assert.strictEqual(names.includes("com.example/nuget-only"), false);
     assert.strictEqual(names.includes("com.example/metadata-only"), false);
+    const npmEntry = result.entries.find(
+      (e) => e.name === "com.example/npm-server",
+    )!;
+    assert.strictEqual(npmEntry.package?.registryType, "npm");
     const hybrid = result.entries.find((e) => e.name === "com.example/hybrid")!;
     assert.strictEqual(hybrid.package?.identifier, "@example/hybrid");
     assert.strictEqual(

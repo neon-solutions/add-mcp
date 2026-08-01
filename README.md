@@ -279,6 +279,8 @@ Transport for `find`/`search` is inferred from registry metadata. The CLI prefer
 
 When a server offers both remote and stdio package options, interactive mode lets you choose one (remote is the default). With `-y`, it auto-selects remote.
 
+Stdio registry packages can use npm or OCI (`docker run`). Install Docker before selecting an OCI package.
+
 If a selected remote server defines URL variables or header inputs:
 
 - required values must be provided
