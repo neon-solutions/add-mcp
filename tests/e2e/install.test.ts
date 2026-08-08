@@ -10,7 +10,13 @@
  */
 
 import assert from "node:assert";
-import { mkdtempSync, rmSync, readFileSync, existsSync } from "node:fs";
+import {
+  mkdtempSync,
+  rmSync,
+  readFileSync,
+  writeFileSync,
+  existsSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import yaml from "js-yaml";
@@ -224,7 +230,7 @@ test("E2E: Install to GitHub Copilot CLI (local) writes VS Code schema", () => {
   assert.ok(servers.company);
 });
 
-test("E2E: Install to OpenCode (local) - transformed format", () => {
+test("E2E: Install to OpenCode (local) - transformed format (jsonc default)", () => {
   const tempDir = createTempDir();
   const parsed = parseSource("https://mcp.openai.com/api");
   const config = buildServerConfig(parsed);
@@ -236,7 +242,7 @@ test("E2E: Install to OpenCode (local) - transformed format", () => {
 
   assert.strictEqual(result.success, true);
 
-  const configPath = join(tempDir, "opencode.json");
+  const configPath = join(tempDir, "opencode.jsonc");
   const savedConfig = readJsonConfig(configPath);
   const mcp = savedConfig.mcp as Record<string, unknown>;
 
@@ -259,7 +265,7 @@ test("E2E: Install local server to OpenCode - transformed format", () => {
 
   assert.strictEqual(result.success, true);
 
-  const configPath = join(tempDir, "opencode.json");
+  const configPath = join(tempDir, "opencode.jsonc");
   const savedConfig = readJsonConfig(configPath);
   const mcp = savedConfig.mcp as Record<string, unknown>;
 
@@ -290,7 +296,7 @@ test("E2E: Install local server to OpenCode maps env to environment", () => {
 
   assert.strictEqual(result.success, true);
 
-  const configPath = join(tempDir, "opencode.json");
+  const configPath = join(tempDir, "opencode.jsonc");
   const savedConfig = readJsonConfig(configPath);
   const mcp = savedConfig.mcp as Record<string, unknown>;
 
@@ -299,6 +305,81 @@ test("E2E: Install local server to OpenCode maps env to environment", () => {
     API_KEY: "secret",
     DATABASE_URL: "postgres://localhost/test",
   });
+});
+
+test("E2E: Install to OpenCode - prefers existing opencode.json over new .jsonc", () => {
+  const tempDir = createTempDir();
+  writeFileSync(join(tempDir, "opencode.json"), "{}");
+
+  const parsed = parseSource("mcp-server-postgres");
+  const config = buildServerConfig(parsed);
+
+  const result = installServerForAgent("postgres", config, "opencode", {
+    local: true,
+    cwd: tempDir,
+  });
+
+  assert.strictEqual(result.success, true);
+  assert.strictEqual(existsSync(join(tempDir, "opencode.jsonc")), false);
+
+  const savedConfig = readJsonConfig(join(tempDir, "opencode.json"));
+  const mcp = savedConfig.mcp as Record<string, unknown>;
+  assert.strictEqual((mcp.postgres as Record<string, unknown>).type, "local");
+});
+
+test("E2E: Install to OpenCode - prefers existing opencode.jsonc over .json", () => {
+  const tempDir = createTempDir();
+  writeFileSync(join(tempDir, "opencode.jsonc"), "{}");
+
+  const parsed = parseSource("mcp-server-postgres");
+  const config = buildServerConfig(parsed);
+
+  const result = installServerForAgent("postgres", config, "opencode", {
+    local: true,
+    cwd: tempDir,
+  });
+
+  assert.strictEqual(result.success, true);
+  assert.strictEqual(existsSync(join(tempDir, "opencode.json")), false);
+
+  const savedConfig = readJsonConfig(join(tempDir, "opencode.jsonc"));
+  const mcp = savedConfig.mcp as Record<string, unknown>;
+  assert.strictEqual((mcp.postgres as Record<string, unknown>).type, "local");
+});
+
+test("E2E: Install to OpenCode - preserves existing config structure (jsonc)", () => {
+  const tempDir = createTempDir();
+  writeFileSync(
+    join(tempDir, "opencode.jsonc"),
+    `{
+  // my tools
+  "mcp": {
+    "existing-server": {
+      "type": "local",
+      "command": ["node", "server.js"],
+      "enabled": false
+    }
+  }
+}`,
+  );
+
+  const parsed = parseSource("mcp-server-postgres");
+  const config = buildServerConfig(parsed);
+
+  const result = installServerForAgent("postgres", config, "opencode", {
+    local: true,
+    cwd: tempDir,
+  });
+
+  assert.strictEqual(result.success, true);
+
+  const raw = readFileSync(join(tempDir, "opencode.jsonc"), "utf-8");
+  assert.ok(raw.includes("// my tools"), "comment should be preserved");
+  assert.ok(
+    raw.includes('"existing-server"'),
+    "existing server should be preserved",
+  );
+  assert.ok(raw.includes('"postgres"'), "new server should be added");
 });
 
 test("E2E: Install to Gemini CLI (local)", () => {

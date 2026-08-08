@@ -281,6 +281,66 @@ test("detectProjectAgents - detects .opencode directory", () => {
   assert.ok(detected.includes("opencode"));
 });
 
+test("detectProjectAgents - detects opencode.jsonc file", () => {
+  const tempDir = createTempDir();
+  writeFileSync(join(tempDir, "opencode.jsonc"), "{}");
+
+  const detected = detectProjectAgents(tempDir);
+  assert.ok(detected.includes("opencode"));
+});
+
+test("resolveConfigPath local - prefers existing opencode.jsonc over .json", () => {
+  const tempDir = createTempDir();
+  writeFileSync(join(tempDir, "opencode.jsonc"), "{}");
+  writeFileSync(join(tempDir, "opencode.json"), "{}");
+
+  const resolver = agents.opencode.resolveConfigPath!;
+  const result = resolver(agents.opencode, { local: true, cwd: tempDir });
+  assert.equal(result, join(tempDir, "opencode.jsonc"));
+});
+
+test("resolveConfigPath local - falls through to .opencode/opencode.jsonc", () => {
+  const tempDir = createTempDir();
+  mkdirSync(join(tempDir, ".opencode"));
+  writeFileSync(join(tempDir, ".opencode", "opencode.jsonc"), "{}");
+
+  const resolver = agents.opencode.resolveConfigPath!;
+  const result = resolver(agents.opencode, { local: true, cwd: tempDir });
+  assert.equal(result, join(tempDir, ".opencode", "opencode.jsonc"));
+});
+
+test("resolveConfigPath local - falls through to .opencode/opencode.json", () => {
+  const tempDir = createTempDir();
+  mkdirSync(join(tempDir, ".opencode"));
+  writeFileSync(join(tempDir, ".opencode", "opencode.json"), "{}");
+
+  const resolver = agents.opencode.resolveConfigPath!;
+  const result = resolver(agents.opencode, { local: true, cwd: tempDir });
+  assert.equal(result, join(tempDir, ".opencode", "opencode.json"));
+});
+
+test("resolveConfigPath local - defaults to opencode.jsonc when nothing exists", () => {
+  const tempDir = createTempDir();
+
+  const resolver = agents.opencode.resolveConfigPath!;
+  const result = resolver(agents.opencode, { local: true, cwd: tempDir });
+  assert.equal(result, join(tempDir, "opencode.jsonc"));
+});
+
+test("resolveConfigPath global - prefers existing opencode.jsonc over .json", () => {
+  const resolver = agents.opencode.resolveConfigPath!;
+  const result = resolver(agents.opencode, { local: false, cwd: "" });
+  assert.equal(
+    result,
+    join(
+      process.env.HOME || "/home/user",
+      ".config",
+      "opencode",
+      "opencode.jsonc",
+    ),
+  );
+});
+
 test("detectProjectAgents - detects .gemini directory", () => {
   const tempDir = createTempDir();
   mkdirSync(join(tempDir, ".gemini"));
