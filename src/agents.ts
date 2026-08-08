@@ -429,6 +429,33 @@ function resolveMcporterConfigPath(
   return globalJsonPath;
 }
 
+function resolveOpenCodeConfigPath(
+  agent: AgentConfig,
+  options: { local: boolean; cwd: string },
+): string {
+  if (options.local) {
+    const candidates = [
+      join(options.cwd, "opencode.jsonc"),
+      join(options.cwd, "opencode.json"),
+      join(options.cwd, ".opencode", "opencode.jsonc"),
+      join(options.cwd, ".opencode", "opencode.json"),
+    ];
+    for (const path of candidates) {
+      if (existsSync(path)) return path;
+    }
+    return join(options.cwd, "opencode.jsonc");
+  }
+
+  const candidates = [
+    join(home, ".config", "opencode", "opencode.jsonc"),
+    join(home, ".config", "opencode", "opencode.json"),
+  ];
+  for (const path of candidates) {
+    if (existsSync(path)) return path;
+  }
+  return join(home, ".config", "opencode", "opencode.jsonc");
+}
+
 function resolveGrokBuildConfigPath(
   agent: AgentConfig,
   options: { local: boolean; cwd: string },
@@ -639,9 +666,9 @@ export const agents: Record<AgentType, AgentConfig> = {
   opencode: {
     name: "opencode",
     displayName: "OpenCode",
-    configPath: join(home, ".config", "opencode", "opencode.json"),
-    localConfigPath: "opencode.json",
-    projectDetectPaths: ["opencode.json", ".opencode"],
+    configPath: join(home, ".config", "opencode", "opencode.jsonc"),
+    localConfigPath: "opencode.jsonc",
+    projectDetectPaths: ["opencode.jsonc", "opencode.json", ".opencode"],
     configKey: "mcp",
     format: "json",
     supportedTransports: ["stdio", "http", "sse"],
@@ -649,6 +676,7 @@ export const agents: Record<AgentType, AgentConfig> = {
     detectGlobalInstall: async () => {
       return existsSync(join(home, ".config", "opencode"));
     },
+    resolveConfigPath: resolveOpenCodeConfigPath,
     transformConfig: transformOpenCodeConfig,
   },
 
