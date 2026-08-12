@@ -41,13 +41,18 @@ export function extractServerIdentity(
     }
   }
 
-  // Stdio: reconstruct from command/cmd + args
+  // Stdio: reconstruct from command/cmd + args. OpenCode-style clients
+  // (OpenCode, Kilo Code) store the command and its arguments as one array.
+  const commandParts = Array.isArray(serverConfig.command)
+    ? serverConfig.command.filter((a): a is string => typeof a === "string")
+    : undefined;
+
   const command =
     typeof serverConfig.command === "string"
       ? serverConfig.command
       : typeof serverConfig.cmd === "string"
         ? serverConfig.cmd
-        : undefined;
+        : commandParts?.[0];
 
   if (!command) {
     return "";
@@ -55,11 +60,7 @@ export function extractServerIdentity(
 
   const rawArgs = Array.isArray(serverConfig.args)
     ? serverConfig.args.filter((a): a is string => typeof a === "string")
-    : Array.isArray(serverConfig.command)
-      ? (serverConfig.command as unknown[])
-          .slice(1)
-          .filter((a): a is string => typeof a === "string")
-      : [];
+    : (commandParts?.slice(1) ?? []);
 
   // Detect npx -y <package> pattern
   if (command === "npx" || command === "bunx") {
@@ -69,11 +70,6 @@ export function extractServerIdentity(
     if (pkg && !pkg.startsWith("-")) {
       return pkg;
     }
-  }
-
-  // OpenCode uses command as array: ["node", "server.js"]
-  if (Array.isArray(serverConfig.command)) {
-    return (serverConfig.command as string[]).join(" ");
   }
 
   if (rawArgs.length > 0) {

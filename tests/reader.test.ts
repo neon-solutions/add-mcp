@@ -137,6 +137,24 @@ test("extractServerIdentity: command only, no args", () => {
   assert.strictEqual(identity, "my-server");
 });
 
+test("extractServerIdentity: OpenCode-style command array", () => {
+  const identity = extractServerIdentity({
+    type: "local",
+    command: ["node", "/path/to/server.js", "--port", "3000"],
+    enabled: true,
+  });
+  assert.strictEqual(identity, "node /path/to/server.js --port 3000");
+});
+
+test("extractServerIdentity: OpenCode-style command array with npx package", () => {
+  const identity = extractServerIdentity({
+    type: "local",
+    command: ["npx", "-y", "@neondatabase/mcp-server-neon"],
+    enabled: true,
+  });
+  assert.strictEqual(identity, "@neondatabase/mcp-server-neon");
+});
+
 test("extractServerIdentity: empty config returns empty string", () => {
   const identity = extractServerIdentity({});
   assert.strictEqual(identity, "");

@@ -12,6 +12,9 @@ export type AgentType =
   | "goose"
   | "github-copilot-cli"
   | "grok-build"
+  | "kilo-code"
+  | "kimi-code"
+  | "kiro-cli"
   | "mcporter"
   | "opencode"
   | "vscode"
@@ -25,6 +28,10 @@ export const agentAliases: Record<string, AgentType> = {
   gemini: "gemini-cli",
   "github-copilot": "vscode",
   grok: "grok-build",
+  kilo: "kilo-code",
+  kilocode: "kilo-code",
+  kimi: "kimi-code",
+  kiro: "kiro-cli",
 };
 
 export type ConfigFormat = "json" | "yaml" | "toml";

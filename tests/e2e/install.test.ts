@@ -10,7 +10,14 @@
  */
 
 import assert from "node:assert";
-import { mkdtempSync, rmSync, readFileSync, existsSync } from "node:fs";
+import {
+  mkdtempSync,
+  mkdirSync,
+  rmSync,
+  readFileSync,
+  writeFileSync,
+  existsSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import yaml from "js-yaml";
@@ -1050,6 +1057,327 @@ test("E2E: Grok re-installs replace the server and preserve other settings", () 
   assert.strictEqual("tool_timeout_sec" in switched, false);
   assert.strictEqual(kept.url, "https://mcp.example.com/keep");
   assert.deepStrictEqual(saved.models, { default: "grok-build" });
+});
+
+// ============================================
+// E2E Tests: Kiro CLI
+// ============================================
+
+test("E2E: Install to Kiro CLI (local) - stdio", () => {
+  const tempDir = createTempDir();
+  const parsed = parseSource("mcp-server-github");
+  const config = buildServerConfig(parsed, {
+    env: { GITHUB_TOKEN: "secret" },
+  });
+
+  const result = installServerForAgent("github", config, "kiro-cli", {
+    local: true,
+    cwd: tempDir,
+  });
+
+  assert.strictEqual(result.success, true);
+
+  const configPath = join(tempDir, ".kiro", "settings", "mcp.json");
+  assert.strictEqual(existsSync(configPath), true);
+
+  const savedConfig = readJsonConfig(configPath);
+  const mcpServers = savedConfig.mcpServers as Record<
+    string,
+    Record<string, unknown>
+  >;
+  const serverConfig = mcpServers.github;
+  assert.ok(serverConfig);
+  assert.strictEqual(serverConfig.command, "npx");
+  assert.deepStrictEqual(serverConfig.args, ["-y", "mcp-server-github"]);
+  assert.deepStrictEqual(serverConfig.env, { GITHUB_TOKEN: "secret" });
+});
+
+test("E2E: Install to Kiro CLI (local) - remote omits the transport type", () => {
+  const tempDir = createTempDir();
+  const parsed = parseSource("https://mcp.example.com/api");
+  const config = buildServerConfig(parsed, {
+    headers: { Authorization: "Bearer token" },
+    timeout: 60000,
+  });
+
+  const result = installServerForAgent("example", config, "kiro-cli", {
+    local: true,
+    cwd: tempDir,
+  });
+
+  assert.strictEqual(result.success, true);
+
+  const configPath = join(tempDir, ".kiro", "settings", "mcp.json");
+  assert.strictEqual(existsSync(configPath), true);
+
+  const savedConfig = readJsonConfig(configPath);
+  const mcpServers = savedConfig.mcpServers as Record<
+    string,
+    Record<string, unknown>
+  >;
+  const serverConfig = mcpServers.example;
+  assert.ok(serverConfig);
+  assert.strictEqual(serverConfig.url, "https://mcp.example.com/api");
+  assert.deepStrictEqual(serverConfig.headers, {
+    Authorization: "Bearer token",
+  });
+  // Kiro infers the transport from url vs command and ignores `type`.
+  assert.strictEqual("type" in serverConfig, false);
+  // Kiro's timeout is in milliseconds, so it maps over unchanged.
+  assert.strictEqual(serverConfig.timeout, 60000);
+});
+
+test("E2E: Install to Kiro CLI (global) uses ~/.kiro/settings/mcp.json", () => {
+  const kiroAgent = agents["kiro-cli"];
+  assert.ok(
+    kiroAgent.configPath.endsWith(join(".kiro", "settings", "mcp.json")),
+  );
+  assert.strictEqual(kiroAgent.localConfigPath, ".kiro/settings/mcp.json");
+});
+
+test("E2E: Kiro CLI sse install does not write a type field", () => {
+  const parsed = parseSource("https://mcp.example.com/sse");
+  const config = buildServerConfig(parsed, { transport: "sse" });
+
+  const transformed = agents["kiro-cli"].transformConfig(
+    "example",
+    config,
+  ) as Record<string, unknown>;
+
+  assert.strictEqual(transformed.url, "https://mcp.example.com/sse");
+  assert.strictEqual("type" in transformed, false);
+  assert.strictEqual("transport" in transformed, false);
+});
+
+// ============================================
+// E2E Tests: Kilo Code (OpenCode-style JSON)
+// ============================================
+
+test("E2E: Install remote MCP to Kilo Code (local)", () => {
+  const tempDir = createTempDir();
+  const parsed = parseSource("https://mcp.example.com/mcp");
+  const config = buildServerConfig(parsed, {
+    headers: { Authorization: "Bearer token" },
+    timeout: 4000,
+  });
+
+  const result = installServerForAgent("example", config, "kilo-code", {
+    local: true,
+    cwd: tempDir,
+  });
+
+  assert.strictEqual(result.success, true);
+
+  const configPath = join(tempDir, "kilo.json");
+  assert.strictEqual(existsSync(configPath), true);
+
+  const savedConfig = readJsonConfig(configPath);
+  const mcp = savedConfig.mcp as Record<string, Record<string, unknown>>;
+  const serverConfig = mcp.example;
+  assert.ok(serverConfig);
+  assert.strictEqual(serverConfig.type, "remote");
+  assert.strictEqual(serverConfig.url, "https://mcp.example.com/mcp");
+  assert.strictEqual(serverConfig.enabled, true);
+  assert.deepStrictEqual(serverConfig.headers, {
+    Authorization: "Bearer token",
+  });
+  assert.strictEqual(serverConfig.timeout, 4000);
+});
+
+test("E2E: Install local server to Kilo Code uses command array and environment", () => {
+  const tempDir = createTempDir();
+  const parsed = parseSource("mcp-server-postgres");
+  const config = buildServerConfig(parsed, {
+    env: { DATABASE_URL: "postgres://localhost/test" },
+  });
+
+  const result = installServerForAgent("postgres", config, "kilo-code", {
+    local: true,
+    cwd: tempDir,
+  });
+
+  assert.strictEqual(result.success, true);
+
+  const savedConfig = readJsonConfig(join(tempDir, "kilo.json"));
+  const mcp = savedConfig.mcp as Record<string, Record<string, unknown>>;
+  const serverConfig = mcp.postgres;
+  assert.ok(serverConfig);
+  assert.strictEqual(serverConfig.type, "local");
+  assert.deepStrictEqual(serverConfig.command, [
+    "npx",
+    "-y",
+    "mcp-server-postgres",
+  ]);
+  assert.deepStrictEqual(serverConfig.environment, {
+    DATABASE_URL: "postgres://localhost/test",
+  });
+  assert.strictEqual("timeout" in serverConfig, false);
+});
+
+test("E2E: Kilo Code writes to an existing .kilo/kilo.json instead of the project root", () => {
+  const tempDir = createTempDir();
+  const nestedPath = join(tempDir, ".kilo", "kilo.json");
+  mkdirSync(join(tempDir, ".kilo"), { recursive: true });
+  writeFileSync(nestedPath, JSON.stringify({ mcp: {} }, null, 2));
+
+  const config = buildServerConfig(parseSource("https://mcp.example.com/mcp"));
+  const result = installServerForAgent("example", config, "kilo-code", {
+    local: true,
+    cwd: tempDir,
+  });
+
+  assert.strictEqual(result.success, true);
+  assert.strictEqual(result.path, nestedPath);
+  assert.strictEqual(existsSync(join(tempDir, "kilo.json")), false);
+
+  const savedConfig = readJsonConfig(nestedPath);
+  const mcp = savedConfig.mcp as Record<string, Record<string, unknown>>;
+  assert.ok(mcp.example);
+});
+
+test("E2E: Kilo Code writes to an existing legacy .kilocode/kilo.json", () => {
+  const tempDir = createTempDir();
+  const legacyPath = join(tempDir, ".kilocode", "kilo.json");
+  mkdirSync(join(tempDir, ".kilocode"), { recursive: true });
+  writeFileSync(legacyPath, JSON.stringify({ mcp: {} }, null, 2));
+
+  const config = buildServerConfig(parseSource("https://mcp.example.com/mcp"));
+  const result = installServerForAgent("example", config, "kilo-code", {
+    local: true,
+    cwd: tempDir,
+  });
+
+  assert.strictEqual(result.success, true);
+  assert.strictEqual(result.path, legacyPath);
+  assert.strictEqual(existsSync(join(tempDir, "kilo.json")), false);
+});
+
+test("E2E: Kilo Code preserves comments when updating a kilo.jsonc", () => {
+  const tempDir = createTempDir();
+  const jsoncPath = join(tempDir, "kilo.jsonc");
+  writeFileSync(
+    jsoncPath,
+    '{\n  // keep me\n  "mcp": {\n    "keep": { "type": "remote", "url": "https://keep.example.com/mcp" }\n  }\n}\n',
+  );
+
+  const config = buildServerConfig(parseSource("https://mcp.example.com/mcp"));
+  const result = installServerForAgent("example", config, "kilo-code", {
+    local: true,
+    cwd: tempDir,
+  });
+
+  assert.strictEqual(result.success, true);
+  assert.strictEqual(result.path, jsoncPath);
+
+  const content = readFileSync(jsoncPath, "utf-8");
+  assert.ok(content.includes("// keep me"));
+  assert.ok(content.includes("https://keep.example.com/mcp"));
+  assert.ok(content.includes("https://mcp.example.com/mcp"));
+});
+
+// ============================================
+// E2E Tests: Kimi Code (mcpServers with transport)
+// ============================================
+
+test("E2E: Install remote MCP to Kimi Code (local)", () => {
+  const tempDir = createTempDir();
+  const parsed = parseSource("https://mcp.example.com/mcp");
+  const config = buildServerConfig(parsed, {
+    headers: { Authorization: "Bearer token" },
+    timeout: 5000,
+  });
+
+  const result = installServerForAgent("example", config, "kimi-code", {
+    local: true,
+    cwd: tempDir,
+  });
+
+  assert.strictEqual(result.success, true);
+
+  const configPath = join(tempDir, ".kimi-code", "mcp.json");
+  assert.strictEqual(existsSync(configPath), true);
+
+  const savedConfig = readJsonConfig(configPath);
+  const mcpServers = savedConfig.mcpServers as Record<
+    string,
+    Record<string, unknown>
+  >;
+  const serverConfig = mcpServers.example;
+  assert.ok(serverConfig);
+  assert.strictEqual(serverConfig.transport, "http");
+  assert.strictEqual(serverConfig.url, "https://mcp.example.com/mcp");
+  assert.deepStrictEqual(serverConfig.headers, {
+    Authorization: "Bearer token",
+  });
+  assert.strictEqual(serverConfig.toolTimeoutMs, 5000);
+  assert.strictEqual("type" in serverConfig, false);
+});
+
+test("E2E: Install sse MCP to Kimi Code keeps an explicit transport", () => {
+  const tempDir = createTempDir();
+  const parsed = parseSource("https://mcp.example.com/sse");
+  const config = buildServerConfig(parsed, { transport: "sse" });
+
+  const result = installServerForAgent("example-sse", config, "kimi-code", {
+    local: true,
+    cwd: tempDir,
+  });
+
+  assert.strictEqual(result.success, true);
+
+  const savedConfig = readJsonConfig(join(tempDir, ".kimi-code", "mcp.json"));
+  const mcpServers = savedConfig.mcpServers as Record<
+    string,
+    Record<string, unknown>
+  >;
+  const serverConfig = mcpServers["example-sse"];
+  assert.ok(serverConfig);
+  assert.strictEqual(serverConfig.transport, "sse");
+  assert.strictEqual(serverConfig.url, "https://mcp.example.com/sse");
+});
+
+test("E2E: Install local server to Kimi Code (stdio)", () => {
+  const tempDir = createTempDir();
+  const parsed = parseSource("mcp-server-postgres");
+  const config = buildServerConfig(parsed, {
+    env: { DATABASE_URL: "postgres://localhost/test" },
+  });
+
+  const result = installServerForAgent("postgres", config, "kimi-code", {
+    local: true,
+    cwd: tempDir,
+  });
+
+  assert.strictEqual(result.success, true);
+
+  const savedConfig = readJsonConfig(join(tempDir, ".kimi-code", "mcp.json"));
+  const mcpServers = savedConfig.mcpServers as Record<
+    string,
+    Record<string, unknown>
+  >;
+  const serverConfig = mcpServers.postgres;
+  assert.ok(serverConfig);
+  assert.strictEqual(serverConfig.transport, "stdio");
+  assert.strictEqual(serverConfig.command, "npx");
+  assert.deepStrictEqual(serverConfig.args, ["-y", "mcp-server-postgres"]);
+  assert.deepStrictEqual(serverConfig.env, {
+    DATABASE_URL: "postgres://localhost/test",
+  });
+});
+
+test("E2E: Kimi Code drops a timeout its schema would reject", () => {
+  const parsed = parseSource("https://mcp.example.com/mcp");
+  const config = buildServerConfig(parsed, {
+    timeout: Number.MAX_SAFE_INTEGER,
+  });
+
+  const transformed = agents["kimi-code"].transformConfig(
+    "example",
+    config,
+  ) as Record<string, unknown>;
+
+  assert.strictEqual("toolTimeoutMs" in transformed, false);
+  assert.strictEqual(transformed.url, "https://mcp.example.com/mcp");
 });
 
 // ============================================

@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0] - 2026-08-12
+
+- add `kilo-code` support with project installs to `kilo.json` and global installs to `~/.config/kilo/kilo.json`, using Kilo Code's `mcp` config key, `local`/`remote` server types, and per-server `timeout`. Existing `.kilo/kilo.json`, `.kilocode/kilo.json`, and `kilo.jsonc` files are reused instead of creating a second config; aliases: `kilo`, `kilocode`.
+- add `kiro-cli` support with project installs to `.kiro/settings/mcp.json` and global installs to `~/.kiro/settings/mcp.json` (the same files the Kiro IDE reads), covering stdio and remote servers plus a native millisecond `timeout`; alias: `kiro`. Co-authored with @donatoaz ([#36](https://github.com/neon-solutions/add-mcp/pull/36))
+- add `kimi-code` support with project installs to `.kimi-code/mcp.json` and global installs to `$KIMI_CODE_HOME/mcp.json` (default `~/.kimi-code/mcp.json`), using Kimi Code's `mcpServers` key, explicit `transport` field, and `toolTimeoutMs`; alias: `kimi`.
+- fix `list`, `find`, `remove`, and `sync` for OpenCode-style servers that store the command and its arguments as a single array, which previously read as an empty entry and could not be matched or synced to other agents.
+
 ## [2.0.0] - 2026-07-22
 
 - **BREAKING:** re-installing a server under an existing name now replaces that server's entire entry instead of deep-merging the new fields into the old entry. Callers that relied on omitted fields surviving a re-install must now pass the complete desired server configuration. This prevents stale fields from producing invalid hybrid configs — most damaging when an old stdio entry (`command`/`args`/`env`) was combined with a new remote install (`type`/`url`). Applies to the TOML, JSON, and YAML writers; unrelated servers and all other config sections are still preserved ([#83](https://github.com/neon-solutions/add-mcp/pull/83))

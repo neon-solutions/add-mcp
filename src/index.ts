@@ -1161,7 +1161,9 @@ function buildServerConfigFromStored(
 
   if (url) {
     const result: import("./types.js").McpServerConfig = {
-      type: httpUrl ? "http" : normalizeTransportType(config.type),
+      type: httpUrl
+        ? "http"
+        : normalizeTransportType(config.type ?? config.transport),
       url,
     };
 
@@ -1179,16 +1181,22 @@ function buildServerConfigFromStored(
     return result;
   }
 
+  // OpenCode-style clients (OpenCode, Kilo Code) store the command and its
+  // arguments as one array.
+  const commandParts = Array.isArray(config.command)
+    ? config.command.filter((a): a is string => typeof a === "string")
+    : undefined;
+
   const command =
     typeof config.command === "string"
       ? config.command
       : typeof config.cmd === "string"
         ? config.cmd
-        : undefined;
+        : commandParts?.[0];
 
   const args = Array.isArray(config.args)
     ? config.args.filter((a): a is string => typeof a === "string")
-    : [];
+    : (commandParts?.slice(1) ?? []);
 
   const env =
     config.env && typeof config.env === "object"
