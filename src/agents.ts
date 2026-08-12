@@ -798,7 +798,7 @@ export const agents: Record<AgentType, AgentConfig> = {
     displayName: "Kilo Code",
     configPath: join(getKiloConfigDir(), "kilo.json"),
     localConfigPath: "kilo.json",
-    projectDetectPaths: [".kilo", ".kilocode", "kilo.json"],
+    projectDetectPaths: [".kilo", ".kilocode", "kilo.json", "kilo.jsonc"],
     configKey: "mcp",
     format: "json",
     supportedTransports: ["stdio", "http", "sse"],

@@ -335,6 +335,16 @@ test("detectProjectAgents - detects kilo.json file", () => {
   assert.ok(detected.includes("kilo-code"));
 });
 
+// A project may carry only kilo.jsonc, which resolveKiloCodeConfigPath writes
+// to, so detection has to recognize it too.
+test("detectProjectAgents - detects kilo.jsonc file", () => {
+  const tempDir = createTempDir();
+  writeFileSync(join(tempDir, "kilo.jsonc"), "{}");
+
+  const detected = detectProjectAgents(tempDir);
+  assert.ok(detected.includes("kilo-code"));
+});
+
 test("detectProjectAgents - detects .kimi-code directory", () => {
   const tempDir = createTempDir();
   mkdirSync(join(tempDir, ".kimi-code"));
