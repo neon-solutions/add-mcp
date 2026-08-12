@@ -26,6 +26,33 @@ export interface AgentServers {
 }
 
 /**
+ * Normalize a stored stdio entry into its command and arguments. OpenCode-style
+ * clients (OpenCode, Kilo Code) store the command and its arguments as a single
+ * array, so the first element is the command and the rest are the arguments.
+ */
+export function normalizeStoredCommand(serverConfig: Record<string, unknown>): {
+  command: string | undefined;
+  args: string[];
+} {
+  const commandParts = Array.isArray(serverConfig.command)
+    ? serverConfig.command.filter((a): a is string => typeof a === "string")
+    : undefined;
+
+  const command =
+    typeof serverConfig.command === "string"
+      ? serverConfig.command
+      : typeof serverConfig.cmd === "string"
+        ? serverConfig.cmd
+        : commandParts?.[0];
+
+  const args = Array.isArray(serverConfig.args)
+    ? serverConfig.args.filter((a): a is string => typeof a === "string")
+    : (commandParts?.slice(1) ?? []);
+
+  return { command, args };
+}
+
+/**
  * Extract a server's identity (URL or package name) from any agent-specific
  * config shape. Returns the URL for remote servers or the package/command
  * string for stdio servers.
@@ -41,26 +68,11 @@ export function extractServerIdentity(
     }
   }
 
-  // Stdio: reconstruct from command/cmd + args. OpenCode-style clients
-  // (OpenCode, Kilo Code) store the command and its arguments as one array.
-  const commandParts = Array.isArray(serverConfig.command)
-    ? serverConfig.command.filter((a): a is string => typeof a === "string")
-    : undefined;
-
-  const command =
-    typeof serverConfig.command === "string"
-      ? serverConfig.command
-      : typeof serverConfig.cmd === "string"
-        ? serverConfig.cmd
-        : commandParts?.[0];
+  const { command, args: rawArgs } = normalizeStoredCommand(serverConfig);
 
   if (!command) {
     return "";
   }
-
-  const rawArgs = Array.isArray(serverConfig.args)
-    ? serverConfig.args.filter((a): a is string => typeof a === "string")
-    : (commandParts?.slice(1) ?? []);
 
   // Detect npx -y <package> pattern
   if (command === "npx" || command === "bunx") {
