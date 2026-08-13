@@ -1,6 +1,6 @@
 {
   "name": "add-mcp",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Add MCP servers to your favorite coding agents with a single command.",
   "author": "Andre Landgraf <andre@neon.tech>",
   "license": "Apache-2.0",
@@ -51,6 +51,10 @@
     "goose",
     "grok",
     "grok-build",
+    "kilo-code",
+    "kimi-code",
+    "kiro",
+    "kiro-cli",
     "mcporter",
     "opencode",
     "vscode",

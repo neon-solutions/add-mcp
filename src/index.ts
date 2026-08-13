@@ -41,6 +41,7 @@ import {
   listInstalledServers,
   findMatchingServers,
   extractServerIdentity,
+  normalizeStoredCommand,
   type AgentServers,
   type InstalledServer,
 } from "./reader.js";
@@ -1161,7 +1162,9 @@ function buildServerConfigFromStored(
 
   if (url) {
     const result: import("./types.js").McpServerConfig = {
-      type: httpUrl ? "http" : normalizeTransportType(config.type),
+      type: httpUrl
+        ? "http"
+        : normalizeTransportType(config.type ?? config.transport),
       url,
     };
 
@@ -1179,16 +1182,7 @@ function buildServerConfigFromStored(
     return result;
   }
 
-  const command =
-    typeof config.command === "string"
-      ? config.command
-      : typeof config.cmd === "string"
-        ? config.cmd
-        : undefined;
-
-  const args = Array.isArray(config.args)
-    ? config.args.filter((a): a is string => typeof a === "string")
-    : [];
+  const { command, args } = normalizeStoredCommand(config);
 
   const env =
     config.env && typeof config.env === "object"

@@ -77,11 +77,11 @@ Local servers (npm packages, commands) always use **stdio** transport. Most agen
 
 Not every MCP client understands every field. add-mcp keeps one canonical server config; each agent declares which optional fields it supports and maps them into its native shape:
 
-| Field              | Flag                                | Supported by            | Mapped to                                                |
-| ------------------ | ----------------------------------- | ----------------------- | -------------------------------------------------------- |
-| Timeout            | `--timeout`                         | Claude Code, Gemini CLI | `timeout` (milliseconds)                                 |
-| OAuth scopes       | `--scopes`                          | Cursor, Gemini CLI      | Cursor `auth.scopes`, Gemini `oauth.scopes`              |
-| Tool auto-approval | `--auto-approve` / `--approve-tool` | Codex, Claude Code      | Codex approval modes; Claude Code permission allow rules |
+| Field              | Flag                                | Supported by                                                        | Mapped to                                                                                    |
+| ------------------ | ----------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Timeout            | `--timeout`                         | Claude Code, Gemini CLI, Grok Build, Kilo Code, Kimi Code, Kiro CLI | `timeout` (milliseconds); Grok Build `tool_timeout_sec` (seconds), Kimi Code `toolTimeoutMs` |
+| OAuth scopes       | `--scopes`                          | Cursor, Gemini CLI                                                  | Cursor `auth.scopes`, Gemini `oauth.scopes`                                                  |
+| Tool auto-approval | `--auto-approve` / `--approve-tool` | Codex, Claude Code                                                  | Codex approval modes; Claude Code permission allow rules                                     |
 
 When a targeted agent doesn't support a field, add-mcp drops it from that agent's config and prints a warning — other agents still receive it.
 

@@ -1636,6 +1636,154 @@ test("E2E CLI: Grok project install ignores GROK_HOME", () => {
   assert.strictEqual("type" in server, false);
 });
 
+test("E2E CLI: Kiro alias installs into .kiro/settings/mcp.json", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "kiro",
+      "-y",
+      "--name",
+      "kiro-remote",
+      "--timeout",
+      "60000",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const configPath = join(projectDir, ".kiro", "settings", "mcp.json");
+  assert.strictEqual(existsSync(configPath), true);
+
+  const saved = JSON.parse(readFileSync(configPath, "utf-8"));
+  const server = saved.mcpServers["kiro-remote"] as Record<string, unknown>;
+  assert.ok(server);
+  assert.strictEqual(server.url, "https://mcp.example.com/mcp");
+  assert.strictEqual(server.timeout, 60000);
+  assert.strictEqual("type" in server, false);
+});
+
+test("E2E CLI: Kimi alias honors KIMI_CODE_HOME for global installs", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+  const kimiHome = createTempDir();
+
+  const result = runCli(
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "kimi",
+      "-g",
+      "-y",
+      "--name",
+      "kimi-remote",
+      "--timeout",
+      "5000",
+    ],
+    projectDir,
+    homeDir,
+    { KIMI_CODE_HOME: kimiHome },
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const configPath = join(kimiHome, "mcp.json");
+  assert.strictEqual(existsSync(configPath), true);
+  assert.strictEqual(
+    existsSync(join(homeDir, ".kimi-code", "mcp.json")),
+    false,
+  );
+
+  const saved = JSON.parse(readFileSync(configPath, "utf-8"));
+  const server = saved.mcpServers["kimi-remote"] as Record<string, unknown>;
+  assert.ok(server);
+  assert.strictEqual(server.transport, "http");
+  assert.strictEqual(server.url, "https://mcp.example.com/mcp");
+  assert.strictEqual(server.toolTimeoutMs, 5000);
+});
+
+test("E2E CLI: Kimi global install falls back to ~/.kimi-code", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "mcp-server-postgres",
+      "-a",
+      "kimi-code",
+      "-g",
+      "-y",
+      "--name",
+      "kimi-local",
+    ],
+    projectDir,
+    homeDir,
+    { KIMI_CODE_HOME: "" },
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const saved = JSON.parse(
+    readFileSync(join(homeDir, ".kimi-code", "mcp.json"), "utf-8"),
+  );
+  const server = saved.mcpServers["kimi-local"] as Record<string, unknown>;
+  assert.ok(server);
+  assert.strictEqual(server.transport, "stdio");
+  assert.strictEqual(server.command, "npx");
+  assert.deepStrictEqual(server.args, ["-y", "mcp-server-postgres"]);
+});
+
+test("E2E CLI: Kilo alias installs into the XDG config dir for global installs", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "kilo",
+      "-g",
+      "-y",
+      "--name",
+      "kilo-remote",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const configPath = join(homeDir, ".config", "kilo", "kilo.json");
+  assert.strictEqual(existsSync(configPath), true);
+
+  const saved = JSON.parse(readFileSync(configPath, "utf-8"));
+  const server = saved.mcp["kilo-remote"] as Record<string, unknown>;
+  assert.ok(server);
+  assert.strictEqual(server.type, "remote");
+  assert.strictEqual(server.url, "https://mcp.example.com/mcp");
+});
+
 test("E2E CLI: --timeout and --scopes map per agent and warn on drop", () => {
   const projectDir = createTempDir();
   const homeDir = createTempDir();

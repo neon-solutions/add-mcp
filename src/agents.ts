@@ -12,6 +12,18 @@ function getGrokHome(): string {
   return process.env.GROK_HOME || defaultGrokHome;
 }
 
+function getKimiCodeHome(): string {
+  return process.env.KIMI_CODE_HOME || join(home, ".kimi-code");
+}
+
+/**
+ * Kilo Code resolves its global config through xdg-basedir on every platform,
+ * so Windows uses `~/.config/kilo` rather than `%APPDATA%`.
+ */
+function getKiloConfigDir(): string {
+  return join(process.env.XDG_CONFIG_HOME || join(home, ".config"), "kilo");
+}
+
 function shortenPath(fullPath: string): string {
   if (fullPath.startsWith(home)) {
     return fullPath.replace(home, "~");
@@ -69,6 +81,17 @@ const clineExtensionConfigPath = join(
 const copilotConfigPath = join(
   process.env.XDG_CONFIG_HOME || join(home, ".copilot"),
   "mcp-config.json",
+);
+/**
+ * Kilo Code's VS Code extension storage, used for detection only. The
+ * `mcp_settings.json` it contains is a legacy location the extension still
+ * reads, but new servers belong in the modern `kilo.json`, which the extension
+ * and the standalone CLI share.
+ */
+const kiloVscodeStoragePath = join(
+  vscodePath,
+  "globalStorage",
+  "kilocode.kilo-code",
 );
 const windsurfConfigPath = join(
   home,
@@ -188,10 +211,15 @@ function transformZedConfig(
   };
 }
 
+/**
+ * OpenCode's shape: a `local`/`remote` discriminator, the command and its args
+ * as a single array, and env under `environment`. Shared with Kilo Code, which
+ * forked OpenCode's config schema.
+ */
 function transformOpenCodeConfig(
   _serverName: string,
   config: McpServerConfig,
-): unknown {
+): Record<string, unknown> {
   if (config.url) {
     return {
       type: "remote",
@@ -207,6 +235,80 @@ function transformOpenCodeConfig(
     enabled: true,
     environment: config.env || {},
   };
+}
+
+/**
+ * Kilo Code matches OpenCode's schema and additionally accepts a per-server
+ * request `timeout` in milliseconds.
+ * See https://kilocode.ai/docs/features/mcp/using-mcp-in-kilo-code.
+ */
+function transformKiloCodeConfig(
+  serverName: string,
+  config: McpServerConfig,
+): unknown {
+  const entry = transformOpenCodeConfig(serverName, config);
+
+  if (typeof config.timeout === "number") {
+    entry.timeout = config.timeout;
+  }
+
+  return entry;
+}
+
+/** Largest value Kimi Code's MCP timeout schema accepts. */
+const KIMI_MAX_TIMEOUT_MS = 2_147_483_647;
+
+/**
+ * Kimi Code validates its MCP config as a whole and fails closed: one entry it
+ * rejects disables every MCP server, including servers defined elsewhere. Drop
+ * a timeout that falls outside the schema's bounds rather than risk that.
+ */
+function kimiToolTimeoutMs(timeout: number | undefined): number | undefined {
+  if (typeof timeout !== "number" || !Number.isInteger(timeout)) {
+    return undefined;
+  }
+  if (timeout < 1 || timeout > KIMI_MAX_TIMEOUT_MS) {
+    return undefined;
+  }
+  return timeout;
+}
+
+/**
+ * Kimi Code stores servers under `mcpServers` with an explicit `transport`
+ * discriminator and maps a request timeout to `toolTimeoutMs`.
+ * See https://www.kimi.com/code/docs/en/kimi-code-cli/customization/mcp.html.
+ */
+function transformKimiCodeConfig(
+  _serverName: string,
+  config: McpServerConfig,
+): unknown {
+  let entry: Record<string, unknown>;
+
+  if (config.url) {
+    entry = {
+      transport: config.type === "sse" ? "sse" : "http",
+      url: config.url,
+    };
+    if (config.headers && Object.keys(config.headers).length > 0) {
+      entry.headers = config.headers;
+    }
+  } else {
+    entry = {
+      transport: "stdio",
+      command: config.command,
+      args: config.args || [],
+    };
+    if (config.env && Object.keys(config.env).length > 0) {
+      entry.env = config.env;
+    }
+  }
+
+  const toolTimeoutMs = kimiToolTimeoutMs(config.timeout);
+  if (toolTimeoutMs !== undefined) {
+    entry.toolTimeoutMs = toolTimeoutMs;
+  }
+
+  return entry;
 }
 
 /**
@@ -287,6 +389,36 @@ function transformGrokBuildConfig(
   }
 
   return buildStandardLocal(config);
+}
+
+/**
+ * Kiro infers a server's transport from which fields are present — `command`
+ * for stdio, `url` for remote (streamable HTTP with an SSE fallback) — and
+ * ignores `type` entirely, so no transport field is emitted. Its own
+ * `kiro-cli mcp add` writes the same shape. `timeout` is in milliseconds.
+ * See https://kiro.dev/docs/mcp/configuration.
+ */
+function transformKiroCliConfig(
+  _serverName: string,
+  config: McpServerConfig,
+): unknown {
+  if (!config.url) {
+    return buildStandardLocal(config);
+  }
+
+  const remoteConfig: Record<string, unknown> = {
+    url: config.url,
+  };
+
+  if (config.headers && Object.keys(config.headers).length > 0) {
+    remoteConfig.headers = config.headers;
+  }
+
+  if (typeof config.timeout === "number") {
+    remoteConfig.timeout = config.timeout;
+  }
+
+  return remoteConfig;
 }
 
 function transformCursorConfig(
@@ -438,6 +570,48 @@ function resolveGrokBuildConfigPath(
   }
 
   return join(getGrokHome(), "config.toml");
+}
+
+function resolveKimiCodeConfigPath(
+  agent: AgentConfig,
+  options: { local: boolean; cwd: string },
+): string {
+  if (options.local && agent.localConfigPath) {
+    return join(options.cwd, agent.localConfigPath);
+  }
+
+  return join(getKimiCodeHome(), "mcp.json");
+}
+
+/**
+ * Kilo Code reads its config from several candidate filenames, preferring
+ * `.kilo/` over the legacy `.kilocode/` and the project root last. Write to the
+ * first candidate that already exists so an existing config keeps winning,
+ * matching how `kilo mcp add` picks its target.
+ */
+function resolveKiloCodeConfigPath(
+  _agent: AgentConfig,
+  options: { local: boolean; cwd: string },
+): string {
+  const baseDir = options.local ? options.cwd : getKiloConfigDir();
+  const candidates = options.local
+    ? [
+        join(".kilo", "kilo.jsonc"),
+        join(".kilo", "kilo.json"),
+        join(".kilocode", "kilo.jsonc"),
+        join(".kilocode", "kilo.json"),
+        "kilo.jsonc",
+      ]
+    : ["kilo.jsonc"];
+
+  for (const candidate of candidates) {
+    const candidatePath = join(baseDir, candidate);
+    if (existsSync(candidatePath)) {
+      return candidatePath;
+    }
+  }
+
+  return join(baseDir, "kilo.json");
 }
 
 export const agents: Record<AgentType, AgentConfig> = {
@@ -617,6 +791,59 @@ export const agents: Record<AgentType, AgentConfig> = {
     },
     resolveConfigPath: resolveGrokBuildConfigPath,
     transformConfig: transformGrokBuildConfig,
+  },
+
+  "kilo-code": {
+    name: "kilo-code",
+    displayName: "Kilo Code",
+    configPath: join(getKiloConfigDir(), "kilo.json"),
+    localConfigPath: "kilo.json",
+    projectDetectPaths: [".kilo", ".kilocode", "kilo.json", "kilo.jsonc"],
+    configKey: "mcp",
+    format: "json",
+    supportedTransports: ["stdio", "http", "sse"],
+    supportedFields: ["timeout"],
+    detectGlobalInstall: async () => {
+      return (
+        existsSync(getKiloConfigDir()) || existsSync(kiloVscodeStoragePath)
+      );
+    },
+    resolveConfigPath: resolveKiloCodeConfigPath,
+    transformConfig: transformKiloCodeConfig,
+  },
+
+  "kimi-code": {
+    name: "kimi-code",
+    displayName: "Kimi Code",
+    configPath: join(getKimiCodeHome(), "mcp.json"),
+    localConfigPath: ".kimi-code/mcp.json",
+    projectDetectPaths: [".kimi-code"],
+    configKey: "mcpServers",
+    format: "json",
+    supportedTransports: ["stdio", "http", "sse"],
+    supportedFields: ["timeout"],
+    detectGlobalInstall: async () => {
+      return existsSync(getKimiCodeHome());
+    },
+    resolveConfigPath: resolveKimiCodeConfigPath,
+    transformConfig: transformKimiCodeConfig,
+  },
+
+  "kiro-cli": {
+    name: "kiro-cli",
+    displayName: "Kiro CLI",
+    // Shared with the Kiro IDE, which reads the same two files.
+    configPath: join(home, ".kiro", "settings", "mcp.json"),
+    localConfigPath: ".kiro/settings/mcp.json",
+    projectDetectPaths: [".kiro"],
+    configKey: "mcpServers",
+    format: "json",
+    supportedTransports: ["stdio", "http", "sse"],
+    supportedFields: ["timeout"],
+    detectGlobalInstall: async () => {
+      return existsSync(join(home, ".kiro"));
+    },
+    transformConfig: transformKiroCliConfig,
   },
 
   mcporter: {

@@ -2,7 +2,7 @@
 
 Add MCP servers to your favorite coding agents with a single command.
 
-Supports **Claude Code**, **Codex**, **Cursor**, **OpenCode**, **VS Code**, **Grok Build** and [10 more](#supported-agents).
+Supports **Claude Code**, **Codex**, **Cursor**, **OpenCode**, **VS Code**, **Grok Build** and [13 more](#supported-agents).
 
 Docs and registry: [add-mcp.com](https://add-mcp.com)
 
@@ -50,26 +50,31 @@ The first `find`/`search` run automatically saves the add-mcp registry to `~/.co
 
 MCP servers can be installed to any of these agents:
 
-| Agent                  | `--agent`            | Project Path            | Global Path                                                                                                     |
-| ---------------------- | -------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------- |
-| Antigravity            | `antigravity`        | -                       | `~/.gemini/config/mcp_config.json` (shared by Antigravity, Antigravity IDE, and Antigravity CLI)                |
-| Cline VSCode Extension | `cline`              | -                       | `~/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json` |
-| Cline CLI              | `cline-cli`          | -                       | `~/.cline/data/settings/cline_mcp_settings.json`                                                                |
-| Claude Code            | `claude-code`        | `.mcp.json`             | `~/.claude.json`                                                                                                |
-| Claude Desktop         | `claude-desktop`     | -                       | `~/Library/Application Support/Claude/claude_desktop_config.json`                                               |
-| Codex                  | `codex`              | `.codex/config.toml`    | `~/.codex/config.toml`                                                                                          |
-| Cursor                 | `cursor`             | `.cursor/mcp.json`      | `~/.cursor/mcp.json`                                                                                            |
-| Gemini CLI             | `gemini-cli`         | `.gemini/settings.json` | `~/.gemini/settings.json`                                                                                       |
-| Goose                  | `goose`              | `.goose/config.yaml`    | `~/.config/goose/config.yaml`                                                                                   |
-| GitHub Copilot CLI     | `github-copilot-cli` | `.vscode/mcp.json`      | `~/.copilot/mcp-config.json`                                                                                    |
-| Grok Build             | `grok-build`         | `.grok/config.toml`     | `$GROK_HOME/config.toml` (defaults to `~/.grok/config.toml`)                                                    |
-| MCPorter               | `mcporter`           | `config/mcporter.json`  | `~/.mcporter/mcporter.json` (or existing `~/.mcporter/mcporter.jsonc`)                                          |
-| OpenCode               | `opencode`           | `opencode.json`         | `~/.config/opencode/opencode.json`                                                                              |
-| VS Code                | `vscode`             | `.vscode/mcp.json`      | `~/Library/Application Support/Code/User/mcp.json`                                                              |
-| Windsurf               | `windsurf`           | -                       | `~/.codeium/windsurf/mcp_config.json`                                                                           |
-| Zed                    | `zed`                | `.zed/settings.json`    | `~/Library/Application Support/Zed/settings.json`                                                               |
+| Agent                  | `--agent`            | Project Path                                                                  | Global Path                                                                                                     |
+| ---------------------- | -------------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Antigravity            | `antigravity`        | -                                                                             | `~/.gemini/config/mcp_config.json` (shared by Antigravity, Antigravity IDE, and Antigravity CLI)                |
+| Cline VSCode Extension | `cline`              | -                                                                             | `~/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json` |
+| Cline CLI              | `cline-cli`          | -                                                                             | `~/.cline/data/settings/cline_mcp_settings.json`                                                                |
+| Claude Code            | `claude-code`        | `.mcp.json`                                                                   | `~/.claude.json`                                                                                                |
+| Claude Desktop         | `claude-desktop`     | -                                                                             | `~/Library/Application Support/Claude/claude_desktop_config.json`                                               |
+| Codex                  | `codex`              | `.codex/config.toml`                                                          | `~/.codex/config.toml`                                                                                          |
+| Cursor                 | `cursor`             | `.cursor/mcp.json`                                                            | `~/.cursor/mcp.json`                                                                                            |
+| Gemini CLI             | `gemini-cli`         | `.gemini/settings.json`                                                       | `~/.gemini/settings.json`                                                                                       |
+| Goose                  | `goose`              | `.goose/config.yaml`                                                          | `~/.config/goose/config.yaml`                                                                                   |
+| GitHub Copilot CLI     | `github-copilot-cli` | `.vscode/mcp.json`                                                            | `~/.copilot/mcp-config.json`                                                                                    |
+| Grok Build             | `grok-build`         | `.grok/config.toml`                                                           | `$GROK_HOME/config.toml` (defaults to `~/.grok/config.toml`)                                                    |
+| Kilo Code              | `kilo-code`          | `kilo.json` (or existing `.kilo/`, `.kilocode/`, or root `kilo.jsonc` config) | `~/.config/kilo/kilo.json` (or existing `~/.config/kilo/kilo.jsonc`)                                            |
+| Kimi Code              | `kimi-code`          | `.kimi-code/mcp.json`                                                         | `$KIMI_CODE_HOME/mcp.json` (defaults to `~/.kimi-code/mcp.json`)                                                |
+| Kiro CLI               | `kiro-cli`           | `.kiro/settings/mcp.json`                                                     | `~/.kiro/settings/mcp.json` (shared with the Kiro IDE)                                                          |
+| MCPorter               | `mcporter`           | `config/mcporter.json`                                                        | `~/.mcporter/mcporter.json` (or existing `~/.mcporter/mcporter.jsonc`)                                          |
+| OpenCode               | `opencode`           | `opencode.json`                                                               | `~/.config/opencode/opencode.json`                                                                              |
+| VS Code                | `vscode`             | `.vscode/mcp.json`                                                            | `~/Library/Application Support/Code/User/mcp.json`                                                              |
+| Windsurf               | `windsurf`           | -                                                                             | `~/.codeium/windsurf/mcp_config.json`                                                                           |
+| Zed                    | `zed`                | `.zed/settings.json`                                                          | `~/Library/Application Support/Zed/settings.json`                                                               |
 
-**Aliases:** `codeium`, `cascade` → `windsurf`, `cline-vscode` → `cline`, `gemini` → `gemini-cli`, `github-copilot` → `vscode`, `grok` → `grok-build`
+**Aliases:** `codeium`, `cascade` → `windsurf`, `cline-vscode` → `cline`, `gemini` → `gemini-cli`, `github-copilot` → `vscode`, `grok` → `grok-build`, `kilo`, `kilocode` → `kilo-code`, `kimi` → `kimi-code`, `kiro` → `kiro-cli`
+
+Kimi Code only loads a project-level `.kimi-code/mcp.json` after you trust the folder in the CLI, so a project install may not take effect until then.
 
 ## Installation Scope
 
@@ -197,11 +202,11 @@ Not every MCP client understands every field. `add-mcp` keeps one canonical
 server config and each agent declares which optional fields it supports, mapping
 them into that client's native shape:
 
-| Field              | Flag                                | Supported by            | Mapped to                                                |
-| ------------------ | ----------------------------------- | ----------------------- | -------------------------------------------------------- |
-| Timeout            | `--timeout`                         | Claude Code, Gemini CLI | `timeout` (milliseconds)                                 |
-| OAuth scopes       | `--scopes`                          | Cursor, Gemini CLI      | Cursor `auth.scopes`, Gemini `oauth.scopes`              |
-| Tool auto-approval | `--auto-approve` / `--approve-tool` | Codex, Claude Code      | Codex approval modes; Claude Code permission allow rules |
+| Field              | Flag                                | Supported by                                                        | Mapped to                                                                                    |
+| ------------------ | ----------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Timeout            | `--timeout`                         | Claude Code, Gemini CLI, Grok Build, Kilo Code, Kimi Code, Kiro CLI | `timeout` (milliseconds); Grok Build `tool_timeout_sec` (seconds), Kimi Code `toolTimeoutMs` |
+| OAuth scopes       | `--scopes`                          | Cursor, Gemini CLI                                                  | Cursor `auth.scopes`, Gemini `oauth.scopes`                                                  |
+| Tool auto-approval | `--auto-approve` / `--approve-tool` | Codex, Claude Code                                                  | Codex approval modes; Claude Code permission allow rules                                     |
 
 When you target an agent that does not support a field, `add-mcp` drops it from
 that agent's config and prints a warning (e.g. _"request timeout is not

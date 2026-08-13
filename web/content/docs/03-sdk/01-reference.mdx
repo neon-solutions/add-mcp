@@ -30,11 +30,11 @@ function upsertServer(
 ): InstallResult;
 ```
 
-| Parameter      | Type              | Description                                                        |
-| -------------- | ----------------- | ------------------------------------------------------------------ |
-| `agentType`    | `AgentInput`      | Agent identifier, e.g. `"cursor"`, `"claude-code"`. Validated at runtime. |
-| `serverName`   | `string`          | Key the server is stored under in the agent config.                |
-| `serverConfig` | `McpServerConfig` | Canonical server definition (see below).                           |
+| Parameter      | Type              | Description                                                                            |
+| -------------- | ----------------- | -------------------------------------------------------------------------------------- |
+| `agentType`    | `AgentInput`      | Agent identifier, e.g. `"cursor"`, `"claude-code"`. Validated at runtime.              |
+| `serverName`   | `string`          | Key the server is stored under in the agent config.                                    |
+| `serverConfig` | `McpServerConfig` | Canonical server definition (see below).                                               |
 | `options`      | `InstallOptions`  | `{ local?: boolean; cwd?: string }` — project-level install and its working directory. |
 
 Returns [`InstallResult`](#installresult). Never throws — errors are reported via `result.error`.
@@ -114,7 +114,7 @@ interface McpServerConfig {
   env?: Record<string, string>;
 
   // Capability-gated optional fields
-  timeout?: number; // Claude Code, Gemini CLI
+  timeout?: number; // milliseconds; Claude Code, Gemini CLI, Grok Build, Kilo Code, Kimi Code, Kiro CLI
   oauthScopes?: string[]; // Cursor, Gemini CLI
   autoApproveTools?: string[]; // Codex, Claude Code; [] = all tools
 }
@@ -159,6 +159,10 @@ type AgentType =
   | "gemini-cli"
   | "goose"
   | "github-copilot-cli"
+  | "grok-build"
+  | "kilo-code"
+  | "kimi-code"
+  | "kiro-cli"
   | "mcporter"
   | "opencode"
   | "vscode"
