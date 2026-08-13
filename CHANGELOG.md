@@ -6,6 +6,7 @@
 - add `kiro-cli` support with project installs to `.kiro/settings/mcp.json` and global installs to `~/.kiro/settings/mcp.json` (the same files the Kiro IDE reads), covering stdio and remote servers plus a native millisecond `timeout`; alias: `kiro`. Co-authored with @donatoaz ([#36](https://github.com/neon-solutions/add-mcp/pull/36))
 - add `kimi-code` support with project installs to `.kimi-code/mcp.json` and global installs to `$KIMI_CODE_HOME/mcp.json` (default `~/.kimi-code/mcp.json`), using Kimi Code's `mcpServers` key, explicit `transport` field, and `toolTimeoutMs`; alias: `kimi`.
 - fix `list`, `find`, `remove`, and `sync` for OpenCode-style servers that store the command and its arguments as a single array, which previously read as an empty entry and could not be matched or synced to other agents.
+- prefer OpenCode's `opencode.jsonc` over `opencode.json` when both exist, write jsonc when neither does, and reuse an existing `.opencode/` config instead of creating a second file at the project root ([#96](https://github.com/neon-solutions/add-mcp/pull/96))
 
 ## [2.0.0] - 2026-07-22
 

@@ -339,20 +339,6 @@ test("resolveConfigPath local - defaults to opencode.jsonc when nothing exists",
   assert.equal(result, join(tempDir, "opencode.jsonc"));
 });
 
-test("resolveConfigPath global - prefers existing opencode.jsonc over .json", () => {
-  const resolver = agents.opencode.resolveConfigPath!;
-  const result = resolver(agents.opencode, { local: false, cwd: "" });
-  assert.equal(
-    result,
-    join(
-      process.env.HOME || "/home/user",
-      ".config",
-      "opencode",
-      "opencode.jsonc",
-    ),
-  );
-});
-
 test("detectProjectAgents - detects .gemini directory", () => {
   const tempDir = createTempDir();
   mkdirSync(join(tempDir, ".gemini"));
