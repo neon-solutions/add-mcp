@@ -9839,6 +9839,28 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "io.github.helena-bioinformatics/folklore",
+      "title": "Folklore Clinical Variant Interpretation MCP",
+      "description": "Helena Bioinformatics MCP for clinical variant interpretation, ACMG/AMP evidence and literature.",
+      "version": "1.2.2",
+      "websiteUrl": "https://folklore.helena.bio",
+      "icons": [
+        {
+          "src": "https://folklore.helena.bio/images/logos/folklore.png",
+          "mimeType": "image/png"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://api.helena.bio/folklore/v1/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.olutely/footchatball-mcp",
       "title": "FootChatBall",
       "description": "Olutely's widget service, operated by Spheric Admin Ltd, provides interactive widgets and basic app behavior inside ChatGPT. Its terms describe widget requests being handled by the company's own MCP servers without storing conversation content persistently.",
