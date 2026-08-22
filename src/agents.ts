@@ -16,6 +16,7 @@ function getKimiCodeHome(): string {
   return process.env.KIMI_CODE_HOME || join(home, ".kimi-code");
 }
 
+/** Resolve Pi's global agent directory, honoring its documented override. */
 function getPiAgentDir(): string {
   return process.env.PI_CODING_AGENT_DIR || join(home, ".pi", "agent");
 }
@@ -942,6 +943,7 @@ export const agents: Record<AgentType, AgentConfig> = {
     format: "json",
     supportedTransports: ["stdio", "http", "sse"],
     supportedFields: ["timeout"],
+    /** Detect Pi from its global agent directory. */
     detectGlobalInstall: async () => {
       return existsSync(getPiAgentDir());
     },
