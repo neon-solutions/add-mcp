@@ -519,6 +519,37 @@ test("installServerForAgent - Pi maps timeout to requestTimeoutMs", () => {
   assert.ok(!("timeout" in server));
 });
 
+test("installServerForAgent - Pi maps stdio config and timeout", () => {
+  const tempDir = createTempDir();
+  const result = installServerForAgent(
+    "postgres",
+    {
+      command: "npx",
+      args: ["-y", "mcp-server-postgres"],
+      env: { DATABASE_URL: "postgres://localhost/test" },
+      timeout: 12000,
+    },
+    "pi",
+    { local: true, cwd: tempDir },
+  );
+  assert.ok(result.success);
+  assert.strictEqual(result.droppedFields, undefined);
+
+  const saved = readJsonConfig(join(tempDir, ".pi", "mcp.json"));
+  const server = (saved.mcpServers as Record<string, Record<string, unknown>>)
+    .postgres;
+  assert.ok(server);
+  assert.strictEqual(server.command, "npx");
+  assert.deepStrictEqual(server.args, ["-y", "mcp-server-postgres"]);
+  assert.deepStrictEqual(server.env, {
+    DATABASE_URL: "postgres://localhost/test",
+  });
+  assert.strictEqual(server.requestTimeoutMs, 12000);
+  assert.ok(!("type" in server));
+  assert.ok(!("transport" in server));
+  assert.ok(!("timeout" in server));
+});
+
 test("installServerForAgent - VS Code drops both timeout and scopes", () => {
   const tempDir = createTempDir();
   const result = installRemoteWith("vscode", tempDir, {
