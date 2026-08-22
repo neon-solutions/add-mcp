@@ -1672,6 +1672,49 @@ test("E2E CLI: Kiro alias installs into .kiro/settings/mcp.json", () => {
   assert.strictEqual("type" in server, false);
 });
 
+test("E2E CLI: Pi alias honors PI_CODING_AGENT_DIR for global installs", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+  const piAgentDir = createTempDir();
+
+  const result = runCli(
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "pi-agent",
+      "-g",
+      "-y",
+      "--name",
+      "pi-remote",
+      "--timeout",
+      "5000",
+    ],
+    projectDir,
+    homeDir,
+    { PI_CODING_AGENT_DIR: piAgentDir },
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const configPath = join(piAgentDir, "mcp.json");
+  assert.strictEqual(existsSync(configPath), true);
+  assert.strictEqual(
+    existsSync(join(homeDir, ".pi", "agent", "mcp.json")),
+    false,
+  );
+
+  const saved = JSON.parse(readFileSync(configPath, "utf-8"));
+  const server = saved.mcpServers["pi-remote"] as Record<string, unknown>;
+  assert.ok(server);
+  assert.strictEqual(server.url, "https://mcp.example.com/mcp");
+  assert.strictEqual(server.requestTimeoutMs, 5000);
+  assert.strictEqual("type" in server, false);
+});
+
 test("E2E CLI: Kimi alias honors KIMI_CODE_HOME for global installs", () => {
   const projectDir = createTempDir();
   const homeDir = createTempDir();

@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.2.0] - 2026-08-12
+
+- add `pi` support through the `pi-mcp-adapter` extension, with project installs to `.pi/mcp.json` and global installs to `$PI_CODING_AGENT_DIR/mcp.json` (default `~/.pi/agent/mcp.json`), including native `requestTimeoutMs` mapping; alias: `pi-agent`.
+
 ## [2.1.0] - 2026-08-12
 
 - add `kilo-code` support with project installs to `kilo.json` and global installs to `~/.config/kilo/kilo.json`, using Kilo Code's `mcp` config key, `local`/`remote` server types, and per-server `timeout`. Existing `.kilo/`, `.kilocode/`, and root `kilo.jsonc` configs are reused instead of creating a second config; aliases: `kilo`, `kilocode`.

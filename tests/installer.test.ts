@@ -501,6 +501,24 @@ test("installServerForAgent - Claude Code keeps timeout, drops scopes", () => {
   assert.ok(!("oauthScopes" in server));
 });
 
+test("installServerForAgent - Pi maps timeout to requestTimeoutMs", () => {
+  const tempDir = createTempDir();
+  const result = installRemoteWith("pi", tempDir, {
+    timeout: 12000,
+  });
+  assert.ok(result.success);
+  assert.strictEqual(result.droppedFields, undefined);
+
+  const saved = readJsonConfig(join(tempDir, ".pi", "mcp.json"));
+  const server = (saved.mcpServers as Record<string, Record<string, unknown>>)
+    .example;
+  assert.ok(server);
+  assert.strictEqual(server.url, "https://mcp.example.com/mcp");
+  assert.strictEqual(server.requestTimeoutMs, 12000);
+  assert.ok(!("type" in server));
+  assert.ok(!("timeout" in server));
+});
+
 test("installServerForAgent - VS Code drops both timeout and scopes", () => {
   const tempDir = createTempDir();
   const result = installRemoteWith("vscode", tempDir, {
