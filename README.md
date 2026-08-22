@@ -73,7 +73,7 @@ MCP servers can be installed to any of these agents:
 | Windsurf               | `windsurf`           | -                                                                             | `~/.codeium/windsurf/mcp_config.json`                                                                           |
 | Zed                    | `zed`                | `.zed/settings.json`                                                          | `~/Library/Application Support/Zed/settings.json`                                                               |
 
-**Aliases:** `codeium`, `cascade` → `windsurf`, `cline-vscode` → `cline`, `gemini` → `gemini-cli`, `github-copilot` → `vscode`, `grok` → `grok-build`, `kilo`, `kilocode` → `kilo-code`, `kimi` → `kimi-code`, `kiro` → `kiro-cli`, `pi-agent` → `pi`
+**Aliases:** `codeium`, `cascade` → `windsurf`, `cline-vscode` → `cline`, `gemini` → `gemini-cli`, `github-copilot` → `vscode`, `grok` → `grok-build`, `kilo`, `kilocode` → `kilo-code`, `kimi` → `kimi-code`, `kiro` → `kiro-cli`
 
 Pi support targets the [`pi-mcp-adapter`](https://github.com/nicobailon/pi-mcp-adapter) extension's Pi-owned config files. Install that extension with `pi install npm:pi-mcp-adapter` before using MCP servers in Pi.
 

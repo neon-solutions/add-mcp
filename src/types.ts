@@ -33,7 +33,6 @@ export const agentAliases: Record<string, AgentType> = {
   kilocode: "kilo-code",
   kimi: "kimi-code",
   kiro: "kiro-cli",
-  "pi-agent": "pi",
 };
 
 export type ConfigFormat = "json" | "yaml" | "toml";

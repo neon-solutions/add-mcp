@@ -1672,7 +1672,7 @@ test("E2E CLI: Kiro alias installs into .kiro/settings/mcp.json", () => {
   assert.strictEqual("type" in server, false);
 });
 
-test("E2E CLI: Pi alias honors PI_CODING_AGENT_DIR for global installs", () => {
+test("E2E CLI: Pi honors PI_CODING_AGENT_DIR for global installs", () => {
   const projectDir = createTempDir();
   const homeDir = createTempDir();
   const piAgentDir = createTempDir();
@@ -1681,7 +1681,7 @@ test("E2E CLI: Pi alias honors PI_CODING_AGENT_DIR for global installs", () => {
     [
       "https://mcp.example.com/mcp",
       "-a",
-      "pi-agent",
+      "pi",
       "-g",
       "-y",
       "--name",

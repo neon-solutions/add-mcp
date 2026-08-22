@@ -2,7 +2,7 @@
 
 ## [2.2.0] - 2026-08-12
 
-- add `pi` support through the `pi-mcp-adapter` extension, with project installs to `.pi/mcp.json` and global installs to `$PI_CODING_AGENT_DIR/mcp.json` (default `~/.pi/agent/mcp.json`), including native `requestTimeoutMs` mapping; alias: `pi-agent`.
+- add `pi` support through the `pi-mcp-adapter` extension, with project installs to `.pi/mcp.json` and global installs to `$PI_CODING_AGENT_DIR/mcp.json` (default `~/.pi/agent/mcp.json`), including native `requestTimeoutMs` mapping.
 
 ## [2.1.0] - 2026-08-12
 
