@@ -28,6 +28,7 @@ import {
   installServerForAgent,
 } from "../../src/installer.js";
 import { agents } from "../../src/agents.js";
+import { applyFieldSupport } from "../../src/schema.js";
 import { writeConfig, buildConfigWithKey } from "../../src/formats/index.js";
 import type { AgentType } from "../../src/types.js";
 
@@ -1529,8 +1530,50 @@ test("E2E: fx remote transform rejects a literal Authorization header", () => {
 
   assert.throws(
     () => agents.fx.transformConfig("example", config),
-    /bearer_token_env, header_env, or oauth/,
+    /--bearer-token-env/,
   );
+});
+
+test("E2E: fx remote transform writes bearer_token_env and drops mixed-case Authorization", () => {
+  const headers = {
+    authorization: "Bearer token",
+    "X-Workspace": "demo",
+  };
+  const config = buildServerConfig(parseSource("https://mcp.example.com/mcp"), {
+    headers,
+    bearerTokenEnv: "  NEON_API_KEY  ",
+  });
+  const transformed = agents.fx.transformConfig("example", config) as Record<
+    string,
+    unknown
+  >;
+
+  assert.strictEqual(transformed.bearer_token_env, "NEON_API_KEY");
+  assert.deepStrictEqual(transformed.headers, { "X-Workspace": "demo" });
+  assert.strictEqual(headers.authorization, "Bearer token");
+});
+
+test("E2E: Cursor keeps Authorization after an fx transform on the same config", () => {
+  const headers = { authorization: "Bearer token" };
+  const config = buildServerConfig(parseSource("https://mcp.example.com/mcp"), {
+    headers,
+    bearerTokenEnv: "NEON_API_KEY",
+  });
+
+  const fxGated = applyFieldSupport(config, agents.fx.supportedFields);
+  agents.fx.transformConfig("example", fxGated.config);
+
+  const cursorGated = applyFieldSupport(config, agents.cursor.supportedFields);
+  const cursorEntry = agents.cursor.transformConfig(
+    "example",
+    cursorGated.config,
+  ) as Record<string, unknown>;
+
+  assert.deepStrictEqual(cursorEntry.headers, {
+    authorization: "Bearer token",
+  });
+  assert.deepStrictEqual(cursorGated.dropped, ["bearerTokenEnv"]);
+  assert.strictEqual(headers.authorization, "Bearer token");
 });
 
 test("E2E: fx is global-only and writes ~/.fx/mcp.json", () => {

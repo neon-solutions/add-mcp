@@ -70,6 +70,8 @@ export interface BuildServerConfigOptions {
    * "all tools". Applies to remote and local servers alike.
    */
   autoApproveTools?: string[];
+  /** Remote-only; fx maps this environment variable to `bearer_token_env`. */
+  bearerTokenEnv?: string;
 }
 
 export interface UpdateGitignoreOptions {
@@ -106,6 +108,13 @@ export function buildServerConfig(
 
     if (options.autoApproveTools) {
       config.autoApproveTools = options.autoApproveTools;
+    }
+
+    if (typeof options.bearerTokenEnv === "string") {
+      const name = options.bearerTokenEnv.trim();
+      if (name.length > 0) {
+        config.bearerTokenEnv = name;
+      }
     }
 
     return config;

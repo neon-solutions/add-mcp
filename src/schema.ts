@@ -10,7 +10,11 @@ import type { McpServerConfig } from "./types.js";
  * before its transform runs, guaranteeing that only known fields are ever
  * written to a client config.
  */
-export type OptionalField = "timeout" | "scopes" | "autoApprove";
+export type OptionalField =
+  | "timeout"
+  | "scopes"
+  | "autoApprove"
+  | "bearerTokenEnv";
 
 interface OptionalFieldSpec {
   /** Human-friendly label used in user-facing "dropped" warnings. */
@@ -44,6 +48,15 @@ const OPTIONAL_FIELD_SPECS: Record<OptionalField, OptionalFieldSpec> = {
     isSet: (config) => Array.isArray(config.autoApproveTools),
     clear: (config) => {
       delete config.autoApproveTools;
+    },
+  },
+  bearerTokenEnv: {
+    label: "bearer token env",
+    isSet: (config) =>
+      typeof config.bearerTokenEnv === "string" &&
+      config.bearerTokenEnv.trim().length > 0,
+    clear: (config) => {
+      delete config.bearerTokenEnv;
     },
   },
 };

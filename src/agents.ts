@@ -421,6 +421,24 @@ function transformKiroCliConfig(
   return remoteConfig;
 }
 
+function headersWithoutAuthorization(
+  headers: Record<string, string>,
+): Record<string, string> {
+  const next: Record<string, string> = {};
+  for (const [name, value] of Object.entries(headers)) {
+    if (name.toLowerCase() !== "authorization") {
+      next[name] = value;
+    }
+  }
+  return next;
+}
+
+function hasAuthorizationHeader(headers: Record<string, string>): boolean {
+  return Object.keys(headers).some(
+    (name) => name.toLowerCase() === "authorization",
+  );
+}
+
 /**
  * fx accepts command/args/env, but `/mcp add` writes a command array with
  * `environment`: https://fx.sh/docs/capabilities/mcp
@@ -430,14 +448,15 @@ function transformFxConfig(
   config: McpServerConfig,
 ): unknown {
   if (config.url) {
-    if (
-      config.headers &&
-      Object.keys(config.headers).some(
-        (name) => name.toLowerCase() === "authorization",
-      )
-    ) {
+    const headers = config.headers
+      ? config.bearerTokenEnv
+        ? headersWithoutAuthorization(config.headers)
+        : config.headers
+      : undefined;
+
+    if (headers && hasAuthorizationHeader(headers)) {
       throw new Error(
-        "fx rejects a literal Authorization header. Use a non-Authorization header, or set bearer_token_env, header_env, or oauth in ~/.fx/mcp.json.",
+        "fx rejects a literal Authorization header. Pass --bearer-token-env <NAME>, use a non-Authorization header, or set header_env or oauth in ~/.fx/mcp.json.",
       );
     }
 
@@ -446,8 +465,11 @@ function transformFxConfig(
       url: config.url,
       enabled: true,
     };
-    if (config.headers && Object.keys(config.headers).length > 0) {
-      entry.headers = config.headers;
+    if (headers && Object.keys(headers).length > 0) {
+      entry.headers = headers;
+    }
+    if (config.bearerTokenEnv) {
+      entry.bearer_token_env = config.bearerTokenEnv;
     }
     return entry;
   }
@@ -807,7 +829,7 @@ export const agents: Record<AgentType, AgentConfig> = {
     configKey: "mcp",
     format: "json",
     supportedTransports: ["stdio", "http", "sse"],
-    supportedFields: [],
+    supportedFields: ["bearerTokenEnv"],
     detectGlobalInstall: async () => {
       return existsSync(join(home, ".fx"));
     },

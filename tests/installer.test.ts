@@ -540,6 +540,61 @@ test("applyFieldSupport - autoApprove dropped (and reported) when unsupported, i
   assert.deepStrictEqual(original.autoApproveTools, ["run"]);
 });
 
+test("applyFieldSupport - drops bearerTokenEnv when unsupported", () => {
+  const original = {
+    type: "http" as const,
+    url: "https://mcp.example.com/mcp",
+    bearerTokenEnv: "NEON_API_KEY",
+  };
+  const { config, dropped } = applyFieldSupport(original, []);
+  assert.strictEqual(config.bearerTokenEnv, undefined);
+  assert.deepStrictEqual(dropped, ["bearerTokenEnv"]);
+  assert.strictEqual(original.bearerTokenEnv, "NEON_API_KEY");
+});
+
+test("applyFieldSupport - keeps bearerTokenEnv when supported", () => {
+  const { config, dropped } = applyFieldSupport(
+    {
+      type: "http",
+      url: "https://mcp.example.com/mcp",
+      bearerTokenEnv: "NEON_API_KEY",
+    },
+    ["bearerTokenEnv"],
+  );
+  assert.strictEqual(config.bearerTokenEnv, "NEON_API_KEY");
+  assert.deepStrictEqual(dropped, []);
+});
+
+test("fx drops Authorization when bearerTokenEnv is set; Cursor keeps the shared header object intact", () => {
+  const headers = {
+    authorization: "Bearer token",
+    "X-Workspace": "demo",
+  };
+  const config = {
+    type: "http" as const,
+    url: "https://mcp.example.com/mcp",
+    headers,
+    bearerTokenEnv: "NEON_API_KEY",
+  };
+
+  const fxGated = applyFieldSupport(config, agents.fx.supportedFields);
+  const fxEntry = agents.fx.transformConfig(
+    "example",
+    fxGated.config,
+  ) as Record<string, unknown>;
+  const cursorGated = applyFieldSupport(config, agents.cursor.supportedFields);
+  const cursorEntry = agents.cursor.transformConfig(
+    "example",
+    cursorGated.config,
+  ) as Record<string, unknown>;
+
+  assert.strictEqual(fxEntry.bearer_token_env, "NEON_API_KEY");
+  assert.deepStrictEqual(fxEntry.headers, { "X-Workspace": "demo" });
+  assert.deepStrictEqual(cursorEntry.headers, headers);
+  assert.deepStrictEqual(cursorGated.dropped, ["bearerTokenEnv"]);
+  assert.strictEqual(headers.authorization, "Bearer token");
+});
+
 test("installServerForAgent - Codex auto-approve selected tools writes per-tool approval", () => {
   const tempDir = createTempDir();
   const config = buildServerConfig(parseSource("executor mcp"), {

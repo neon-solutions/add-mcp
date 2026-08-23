@@ -164,6 +164,7 @@ interface Options {
   oauthScopes?: string;
   autoApprove?: boolean;
   approveTool?: string[];
+  bearerTokenEnv?: string;
   yes?: boolean;
   all?: boolean;
   gitignore?: boolean;
@@ -468,6 +469,10 @@ program
     "OAuth scopes to request for remote servers (comma-separated). Only applied to agents that support it (e.g. Cursor, Gemini CLI); dropped with a warning elsewhere.",
   )
   .option("--oauth-scopes <scopes>", "Alias for --scopes")
+  .option(
+    "--bearer-token-env <name>",
+    "Environment variable name whose value fx sends as a bearer token. Written as bearer_token_env for fx; dropped with a warning elsewhere.",
+  )
   .option(
     "--auto-approve",
     "Auto-approve MCP tool calls for agents that support it (Codex, Claude Code). Dropped with a warning for other agents.",
@@ -1510,6 +1515,22 @@ async function main(target: string | undefined, options: Options) {
   const autoApproveTools =
     options.autoApprove || approveTools.length > 0 ? approveTools : undefined;
 
+  let resolvedBearerTokenEnv: string | undefined;
+  if (options.bearerTokenEnv !== undefined) {
+    const name = options.bearerTokenEnv.trim();
+    if (name.length === 0) {
+      p.log.error(
+        "Invalid --bearer-token-env value. Provide the environment variable name, not its value.",
+      );
+      process.exit(1);
+    }
+    if (isRemote) {
+      resolvedBearerTokenEnv = name;
+    } else {
+      p.log.warn("--bearer-token-env is only used for remote URLs, ignoring");
+    }
+  }
+
   // Build server config
   const serverConfig = buildServerConfig(parsed, {
     transport: resolvedTransport,
@@ -1525,6 +1546,7 @@ async function main(target: string | undefined, options: Options) {
     timeout: resolvedTimeout,
     oauthScopes: resolvedScopes,
     autoApproveTools,
+    bearerTokenEnv: resolvedBearerTokenEnv,
   });
 
   // Determine target agents

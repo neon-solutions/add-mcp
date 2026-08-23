@@ -127,6 +127,8 @@ export interface McpServerConfig {
    * separate settings file). It is never written into a server entry verbatim.
    */
   autoApproveTools?: string[];
+  /** Remote-only; fx maps this environment variable to `bearer_token_env`. */
+  bearerTokenEnv?: string;
 }
 
 export interface ConfigFile {
