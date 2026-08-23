@@ -80,7 +80,7 @@ export function invalidBearerTokenEnvMessage(value: string): string {
   if (name.length === 0) {
     return "Invalid bearerTokenEnv. The name cannot be empty.";
   }
-  return `Invalid bearerTokenEnv. "${name}" is not an environment variable name.`;
+  return `Invalid bearerTokenEnv. "${name}" is not an environment variable name ([A-Za-z_][A-Za-z0-9_]*).`;
 }
 
 const ALL_OPTIONAL_FIELDS = Object.keys(

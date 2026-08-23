@@ -1523,14 +1523,12 @@ async function main(target: string | undefined, options: Options) {
   if (options.bearerTokenEnv !== undefined) {
     const name = options.bearerTokenEnv.trim();
     if (name.length === 0) {
-      p.log.error(
-        "Invalid --bearer-token-env value. The name cannot be empty.",
-      );
+      p.log.error("Invalid --bearer-token-env. The name cannot be empty.");
       process.exit(1);
     }
     if (!isBearerTokenEnvName(name)) {
       p.log.error(
-        `--bearer-token-env takes an environment variable name, not a value. "${name}" is not a valid name.`,
+        `--bearer-token-env takes an environment variable name ([A-Za-z_][A-Za-z0-9_]*). "${name}" is not a valid name.`,
       );
       process.exit(1);
     }
