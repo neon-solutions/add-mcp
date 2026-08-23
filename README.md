@@ -135,7 +135,6 @@ npx add-mcp https://mcp.example.com/sse --transport sse
 # Remote MCP server with auth header
 npx add-mcp https://mcp.example.com/mcp --header "Authorization: Bearer $TOKEN"
 
-# Remote server whose bearer token lives in an environment variable (fx)
 npx add-mcp https://mcp.example.com/mcp --bearer-token-env NEON_API_KEY
 
 # Remote server with a request timeout and OAuth scopes

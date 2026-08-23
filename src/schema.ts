@@ -52,14 +52,25 @@ const OPTIONAL_FIELD_SPECS: Record<OptionalField, OptionalFieldSpec> = {
   },
   bearerTokenEnv: {
     label: "bearer token env",
-    isSet: (config) =>
-      typeof config.bearerTokenEnv === "string" &&
-      config.bearerTokenEnv.trim().length > 0,
+    isSet: (config) => resolvedBearerTokenEnv(config) !== undefined,
     clear: (config) => {
       delete config.bearerTokenEnv;
     },
   },
 };
+
+export function resolvedBearerTokenEnv(
+  config: McpServerConfig,
+): string | undefined {
+  if (typeof config.bearerTokenEnv !== "string") {
+    return undefined;
+  }
+  const name = config.bearerTokenEnv.trim();
+  return name.length > 0 ? name : undefined;
+}
+
+export const INVALID_BEARER_TOKEN_ENV =
+  "Invalid bearerTokenEnv. Provide the environment variable name, not its value.";
 
 const ALL_OPTIONAL_FIELDS = Object.keys(
   OPTIONAL_FIELD_SPECS,
@@ -95,6 +106,15 @@ export function applyFieldSupport(
   // caller's nested objects/arrays.
   if (copy.oauthScopes) copy.oauthScopes = [...copy.oauthScopes];
   if (copy.autoApproveTools) copy.autoApproveTools = [...copy.autoApproveTools];
+
+  if (typeof copy.bearerTokenEnv === "string") {
+    const name = resolvedBearerTokenEnv(copy);
+    if (name) {
+      copy.bearerTokenEnv = name;
+    } else {
+      delete copy.bearerTokenEnv;
+    }
+  }
 
   const dropped: OptionalField[] = [];
   for (const field of ALL_OPTIONAL_FIELDS) {

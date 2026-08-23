@@ -4,6 +4,7 @@ import { dirname, join } from "path";
 import { existsSync } from "fs";
 import type { AgentConfig, AgentType, McpServerConfig } from "./types.js";
 import { getLastSelectedAgents, saveSelectedAgents } from "./config.js";
+import { resolvedBearerTokenEnv } from "./schema.js";
 
 const home = homedir();
 const defaultGrokHome = join(home, ".grok");
@@ -448,8 +449,9 @@ function transformFxConfig(
   config: McpServerConfig,
 ): unknown {
   if (config.url) {
+    const bearerTokenEnv = resolvedBearerTokenEnv(config);
     const headers = config.headers
-      ? config.bearerTokenEnv
+      ? bearerTokenEnv
         ? headersWithoutAuthorization(config.headers)
         : config.headers
       : undefined;
@@ -468,8 +470,8 @@ function transformFxConfig(
     if (headers && Object.keys(headers).length > 0) {
       entry.headers = headers;
     }
-    if (config.bearerTokenEnv) {
-      entry.bearer_token_env = config.bearerTokenEnv;
+    if (bearerTokenEnv) {
+      entry.bearer_token_env = bearerTokenEnv;
     }
     return entry;
   }

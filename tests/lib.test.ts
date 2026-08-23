@@ -26,6 +26,7 @@ import {
   getAgentTypes,
   type McpServerConfig,
 } from "../src/lib.js";
+import { INVALID_BEARER_TOKEN_ENV } from "../src/schema.js";
 
 const remote = (url: string): McpServerConfig => ({ type: "http", url });
 const pkg = (name: string): McpServerConfig => ({
@@ -253,6 +254,51 @@ await test("upsertServer + removeServer reject local: true for global-only agent
   });
   assert.strictEqual(fxUpsert.success, false);
   assert.ok(fxUpsert.error?.includes("does not support project-level"));
+});
+
+await test("upsertServer trims padded bearerTokenEnv and does not leak it to an unsupported local agent", () => {
+  const dir = createTempDir();
+  const result = upsertServer(
+    "github-copilot-cli",
+    "example",
+    {
+      type: "http",
+      url: "https://mcp.example.com/mcp",
+      headers: { Authorization: "Bearer token" },
+      bearerTokenEnv: "  NEON_API_KEY  ",
+    },
+    { local: true, cwd: dir },
+  );
+
+  assert.ok(result.success, result.error);
+  assert.deepStrictEqual(result.droppedFields, ["bearerTokenEnv"]);
+
+  const written = readJson(join(dir, ".vscode", "mcp.json"));
+  const server = (written.servers as Record<string, Record<string, unknown>>)
+    .example;
+  assert.ok(server);
+  assert.strictEqual("bearerTokenEnv" in server, false);
+  assert.strictEqual("bearer_token_env" in server, false);
+  assert.deepStrictEqual(server.headers, { Authorization: "Bearer token" });
+});
+
+await test("upsertServer rejects whitespace-only bearerTokenEnv and writes nothing", () => {
+  const dir = createTempDir();
+  const result = upsertServer(
+    "github-copilot-cli",
+    "example",
+    {
+      type: "http",
+      url: "https://mcp.example.com/mcp",
+      headers: { Authorization: "Bearer token" },
+      bearerTokenEnv: "   ",
+    },
+    { local: true, cwd: dir },
+  );
+
+  assert.strictEqual(result.success, false);
+  assert.strictEqual(result.error, INVALID_BEARER_TOKEN_ENV);
+  assert.strictEqual(existsSync(join(dir, ".vscode", "mcp.json")), false);
 });
 
 await test("upsertServer + removeServer honor github-copilot-cli local `servers` key", () => {

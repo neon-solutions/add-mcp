@@ -17,7 +17,11 @@ import type {
 import { agents } from "./agents.js";
 import { writeConfig, buildConfigWithKey } from "./formats/index.js";
 import { looksLikePath } from "./source-parser.js";
-import { applyFieldSupport, type OptionalField } from "./schema.js";
+import {
+  applyFieldSupport,
+  INVALID_BEARER_TOKEN_ENV,
+  type OptionalField,
+} from "./schema.js";
 
 const home = homedir();
 
@@ -70,7 +74,6 @@ export interface BuildServerConfigOptions {
    * "all tools". Applies to remote and local servers alike.
    */
   autoApproveTools?: string[];
-  /** Remote-only; fx maps this environment variable to `bearer_token_env`. */
   bearerTokenEnv?: string;
 }
 
@@ -371,6 +374,17 @@ export function installServerForAgent(
   const configPath = getConfigPath(agent, options);
 
   try {
+    if (
+      typeof serverConfig.bearerTokenEnv === "string" &&
+      serverConfig.bearerTokenEnv.trim().length === 0
+    ) {
+      return {
+        success: false,
+        path: configPath,
+        error: INVALID_BEARER_TOKEN_ENV,
+      };
+    }
+
     // Strip optional fields the agent can't represent, then transform the
     // gated config into the agent's native schema. Because every transform
     // builds a fresh object with only known keys, unsupported fields can never

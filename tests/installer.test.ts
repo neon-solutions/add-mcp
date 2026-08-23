@@ -565,6 +565,28 @@ test("applyFieldSupport - keeps bearerTokenEnv when supported", () => {
   assert.deepStrictEqual(dropped, []);
 });
 
+test("applyFieldSupport - trims padded bearerTokenEnv and clears whitespace-only", () => {
+  const padded = {
+    type: "http" as const,
+    url: "https://mcp.example.com/mcp",
+    bearerTokenEnv: "  NEON_API_KEY  ",
+  };
+  const kept = applyFieldSupport(padded, ["bearerTokenEnv"]);
+  assert.strictEqual(kept.config.bearerTokenEnv, "NEON_API_KEY");
+  assert.deepStrictEqual(kept.dropped, []);
+  assert.strictEqual(padded.bearerTokenEnv, "  NEON_API_KEY  ");
+
+  const whitespace = {
+    type: "http" as const,
+    url: "https://mcp.example.com/mcp",
+    bearerTokenEnv: "   ",
+  };
+  const cleared = applyFieldSupport(whitespace, []);
+  assert.strictEqual(cleared.config.bearerTokenEnv, undefined);
+  assert.deepStrictEqual(cleared.dropped, []);
+  assert.strictEqual(whitespace.bearerTokenEnv, "   ");
+});
+
 test("fx drops Authorization when bearerTokenEnv is set; Cursor keeps the shared header object intact", () => {
   const headers = {
     authorization: "Bearer token",
@@ -593,6 +615,24 @@ test("fx drops Authorization when bearerTokenEnv is set; Cursor keeps the shared
   assert.deepStrictEqual(cursorEntry.headers, headers);
   assert.deepStrictEqual(cursorGated.dropped, ["bearerTokenEnv"]);
   assert.strictEqual(headers.authorization, "Bearer token");
+});
+
+test("fx does not drop Authorization for whitespace-only bearerTokenEnv", () => {
+  const headers = { Authorization: "Bearer token" };
+  const config = {
+    type: "http" as const,
+    url: "https://mcp.example.com/mcp",
+    headers,
+    bearerTokenEnv: "   ",
+  };
+
+  const gated = applyFieldSupport(config, agents.fx.supportedFields);
+  assert.strictEqual(gated.config.bearerTokenEnv, undefined);
+  assert.throws(
+    () => agents.fx.transformConfig("example", gated.config),
+    /literal Authorization header/,
+  );
+  assert.strictEqual(headers.Authorization, "Bearer token");
 });
 
 test("installServerForAgent - Codex auto-approve selected tools writes per-tool approval", () => {
