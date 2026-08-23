@@ -884,7 +884,7 @@ function extractConflictFields(config: Record<string, unknown>): {
   return {
     headers: config.headers ?? config.http_headers ?? null,
     env: config.env ?? config.envs ?? config.environment ?? null,
-    args: config.args ?? null,
+    args: normalizeStoredCommand(config).args,
   };
 }
 

@@ -421,6 +421,37 @@ function transformKiroCliConfig(
   return remoteConfig;
 }
 
+/**
+ * fx accepts command/args/env, but `/mcp add` writes a command array with
+ * `environment`: https://fx.sh/docs/capabilities/mcp
+ */
+function transformFxConfig(
+  _serverName: string,
+  config: McpServerConfig,
+): unknown {
+  if (config.url) {
+    const entry: Record<string, unknown> = {
+      type: config.type === "sse" ? "sse" : "http",
+      url: config.url,
+      enabled: true,
+    };
+    if (config.headers && Object.keys(config.headers).length > 0) {
+      entry.headers = config.headers;
+    }
+    return entry;
+  }
+
+  const entry: Record<string, unknown> = {
+    type: "local",
+    command: [config.command, ...(config.args || [])],
+    enabled: true,
+  };
+  if (config.env && Object.keys(config.env).length > 0) {
+    entry.environment = config.env;
+  }
+  return entry;
+}
+
 function transformCursorConfig(
   _serverName: string,
   config: McpServerConfig,
@@ -753,6 +784,23 @@ export const agents: Record<AgentType, AgentConfig> = {
       return existsSync(join(home, ".cursor"));
     },
     transformConfig: transformCursorConfig,
+  },
+
+  fx: {
+    name: "fx",
+    displayName: "fx",
+    // fx reads MCP config only from its trusted global profile:
+    // https://fx.sh/docs/capabilities/mcp
+    configPath: join(home, ".fx", "mcp.json"),
+    projectDetectPaths: [],
+    configKey: "mcp",
+    format: "json",
+    supportedTransports: ["stdio", "http", "sse"],
+    supportedFields: [],
+    detectGlobalInstall: async () => {
+      return existsSync(join(home, ".fx"));
+    },
+    transformConfig: transformFxConfig,
   },
 
   "gemini-cli": {

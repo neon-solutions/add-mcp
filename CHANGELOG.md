@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.2.0] - 2026-08-23
+
+- add `fx` support with global installs to `~/.fx/mcp.json`, using fx's `mcp` config key, `local`/`http`/`sse` server types, a command array for stdio, and `environment`. fx does not load repository-local MCP files, so there is no project install path.
+
 ## [2.1.0] - 2026-08-12
 
 - add `kilo-code` support with project installs to `kilo.json` and global installs to `~/.config/kilo/kilo.json`, using Kilo Code's `mcp` config key, `local`/`remote` server types, and per-server `timeout`. Existing `.kilo/`, `.kilocode/`, and root `kilo.jsonc` configs are reused instead of creating a second config; aliases: `kilo`, `kilocode`.

@@ -512,6 +512,114 @@ test("E2E CLI: Goose HTTP install with headers", () => {
   });
 });
 
+test("E2E CLI: fx remote install writes ~/.fx/mcp.json without -g", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "fx",
+      "-y",
+      "--name",
+      "example",
+      "--header",
+      "Authorization: Bearer token",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const configPath = join(homeDir, ".fx", "mcp.json");
+  assert.strictEqual(existsSync(configPath), true);
+  assert.strictEqual(existsSync(join(projectDir, ".fx.json")), false);
+  assert.strictEqual(existsSync(join(projectDir, "mcp.json")), false);
+
+  const saved = JSON.parse(readFileSync(configPath, "utf-8")) as {
+    mcp: Record<string, Record<string, unknown>>;
+  };
+  const server = saved.mcp.example;
+  assert.ok(server);
+  assert.strictEqual(server.type, "http");
+  assert.strictEqual(server.url, "https://mcp.example.com/mcp");
+  assert.strictEqual(server.enabled, true);
+  assert.deepStrictEqual(server.headers, {
+    Authorization: "Bearer token",
+  });
+});
+
+test("E2E CLI: fx stdio install uses command array and environment", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "mcp-server-postgres",
+      "-a",
+      "fx",
+      "-y",
+      "--name",
+      "postgres",
+      "--env",
+      "DATABASE_URL=postgres://localhost/test",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const saved = JSON.parse(
+    readFileSync(join(homeDir, ".fx", "mcp.json"), "utf-8"),
+  ) as { mcp: Record<string, Record<string, unknown>> };
+  const server = saved.mcp.postgres;
+  assert.ok(server);
+  assert.strictEqual(server.type, "local");
+  assert.deepStrictEqual(server.command, ["npx", "-y", "mcp-server-postgres"]);
+  assert.deepStrictEqual(server.environment, {
+    DATABASE_URL: "postgres://localhost/test",
+  });
+  assert.strictEqual("args" in server, false);
+});
+
+test("E2E CLI: fx list reads the command-array identity", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const install = runCli(
+    ["mcp-server-github", "-a", "fx", "-y", "--name", "github"],
+    projectDir,
+    homeDir,
+  );
+  if (install.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${install.stdout}\nSTDERR:\n${install.stderr}`,
+    );
+  }
+
+  const listed = runCli(["list", "-g", "-a", "fx"], projectDir, homeDir);
+  if (listed.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${listed.stdout}\nSTDERR:\n${listed.stderr}`,
+    );
+  }
+
+  const output = `${listed.stdout}\n${listed.stderr}`;
+  assert.match(output, /github/);
+  assert.match(output, /mcp-server-github/);
+});
+
 test("E2E CLI: Goose HTTP install with -h header shorthand", () => {
   const projectDir = createTempDir();
   const homeDir = createTempDir();

@@ -60,9 +60,9 @@ function cleanup() {
 // Agent Configuration Tests
 // ============================================
 
-test("getAgentTypes returns all 19 agents", () => {
+test("getAgentTypes returns all 20 agents", () => {
   const types = getAgentTypes();
-  assert.strictEqual(types.length, 19);
+  assert.strictEqual(types.length, 20);
   assert.ok(types.includes("antigravity"));
   assert.ok(types.includes("cline"));
   assert.ok(types.includes("cline-cli"));
@@ -70,6 +70,7 @@ test("getAgentTypes returns all 19 agents", () => {
   assert.ok(types.includes("claude-desktop"));
   assert.ok(types.includes("codex"));
   assert.ok(types.includes("cursor"));
+  assert.ok(types.includes("fx"));
   assert.ok(types.includes("gemini-cli"));
   assert.ok(types.includes("goose"));
   assert.ok(types.includes("github-copilot-cli"));
@@ -144,6 +145,7 @@ test("supportedFields reflects per-client capabilities", () => {
   // Clients with no extra field support declare an empty list.
   assert.deepStrictEqual(agents.vscode.supportedFields, []);
   assert.deepStrictEqual(agents["claude-desktop"].supportedFields, []);
+  assert.deepStrictEqual(agents.fx.supportedFields, []);
 });
 
 // ============================================
@@ -173,6 +175,7 @@ test("supportsProjectConfig - returns false for global-only agents", () => {
   assert.strictEqual(supportsProjectConfig("claude-desktop"), false);
   assert.strictEqual(supportsProjectConfig("goose"), false);
   assert.strictEqual(supportsProjectConfig("windsurf"), false);
+  assert.strictEqual(supportsProjectConfig("fx"), false);
 });
 
 test("getProjectCapableAgents returns 13 agents", () => {
@@ -193,15 +196,16 @@ test("getProjectCapableAgents returns 13 agents", () => {
   assert.ok(projectAgents.includes("zed"));
 });
 
-test("getGlobalOnlyAgents returns 6 agents", () => {
+test("getGlobalOnlyAgents returns 7 agents", () => {
   const globalAgents = getGlobalOnlyAgents();
-  assert.strictEqual(globalAgents.length, 6);
+  assert.strictEqual(globalAgents.length, 7);
   assert.ok(globalAgents.includes("antigravity"));
   assert.ok(globalAgents.includes("cline"));
   assert.ok(globalAgents.includes("cline-cli"));
   assert.ok(globalAgents.includes("claude-desktop"));
   assert.ok(globalAgents.includes("goose"));
   assert.ok(globalAgents.includes("windsurf"));
+  assert.ok(globalAgents.includes("fx"));
 });
 
 test("Project + global-only agents equals all agents", () => {
@@ -452,6 +456,7 @@ test("detectProjectAgents - does not detect global-only agents", () => {
   assert.ok(!detected.includes("goose"));
   assert.ok(!detected.includes("windsurf"));
   assert.ok(!detected.includes("antigravity"));
+  assert.ok(!detected.includes("fx"));
 });
 
 // ============================================
@@ -476,6 +481,7 @@ test("isTransportSupported - most agents support http", () => {
     "claude-code",
     "codex",
     "cursor",
+    "fx",
     "gemini-cli",
     "github-copilot-cli",
     "goose",
@@ -507,6 +513,7 @@ test("isTransportSupported - most agents support sse", () => {
     "claude-code",
     "codex",
     "cursor",
+    "fx",
     "gemini-cli",
     "github-copilot-cli",
     "goose",

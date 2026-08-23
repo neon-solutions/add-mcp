@@ -1,6 +1,6 @@
 {
   "name": "add-mcp",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Add MCP servers to your favorite coding agents with a single command.",
   "author": "Andre Landgraf <andre@neon.tech>",
   "license": "Apache-2.0",
@@ -46,6 +46,7 @@
     "claude-desktop",
     "codex",
     "cursor",
+    "fx",
     "github-copilot-cli",
     "gemini-cli",
     "goose",
