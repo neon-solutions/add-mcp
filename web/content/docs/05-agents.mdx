@@ -47,4 +47,4 @@ Some agents and editors, like Claude Code, require a restart to load a new MCP s
 
 Kimi Code only loads a project-level `.kimi-code/mcp.json` after you trust the folder in the CLI, so a project install may not take effect until then. Its MCP config is also validated as a whole: if another entry in the file is invalid, Kimi Code disables every MCP server, including a newly added one.
 
-fx reads MCP servers only from `~/.fx/mcp.json`. A project file cannot add a server.
+fx reads MCP servers only from `~/.fx/mcp.json`. A project file cannot add a server. A running session applies the change with `/mcp reload`.

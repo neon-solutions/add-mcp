@@ -77,7 +77,7 @@ MCP servers can be installed to any of these agents:
 
 Kimi Code only loads a project-level `.kimi-code/mcp.json` after you trust the folder in the CLI, so a project install may not take effect until then.
 
-fx reads MCP servers only from `~/.fx/mcp.json`. A project file cannot add a server.
+fx reads MCP servers only from `~/.fx/mcp.json`. A project file cannot add a server. A running session applies the change with `/mcp reload`.
 
 ## Installation Scope
 
@@ -522,3 +522,5 @@ removeServer("claude-code", "example", {
 ### Server not loading
 
 Some agents & editors like Claude Code require a restart to load the new MCP server. Otherwise, like Cursor, require you to navigate to the MCP settings page and toggle the new server as enabled.
+
+fx reads MCP servers only from `~/.fx/mcp.json`. A project file cannot add a server. A running session applies the change with `/mcp reload`.
