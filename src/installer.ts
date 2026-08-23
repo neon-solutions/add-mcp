@@ -1,4 +1,10 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+} from "fs";
 import { homedir } from "os";
 import { join, dirname, isAbsolute, relative, sep } from "path";
 import type {
@@ -380,6 +386,12 @@ export function installServerForAgent(
     const config = buildConfigWithKey(configKey, serverName, transformedConfig);
 
     writeConfig(configPath, config, agent.format, configKey);
+
+    // Match fx's private profile permissions because --env may contain secrets.
+    if (agentType === "fx") {
+      chmodSync(dirname(configPath), 0o700);
+      chmodSync(configPath, 0o600);
+    }
 
     // Claude Code expresses auto-approval as permission rules in a separate
     // settings file rather than inside the MCP server entry, so apply it as a

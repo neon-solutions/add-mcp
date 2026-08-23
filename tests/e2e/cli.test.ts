@@ -8,6 +8,7 @@ import {
   existsSync,
   mkdirSync,
   writeFileSync,
+  statSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
@@ -539,6 +540,8 @@ test("E2E CLI: fx remote install writes ~/.fx/mcp.json without -g", () => {
 
   const configPath = join(homeDir, ".fx", "mcp.json");
   assert.strictEqual(existsSync(configPath), true);
+  assert.strictEqual(statSync(join(homeDir, ".fx")).mode & 0o777, 0o700);
+  assert.strictEqual(statSync(configPath).mode & 0o777, 0o600);
   assert.strictEqual(existsSync(join(projectDir, ".fx.json")), false);
   assert.strictEqual(existsSync(join(projectDir, "mcp.json")), false);
 
