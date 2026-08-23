@@ -458,7 +458,7 @@ function transformFxConfig(
 
     if (headers && hasAuthorizationHeader(headers)) {
       throw new Error(
-        "fx rejects a literal Authorization header. Pass --bearer-token-env <NAME>, use a non-Authorization header, or set header_env or oauth in ~/.fx/mcp.json.",
+        "fx rejects a literal Authorization header. Pass --bearer-token-env <name>, use a non-Authorization header, or set header_env or oauth in ~/.fx/mcp.json.",
       );
     }
 
