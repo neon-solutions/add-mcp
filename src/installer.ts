@@ -19,7 +19,8 @@ import { writeConfig, buildConfigWithKey } from "./formats/index.js";
 import { looksLikePath } from "./source-parser.js";
 import {
   applyFieldSupport,
-  INVALID_BEARER_TOKEN_ENV,
+  invalidBearerTokenEnvMessage,
+  isBearerTokenEnvName,
   type OptionalField,
 } from "./schema.js";
 
@@ -374,15 +375,15 @@ export function installServerForAgent(
   const configPath = getConfigPath(agent, options);
 
   try {
-    if (
-      typeof serverConfig.bearerTokenEnv === "string" &&
-      serverConfig.bearerTokenEnv.trim().length === 0
-    ) {
-      return {
-        success: false,
-        path: configPath,
-        error: INVALID_BEARER_TOKEN_ENV,
-      };
+    if (typeof serverConfig.bearerTokenEnv === "string") {
+      const name = serverConfig.bearerTokenEnv.trim();
+      if (!isBearerTokenEnvName(name)) {
+        return {
+          success: false,
+          path: configPath,
+          error: invalidBearerTokenEnvMessage(serverConfig.bearerTokenEnv),
+        };
+      }
     }
 
     // Strip optional fields the agent can't represent, then transform the

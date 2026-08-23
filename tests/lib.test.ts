@@ -26,7 +26,7 @@ import {
   getAgentTypes,
   type McpServerConfig,
 } from "../src/lib.js";
-import { INVALID_BEARER_TOKEN_ENV } from "../src/schema.js";
+import { invalidBearerTokenEnvMessage } from "../src/schema.js";
 
 const remote = (url: string): McpServerConfig => ({ type: "http", url });
 const pkg = (name: string): McpServerConfig => ({
@@ -297,7 +297,29 @@ await test("upsertServer rejects whitespace-only bearerTokenEnv and writes nothi
   );
 
   assert.strictEqual(result.success, false);
-  assert.strictEqual(result.error, INVALID_BEARER_TOKEN_ENV);
+  assert.strictEqual(result.error, invalidBearerTokenEnvMessage("   "));
+  assert.strictEqual(existsSync(join(dir, ".vscode", "mcp.json")), false);
+});
+
+await test("upsertServer rejects a bearerTokenEnv that is not an env var name", () => {
+  const dir = createTempDir();
+  const result = upsertServer(
+    "github-copilot-cli",
+    "example",
+    {
+      type: "http",
+      url: "https://mcp.example.com/mcp",
+      headers: { Authorization: "Bearer token" },
+      bearerTokenEnv: "Bearer sk-live",
+    },
+    { local: true, cwd: dir },
+  );
+
+  assert.strictEqual(result.success, false);
+  assert.strictEqual(
+    result.error,
+    invalidBearerTokenEnvMessage("Bearer sk-live"),
+  );
   assert.strictEqual(existsSync(join(dir, ".vscode", "mcp.json")), false);
 });
 

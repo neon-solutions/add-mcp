@@ -51,13 +51,19 @@ const OPTIONAL_FIELD_SPECS: Record<OptionalField, OptionalFieldSpec> = {
     },
   },
   bearerTokenEnv: {
-    label: "bearer token env",
+    label: "bearer token env var",
     isSet: (config) => resolvedBearerTokenEnv(config) !== undefined,
     clear: (config) => {
       delete config.bearerTokenEnv;
     },
   },
 };
+
+const BEARER_TOKEN_ENV_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
+
+export function isBearerTokenEnvName(name: string): boolean {
+  return BEARER_TOKEN_ENV_NAME.test(name);
+}
 
 export function resolvedBearerTokenEnv(
   config: McpServerConfig,
@@ -66,11 +72,16 @@ export function resolvedBearerTokenEnv(
     return undefined;
   }
   const name = config.bearerTokenEnv.trim();
-  return name.length > 0 ? name : undefined;
+  return isBearerTokenEnvName(name) ? name : undefined;
 }
 
-export const INVALID_BEARER_TOKEN_ENV =
-  "Invalid bearerTokenEnv. The name cannot be empty.";
+export function invalidBearerTokenEnvMessage(value: string): string {
+  const name = value.trim();
+  if (name.length === 0) {
+    return "Invalid bearerTokenEnv. The name cannot be empty.";
+  }
+  return `Invalid bearerTokenEnv. "${name}" is not an environment variable name.`;
+}
 
 const ALL_OPTIONAL_FIELDS = Object.keys(
   OPTIONAL_FIELD_SPECS,

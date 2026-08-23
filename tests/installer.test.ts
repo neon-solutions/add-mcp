@@ -617,6 +617,24 @@ test("fx drops Authorization when bearerTokenEnv is set; Cursor keeps the shared
   assert.strictEqual(headers.authorization, "Bearer token");
 });
 
+test("fx does not drop Authorization for a bearerTokenEnv that is not an env var name", () => {
+  const headers = { Authorization: "Bearer token" };
+  const config = {
+    type: "http" as const,
+    url: "https://mcp.example.com/mcp",
+    headers,
+    bearerTokenEnv: "Bearer sk-live",
+  };
+
+  const gated = applyFieldSupport(config, agents.fx.supportedFields);
+  assert.strictEqual(gated.config.bearerTokenEnv, undefined);
+  assert.throws(
+    () => agents.fx.transformConfig("example", gated.config),
+    /literal Authorization header/,
+  );
+  assert.strictEqual(headers.Authorization, "Bearer token");
+});
+
 test("fx does not drop Authorization for whitespace-only bearerTokenEnv", () => {
   const headers = { Authorization: "Bearer token" };
   const config = {

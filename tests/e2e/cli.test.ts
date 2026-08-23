@@ -622,7 +622,7 @@ test("E2E CLI: mixed fx then cursor keeps Authorization on Cursor and bearer_tok
   }
 
   const output = `${result.stdout}\n${result.stderr}`;
-  assert.match(output, /bearer token env is not supported by Cursor/);
+  assert.match(output, /bearer token env var is not supported by Cursor/);
   assert.match(
     output,
     /Authorization header dropped from the fx config; fx reads the token from NEON_API_KEY/,
@@ -644,6 +644,31 @@ test("E2E CLI: mixed fx then cursor keeps Authorization on Cursor and bearer_tok
   assert.deepStrictEqual(cursorServer.headers, {
     Authorization: "Bearer token",
   });
+});
+
+test("E2E CLI: --bearer-token-env rejects a value in place of a name", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "fx",
+      "-y",
+      "--header",
+      "Authorization: Bearer token",
+      "--bearer-token-env",
+      "Bearer sk-live",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.notStrictEqual(result.status, 0);
+  assert.match(output, /not a valid name/);
+  assert.strictEqual(existsSync(join(homeDir, ".fx")), false);
 });
 
 test("E2E CLI: whitespace-only --bearer-token-env fails", () => {

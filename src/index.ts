@@ -51,7 +51,11 @@ import {
   resolveArrayTemplates,
   resolveRecordTemplates,
 } from "./template.js";
-import { describeOptionalField, type OptionalField } from "./schema.js";
+import {
+  describeOptionalField,
+  isBearerTokenEnvName,
+  type OptionalField,
+} from "./schema.js";
 
 import packageJson from "../package.json" with { type: "json" };
 
@@ -1521,6 +1525,12 @@ async function main(target: string | undefined, options: Options) {
     if (name.length === 0) {
       p.log.error(
         "Invalid --bearer-token-env value. The name cannot be empty.",
+      );
+      process.exit(1);
+    }
+    if (!isBearerTokenEnvName(name)) {
+      p.log.error(
+        `--bearer-token-env takes an environment variable name, not a value. "${name}" is not a valid name.`,
       );
       process.exit(1);
     }
