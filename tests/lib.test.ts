@@ -246,6 +246,13 @@ await test("upsertServer + removeServer reject local: true for global-only agent
   assert.strictEqual(remove.success, false);
   assert.strictEqual(remove.removed, false);
   assert.ok(remove.error?.includes("does not support project-level"));
+
+  const fxUpsert = upsertServer("fx", "x", remote("https://x.example.com"), {
+    local: true,
+    cwd: dir,
+  });
+  assert.strictEqual(fxUpsert.success, false);
+  assert.ok(fxUpsert.error?.includes("does not support project-level"));
 });
 
 await test("upsertServer + removeServer honor github-copilot-cli local `servers` key", () => {

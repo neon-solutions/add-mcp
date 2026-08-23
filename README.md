@@ -2,7 +2,7 @@
 
 Add MCP servers to your favorite coding agents with a single command.
 
-Supports **Claude Code**, **Codex**, **Cursor**, **OpenCode**, **VS Code**, **Grok Build** and [13 more](#supported-agents).
+Supports **Claude Code**, **Codex**, **Cursor**, **OpenCode**, **VS Code**, **Grok Build** and [14 more](#supported-agents).
 
 Docs and registry: [add-mcp.com](https://add-mcp.com)
 
@@ -59,6 +59,7 @@ MCP servers can be installed to any of these agents:
 | Claude Desktop         | `claude-desktop`     | -                                                                             | `~/Library/Application Support/Claude/claude_desktop_config.json`                                               |
 | Codex                  | `codex`              | `.codex/config.toml`                                                          | `~/.codex/config.toml`                                                                                          |
 | Cursor                 | `cursor`             | `.cursor/mcp.json`                                                            | `~/.cursor/mcp.json`                                                                                            |
+| fx                     | `fx`                 | -                                                                             | `~/.fx/mcp.json`                                                                                                |
 | Gemini CLI             | `gemini-cli`         | `.gemini/settings.json`                                                       | `~/.gemini/settings.json`                                                                                       |
 | Goose                  | `goose`              | `.goose/config.yaml`                                                          | `~/.config/goose/config.yaml`                                                                                   |
 | GitHub Copilot CLI     | `github-copilot-cli` | `.vscode/mcp.json`                                                            | `~/.copilot/mcp-config.json`                                                                                    |
@@ -75,6 +76,8 @@ MCP servers can be installed to any of these agents:
 **Aliases:** `codeium`, `cascade` → `windsurf`, `cline-vscode` → `cline`, `gemini` → `gemini-cli`, `github-copilot` → `vscode`, `grok` → `grok-build`, `kilo`, `kilocode` → `kilo-code`, `kimi` → `kimi-code`, `kiro` → `kiro-cli`
 
 Kimi Code only loads a project-level `.kimi-code/mcp.json` after you trust the folder in the CLI, so a project install may not take effect until then.
+
+fx reads MCP servers only from `~/.fx/mcp.json`. A project file cannot add a server. A running session applies the change with `/mcp reload`.
 
 ## Installation Scope
 
@@ -519,3 +522,5 @@ removeServer("claude-code", "example", {
 ### Server not loading
 
 Some agents & editors like Claude Code require a restart to load the new MCP server. Otherwise, like Cursor, require you to navigate to the MCP settings page and toggle the new server as enabled.
+
+fx reads MCP servers only from `~/.fx/mcp.json`. A project file cannot add a server. A running session applies the change with `/mcp reload`.
