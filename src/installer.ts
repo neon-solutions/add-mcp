@@ -1,4 +1,10 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+} from "fs";
 import { homedir } from "os";
 import { join, dirname, isAbsolute, relative, sep } from "path";
 import type {
@@ -356,15 +362,12 @@ export function installServerForAgent(
   const configPath = getConfigPath(agent, options);
 
   try {
-    const dir = dirname(configPath);
-    if (!existsSync(dir)) {
-      mkdirSync(dir, { recursive: true });
-    }
-
     // Strip optional fields the agent can't represent, then transform the
     // gated config into the agent's native schema. Because every transform
     // builds a fresh object with only known keys, unsupported fields can never
     // leak into the written config.
+    // Agent detection treats an empty config directory as a global install,
+    // so validation must run before creating it.
     const { config: gatedConfig, dropped } = applyFieldSupport(
       serverConfig,
       agent.supportedFields,
@@ -374,10 +377,21 @@ export function installServerForAgent(
       local: Boolean(options.local),
     });
 
+    const dir = dirname(configPath);
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true });
+    }
+
     const configKey = getConfigKey(agent, options);
     const config = buildConfigWithKey(configKey, serverName, transformedConfig);
 
     writeConfig(configPath, config, agent.format, configKey);
+
+    // Match fx's private profile permissions because --env may contain secrets.
+    if (agentType === "fx") {
+      chmodSync(dirname(configPath), 0o700);
+      chmodSync(configPath, 0o600);
+    }
 
     // Claude Code expresses auto-approval as permission rules in a separate
     // settings file rather than inside the MCP server entry, so apply it as a

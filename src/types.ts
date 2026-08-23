@@ -8,6 +8,7 @@ export type AgentType =
   | "claude-desktop"
   | "codex"
   | "cursor"
+  | "fx"
   | "gemini-cli"
   | "goose"
   | "github-copilot-cli"

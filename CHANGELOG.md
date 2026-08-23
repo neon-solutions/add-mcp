@@ -1,8 +1,13 @@
 # Changelog
 
-## [2.2.0] - 2026-08-12
+## [2.3.0] - 2026-08-23
 
 - add `pi` support through the `pi-mcp-adapter` extension, with project installs to `.pi/mcp.json` and global installs to `$PI_CODING_AGENT_DIR/mcp.json` (default `~/.pi/agent/mcp.json`), including native `requestTimeoutMs` mapping.
+
+## [2.2.0] - 2026-08-23
+
+- add `fx` support with global installs to `~/.fx/mcp.json`, using fx's `mcp` config key, `local`/`http`/`sse` server types, a command array for stdio, and `environment`. fx does not load repository-local MCP files, so there is no project install path. A literal `Authorization` header is rejected rather than written, because fx refuses that header at runtime.
+- fix `sync` comparing command-array agents against `args` as stored, so a Cursor `command`/`args` pair and an fx command array for the same package no longer look like a conflict.
 
 ## [2.1.0] - 2026-08-12
 

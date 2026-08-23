@@ -1455,6 +1455,91 @@ test("E2E: Kimi Code drops a timeout its schema would reject", () => {
   assert.strictEqual(transformed.url, "https://mcp.example.com/mcp");
 });
 
+test("E2E: fx stdio transform uses a command array and environment", () => {
+  const parsed = parseSource("mcp-server-postgres");
+  const config = buildServerConfig(parsed, {
+    env: { DATABASE_URL: "postgres://localhost/test" },
+  });
+
+  const transformed = agents.fx.transformConfig("postgres", config) as Record<
+    string,
+    unknown
+  >;
+
+  assert.strictEqual(transformed.type, "local");
+  assert.deepStrictEqual(transformed.command, [
+    "npx",
+    "-y",
+    "mcp-server-postgres",
+  ]);
+  assert.deepStrictEqual(transformed.environment, {
+    DATABASE_URL: "postgres://localhost/test",
+  });
+  assert.strictEqual(transformed.enabled, true);
+  assert.strictEqual("args" in transformed, false);
+  assert.strictEqual("env" in transformed, false);
+});
+
+test("E2E: fx stdio transform omits empty environment", () => {
+  const config = buildServerConfig(parseSource("mcp-server-github"));
+  const transformed = agents.fx.transformConfig("github", config) as Record<
+    string,
+    unknown
+  >;
+
+  assert.strictEqual(transformed.type, "local");
+  assert.strictEqual("environment" in transformed, false);
+});
+
+test("E2E: fx remote transform writes http or sse plus headers", () => {
+  const httpConfig = buildServerConfig(
+    parseSource("https://mcp.example.com/mcp"),
+    {
+      headers: { "X-Workspace": "demo" },
+    },
+  );
+  const http = agents.fx.transformConfig("example", httpConfig) as Record<
+    string,
+    unknown
+  >;
+  assert.strictEqual(http.type, "http");
+  assert.strictEqual(http.url, "https://mcp.example.com/mcp");
+  assert.strictEqual(http.enabled, true);
+  assert.deepStrictEqual(http.headers, { "X-Workspace": "demo" });
+
+  const sseConfig = buildServerConfig(
+    parseSource("https://mcp.example.com/sse"),
+    {
+      transport: "sse",
+    },
+  );
+  const sse = agents.fx.transformConfig("example-sse", sseConfig) as Record<
+    string,
+    unknown
+  >;
+  assert.strictEqual(sse.type, "sse");
+  assert.strictEqual(sse.url, "https://mcp.example.com/sse");
+  assert.strictEqual("headers" in sse, false);
+});
+
+test("E2E: fx remote transform rejects a literal Authorization header", () => {
+  const config = buildServerConfig(parseSource("https://mcp.example.com/mcp"), {
+    headers: { Authorization: "Bearer token" },
+  });
+
+  assert.throws(
+    () => agents.fx.transformConfig("example", config),
+    /bearer_token_env, header_env, or oauth/,
+  );
+});
+
+test("E2E: fx is global-only and writes ~/.fx/mcp.json", () => {
+  assert.ok(agents.fx.configPath.endsWith(join(".fx", "mcp.json")));
+  assert.strictEqual(agents.fx.localConfigPath, undefined);
+  assert.deepStrictEqual(agents.fx.projectDetectPaths, []);
+  assert.strictEqual(agents.fx.configKey, "mcp");
+});
+
 // ============================================
 // E2E Tests: Multiple agents at once
 // ============================================
