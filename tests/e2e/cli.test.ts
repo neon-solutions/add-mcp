@@ -623,6 +623,10 @@ test("E2E CLI: mixed fx then cursor keeps Authorization on Cursor and bearer_tok
 
   const output = `${result.stdout}\n${result.stderr}`;
   assert.match(output, /bearer token env is not supported by Cursor/);
+  assert.match(
+    output,
+    /Authorization header dropped from the fx config; fx reads the token from NEON_API_KEY/,
+  );
 
   const fxSaved = JSON.parse(
     readFileSync(join(homeDir, ".fx", "mcp.json"), "utf-8"),

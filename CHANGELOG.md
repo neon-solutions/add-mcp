@@ -2,7 +2,7 @@
 
 ## [2.3.0] - 2026-08-23
 
-- add `--bearer-token-env <name>` for remote servers. fx writes it as `bearer_token_env`. Other agents drop it with a warning. When the same run also passes `--header Authorization`, fx omits that header and keeps `bearer_token_env`; other agents keep the header. Authorization without `--bearer-token-env` still fails on fx. Empty or whitespace names fail in the CLI and the SDK.
+- add `--bearer-token-env <name>` for remote servers. fx writes it as `bearer_token_env`. Other agents drop it with a warning. When the same run also passes `--header Authorization`, fx omits that header, warns, and keeps `bearer_token_env`; other agents keep the header. Authorization without `--bearer-token-env` still fails on fx. Empty or whitespace names fail in the CLI and the SDK.
 
 ## [2.2.0] - 2026-08-23
 

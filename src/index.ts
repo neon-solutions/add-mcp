@@ -471,7 +471,7 @@ program
   .option("--oauth-scopes <scopes>", "Alias for --scopes")
   .option(
     "--bearer-token-env <name>",
-    "Environment variable name whose value fx sends as a bearer token. Written as bearer_token_env for fx; dropped with a warning elsewhere.",
+    "Environment variable name whose value fx sends as a bearer token for remote servers. Written as bearer_token_env for fx; dropped with a warning elsewhere.",
   )
   .option(
     "--auto-approve",
@@ -1520,7 +1520,7 @@ async function main(target: string | undefined, options: Options) {
     const name = options.bearerTokenEnv.trim();
     if (name.length === 0) {
       p.log.error(
-        "Invalid --bearer-token-env value. Provide the environment variable name, not its value.",
+        "Invalid --bearer-token-env value. The name cannot be empty.",
       );
       process.exit(1);
     }
@@ -1899,6 +1899,19 @@ async function main(target: string | undefined, options: Options) {
       `${describeOptionalField(field)} is not supported by ${agentNames.join(", ")}; dropped from ${
         agentNames.length === 1 ? "that config" : "those configs"
       }.`,
+    );
+  }
+
+  if (
+    results.get("fx")?.success &&
+    resolvedBearerTokenEnv &&
+    serverConfig.headers &&
+    Object.keys(serverConfig.headers).some(
+      (name) => name.toLowerCase() === "authorization",
+    )
+  ) {
+    p.log.warn(
+      `Authorization header dropped from the fx config; fx reads the token from ${resolvedBearerTokenEnv}.`,
     );
   }
 

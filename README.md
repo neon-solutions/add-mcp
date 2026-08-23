@@ -135,6 +135,7 @@ npx add-mcp https://mcp.example.com/sse --transport sse
 # Remote MCP server with auth header
 npx add-mcp https://mcp.example.com/mcp --header "Authorization: Bearer $TOKEN"
 
+# Remote server; fx reads the bearer token from this env var
 npx add-mcp https://mcp.example.com/mcp --bearer-token-env NEON_API_KEY
 
 # Remote server with a request timeout and OAuth scopes
@@ -183,24 +184,24 @@ npx add-mcp https://mcp.example.com/mcp -a cursor -y --gitignore
 
 ### Options
 
-| Option                      | Description                                                              |
-| --------------------------- | ------------------------------------------------------------------------ |
-| `-g, --global`              | Install to user directory instead of project                             |
-| `-a, --agent <agent>`       | Target specific agents (e.g., `cursor`, `claude-code`). Can be repeated. |
-| `-t, --transport <type>`    | Transport type for remote servers: `http` (default), `sse`               |
-| `--type <type>`             | Alias for `--transport`                                                  |
-| `-h, --header <header>`     | HTTP header for remote servers (repeatable, `Key: Value`)                |
-| `--bearer-token-env <name>` | Env var name fx sends as a bearer token (capability-gated, see below)    |
-| `--env <env>`               | Env var for local stdio servers (repeatable, `KEY=VALUE`)                |
-| `--timeout <ms>`            | Request timeout (ms) for remote servers (capability-gated, see below)    |
-| `--scopes <scopes>`         | OAuth scopes for remote servers, comma-separated (capability-gated)      |
-| `--oauth-scopes <scopes>`   | Alias for `--scopes`                                                     |
-| `--auto-approve`            | Auto-approve MCP tool calls for supported agents (Codex, Claude Code)    |
-| `--approve-tool <tool>`     | Tool to auto-approve with `--auto-approve` (repeatable; defaults to all) |
-| `-n, --name <name>`         | Server name (auto-inferred if not provided)                              |
-| `-y, --yes`                 | Skip all confirmation prompts                                            |
-| `--all`                     | Install to all agents                                                    |
-| `--gitignore`               | Add generated config files to `.gitignore`                               |
+| Option                      | Description                                                                  |
+| --------------------------- | ---------------------------------------------------------------------------- |
+| `-g, --global`              | Install to user directory instead of project                                 |
+| `-a, --agent <agent>`       | Target specific agents (e.g., `cursor`, `claude-code`). Can be repeated.     |
+| `-t, --transport <type>`    | Transport type for remote servers: `http` (default), `sse`                   |
+| `--type <type>`             | Alias for `--transport`                                                      |
+| `-h, --header <header>`     | HTTP header for remote servers (repeatable, `Key: Value`)                    |
+| `--bearer-token-env <name>` | Env var whose value fx sends as a bearer token (capability-gated, see below) |
+| `--env <env>`               | Env var for local stdio servers (repeatable, `KEY=VALUE`)                    |
+| `--timeout <ms>`            | Request timeout (ms) for remote servers (capability-gated, see below)        |
+| `--scopes <scopes>`         | OAuth scopes for remote servers, comma-separated (capability-gated)          |
+| `--oauth-scopes <scopes>`   | Alias for `--scopes`                                                         |
+| `--auto-approve`            | Auto-approve MCP tool calls for supported agents (Codex, Claude Code)        |
+| `--approve-tool <tool>`     | Tool to auto-approve with `--auto-approve` (repeatable; defaults to all)     |
+| `-n, --name <name>`         | Server name (auto-inferred if not provided)                                  |
+| `-y, --yes`                 | Skip all confirmation prompts                                                |
+| `--all`                     | Install to all agents                                                        |
+| `--gitignore`               | Add generated config files to `.gitignore`                                   |
 
 #### Capability-gated fields (`--timeout`, `--scopes`, `--bearer-token-env`)
 

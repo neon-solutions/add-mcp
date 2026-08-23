@@ -21,6 +21,7 @@ npx add-mcp https://mcp.example.com/sse --transport sse
 # Remote server with an auth header
 npx add-mcp https://mcp.example.com/mcp --header 'Authorization: Bearer ${TOKEN}'
 
+# Remote server; fx reads the bearer token from this env var
 npx add-mcp https://mcp.example.com/mcp --bearer-token-env NEON_API_KEY
 
 # Remote server with a request timeout and OAuth scopes (capability-gated)
@@ -54,7 +55,7 @@ npx add-mcp https://mcp.example.com/mcp -g -a claude-code -y
 | `-t, --transport <type>`    | Transport type for remote servers: `http` (default), `sse`               |
 | `--type <type>`             | Alias for `--transport`                                                  |
 | `-h, --header <header>`     | HTTP header for remote servers (repeatable, `Key: Value`)                |
-| `--bearer-token-env <name>` | Env var name fx sends as a bearer token (capability-gated)               |
+| `--bearer-token-env <name>` | Env var whose value fx sends as a bearer token (capability-gated)        |
 | `--env <env>`               | Env var for local stdio servers (repeatable, `KEY=VALUE`)                |
 | `--args <args>`             | Arguments for local stdio servers                                        |
 | `--timeout <ms>`            | Request timeout (ms) for remote servers (capability-gated)               |

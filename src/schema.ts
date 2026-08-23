@@ -70,7 +70,7 @@ export function resolvedBearerTokenEnv(
 }
 
 export const INVALID_BEARER_TOKEN_ENV =
-  "Invalid bearerTokenEnv. Provide the environment variable name, not its value.";
+  "Invalid bearerTokenEnv. The name cannot be empty.";
 
 const ALL_OPTIONAL_FIELDS = Object.keys(
   OPTIONAL_FIELD_SPECS,
