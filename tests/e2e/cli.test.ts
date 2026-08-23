@@ -525,7 +525,7 @@ test("E2E CLI: fx remote install writes ~/.fx/mcp.json without -g", () => {
       "--name",
       "example",
       "--header",
-      "Authorization: Bearer token",
+      "X-Workspace: demo",
     ],
     projectDir,
     homeDir,
@@ -551,8 +551,32 @@ test("E2E CLI: fx remote install writes ~/.fx/mcp.json without -g", () => {
   assert.strictEqual(server.url, "https://mcp.example.com/mcp");
   assert.strictEqual(server.enabled, true);
   assert.deepStrictEqual(server.headers, {
-    Authorization: "Bearer token",
+    "X-Workspace": "demo",
   });
+});
+
+test("E2E CLI: fx rejects a literal Authorization header", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "fx",
+      "-y",
+      "--name",
+      "example",
+      "--header",
+      "Authorization: Bearer token",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /literal Authorization header/);
+  assert.strictEqual(existsSync(join(homeDir, ".fx", "mcp.json")), false);
 });
 
 test("E2E CLI: fx stdio install uses command array and environment", () => {
@@ -1375,6 +1399,59 @@ test("remove: prints message when no matches found", () => {
 });
 
 // ── sync command tests ───────────────────────────────────────────────────
+
+test("sync: command-array fx args match Cursor args on global sync", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+
+  mkdirSync(join(homeDir, ".cursor"), { recursive: true });
+  writeFileSync(
+    join(homeDir, ".cursor", "mcp.json"),
+    JSON.stringify({
+      mcpServers: {
+        postgres: {
+          command: "npx",
+          args: ["-y", "mcp-server-postgres"],
+        },
+      },
+    }),
+  );
+
+  mkdirSync(join(homeDir, ".fx"), { recursive: true });
+  writeFileSync(
+    join(homeDir, ".fx", "mcp.json"),
+    JSON.stringify({
+      mcp: {
+        pg: {
+          type: "local",
+          command: ["npx", "-y", "mcp-server-postgres"],
+          enabled: true,
+        },
+      },
+    }),
+  );
+
+  const result = runCli(["sync", "-g", "-y"], projectDir, homeDir);
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.doesNotMatch(output, /args differ/);
+
+  const cursorConfig = JSON.parse(
+    readFileSync(join(homeDir, ".cursor", "mcp.json"), "utf-8"),
+  );
+  const fxConfig = JSON.parse(
+    readFileSync(join(homeDir, ".fx", "mcp.json"), "utf-8"),
+  );
+  assert.ok(cursorConfig.mcpServers.pg, "Cursor should rename to pg");
+  assert.strictEqual(cursorConfig.mcpServers.postgres, undefined);
+  assert.ok(fxConfig.mcp.pg, "fx should keep pg");
+});
 
 test("sync: renames servers to canonical name across agents with -y", () => {
   const homeDir = createTempDir();

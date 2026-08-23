@@ -430,6 +430,17 @@ function transformFxConfig(
   config: McpServerConfig,
 ): unknown {
   if (config.url) {
+    if (
+      config.headers &&
+      Object.keys(config.headers).some(
+        (name) => name.toLowerCase() === "authorization",
+      )
+    ) {
+      throw new Error(
+        "fx rejects a literal Authorization header. Use a non-Authorization header, or set bearer_token_env / header_env in ~/.fx/mcp.json.",
+      );
+    }
+
     const entry: Record<string, unknown> = {
       type: config.type === "sse" ? "sse" : "http",
       url: config.url,

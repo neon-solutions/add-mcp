@@ -1495,7 +1495,7 @@ test("E2E: fx remote transform writes http or sse plus headers", () => {
   const httpConfig = buildServerConfig(
     parseSource("https://mcp.example.com/mcp"),
     {
-      headers: { Authorization: "Bearer token" },
+      headers: { "X-Workspace": "demo" },
     },
   );
   const http = agents.fx.transformConfig("example", httpConfig) as Record<
@@ -1505,7 +1505,7 @@ test("E2E: fx remote transform writes http or sse plus headers", () => {
   assert.strictEqual(http.type, "http");
   assert.strictEqual(http.url, "https://mcp.example.com/mcp");
   assert.strictEqual(http.enabled, true);
-  assert.deepStrictEqual(http.headers, { Authorization: "Bearer token" });
+  assert.deepStrictEqual(http.headers, { "X-Workspace": "demo" });
 
   const sseConfig = buildServerConfig(
     parseSource("https://mcp.example.com/sse"),
@@ -1520,6 +1520,17 @@ test("E2E: fx remote transform writes http or sse plus headers", () => {
   assert.strictEqual(sse.type, "sse");
   assert.strictEqual(sse.url, "https://mcp.example.com/sse");
   assert.strictEqual("headers" in sse, false);
+});
+
+test("E2E: fx remote transform rejects a literal Authorization header", () => {
+  const config = buildServerConfig(parseSource("https://mcp.example.com/mcp"), {
+    headers: { Authorization: "Bearer token" },
+  });
+
+  assert.throws(
+    () => agents.fx.transformConfig("example", config),
+    /literal Authorization header/,
+  );
 });
 
 test("E2E: fx is global-only and writes ~/.fx/mcp.json", () => {
