@@ -356,15 +356,12 @@ export function installServerForAgent(
   const configPath = getConfigPath(agent, options);
 
   try {
-    const dir = dirname(configPath);
-    if (!existsSync(dir)) {
-      mkdirSync(dir, { recursive: true });
-    }
-
     // Strip optional fields the agent can't represent, then transform the
     // gated config into the agent's native schema. Because every transform
     // builds a fresh object with only known keys, unsupported fields can never
     // leak into the written config.
+    // Agent detection treats an empty config directory as a global install,
+    // so validation must run before creating it.
     const { config: gatedConfig, dropped } = applyFieldSupport(
       serverConfig,
       agent.supportedFields,
@@ -373,6 +370,11 @@ export function installServerForAgent(
     const transformedConfig = agent.transformConfig(serverName, gatedConfig, {
       local: Boolean(options.local),
     });
+
+    const dir = dirname(configPath);
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true });
+    }
 
     const configKey = getConfigKey(agent, options);
     const config = buildConfigWithKey(configKey, serverName, transformedConfig);

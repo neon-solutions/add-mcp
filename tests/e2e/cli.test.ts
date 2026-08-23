@@ -576,7 +576,7 @@ test("E2E CLI: fx rejects a literal Authorization header", () => {
 
   const output = `${result.stdout}\n${result.stderr}`;
   assert.match(output, /literal Authorization header/);
-  assert.strictEqual(existsSync(join(homeDir, ".fx", "mcp.json")), false);
+  assert.strictEqual(existsSync(join(homeDir, ".fx")), false);
 });
 
 test("E2E CLI: fx stdio install uses command array and environment", () => {
