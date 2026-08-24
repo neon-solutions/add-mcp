@@ -16,6 +16,8 @@ import {
   searchRegistry,
 } from "../src/find.js";
 import type { RegistryServerEntry } from "../src/find.js";
+import { buildServerConfig } from "../src/installer.js";
+import { parseSource } from "../src/source-parser.js";
 
 let passed = 0;
 let failed = 0;
@@ -699,6 +701,64 @@ test("buildInstallPlanForEntry returns package target for package-only entry", a
   assert.strictEqual(plan?.args, undefined);
 });
 
+test("buildInstallPlanForEntry builds a version-pinned PyPI uvx command", async () => {
+  const plan = await buildInstallPlanForEntry(
+    {
+      name: "com.example/python-mcp",
+      description: "Python MCP server",
+      version: "1.2.3",
+      package: {
+        registryType: "pypi",
+        identifier: "python-mcp",
+        version: "1.2.3",
+        transport: { type: "stdio" },
+      },
+    },
+    { yes: true },
+  );
+
+  assert.ok(plan);
+  assert.strictEqual(plan?.target, "uvx python-mcp@1.2.3");
+  assert.strictEqual(plan?.args, undefined);
+});
+
+test("buildInstallPlanForEntry orders PyPI runtime and package arguments", async () => {
+  const plan = await buildInstallPlanForEntry(
+    {
+      name: "com.example/python-mcp",
+      description: "Python MCP server with runtime dependencies",
+      version: "1.2.3",
+      package: {
+        registryType: "pypi",
+        identifier: "python-mcp",
+        version: "1.2.3",
+        runtimeHint: "uvx",
+        runtimeArguments: [
+          { type: "named", name: "--with", value: "mcp>=1.29,<3" },
+        ],
+        packageArguments: [
+          { type: "positional", value: "mcp" },
+          { type: "positional", value: "serve" },
+        ],
+        transport: { type: "stdio" },
+      },
+    },
+    { yes: true },
+  );
+
+  assert.ok(plan);
+  assert.strictEqual(plan?.target, "uvx --with mcp>=1.29,<3 python-mcp@1.2.3");
+  assert.deepStrictEqual(plan?.args, ["mcp", "serve"]);
+
+  const config = buildServerConfig(parseSource(plan!.target), {
+    args: plan!.args,
+  });
+  assert.deepStrictEqual(config, {
+    command: "uvx",
+    args: ["--with", "mcp>=1.29,<3", "python-mcp@1.2.3", "mcp", "serve"],
+  });
+});
+
 test("buildInstallPlanForEntry includes only required package env/header/args placeholders in -y mode", async () => {
   const plan = await buildInstallPlanForEntry(
     {
@@ -993,7 +1053,7 @@ test("buildInstallPlanForEntry falls back to available remote when preferred tra
   assert.strictEqual(plan?.transport, "http");
 });
 
-test("searchRegistry filters out non-installable entries (no npm package and no remotes)", async () => {
+test("searchRegistry keeps npm and uvx-compatible PyPI packages", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = (async () =>
     ({
@@ -1039,6 +1099,38 @@ test("searchRegistry filters out non-installable entries (no npm package and no 
           },
           {
             server: {
+              name: "com.example/pypi-server",
+              description: "PyPI server",
+              version: "1.0.0",
+              packages: [
+                {
+                  registryType: "pypi",
+                  identifier: "example-mcp-server",
+                  version: "1.0.0",
+                  runtimeHint: "uvx",
+                  transport: { type: "stdio" },
+                },
+              ],
+            },
+          },
+          {
+            server: {
+              name: "com.example/unsupported-pypi-runtime",
+              description: "PyPI server requiring an unsupported runtime",
+              version: "1.0.0",
+              packages: [
+                {
+                  registryType: "pypi",
+                  identifier: "custom-python-mcp",
+                  version: "1.0.0",
+                  runtimeHint: "custom-runner",
+                  transport: { type: "stdio" },
+                },
+              ],
+            },
+          },
+          {
+            server: {
               name: "com.example/remote-only",
               description: "Remote-only server",
               version: "1.0.0",
@@ -1056,6 +1148,13 @@ test("searchRegistry filters out non-installable entries (no npm package and no 
               description: "Has both npm and remote",
               version: "1.0.0",
               packages: [
+                {
+                  registryType: "pypi",
+                  identifier: "example-hybrid",
+                  version: "1.0.0",
+                  runtimeHint: "uvx",
+                  transport: { type: "stdio" },
+                },
                 {
                   registryType: "npm",
                   identifier: "@example/hybrid",
@@ -1083,12 +1182,22 @@ test("searchRegistry filters out non-installable entries (no npm package and no 
       },
     ]);
     const names = result.entries.map((e) => e.name);
-    assert.strictEqual(result.entries.length, 3);
+    assert.strictEqual(result.entries.length, 4);
     assert.strictEqual(names.includes("com.example/npm-server"), true);
+    assert.strictEqual(names.includes("com.example/pypi-server"), true);
     assert.strictEqual(names.includes("com.example/remote-only"), true);
     assert.strictEqual(names.includes("com.example/hybrid"), true);
     assert.strictEqual(names.includes("com.example/oci-only"), false);
+    assert.strictEqual(
+      names.includes("com.example/unsupported-pypi-runtime"),
+      false,
+    );
     assert.strictEqual(names.includes("com.example/metadata-only"), false);
+    assert.strictEqual(
+      result.entries.find((entry) => entry.name === "com.example/hybrid")
+        ?.package?.registryType,
+      "npm",
+    );
     const hybrid = result.entries.find((e) => e.name === "com.example/hybrid")!;
     assert.strictEqual(hybrid.package?.identifier, "@example/hybrid");
     assert.strictEqual(
