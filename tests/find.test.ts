@@ -718,8 +718,9 @@ test("buildInstallPlanForEntry builds a version-pinned PyPI uvx command", async 
   );
 
   assert.ok(plan);
-  assert.strictEqual(plan?.target, "uvx python-mcp@1.2.3");
-  assert.strictEqual(plan?.args, undefined);
+  assert.strictEqual(plan?.target, "uvx");
+  assert.strictEqual(plan?.sourceType, "command");
+  assert.deepStrictEqual(plan?.args, ["python-mcp@1.2.3"]);
 });
 
 test("buildInstallPlanForEntry orders PyPI runtime and package arguments", async () => {
@@ -747,15 +748,70 @@ test("buildInstallPlanForEntry orders PyPI runtime and package arguments", async
   );
 
   assert.ok(plan);
-  assert.strictEqual(plan?.target, "uvx --with mcp>=1.29,<3 python-mcp@1.2.3");
-  assert.deepStrictEqual(plan?.args, ["mcp", "serve"]);
+  assert.strictEqual(plan?.target, "uvx");
+  assert.strictEqual(plan?.sourceType, "command");
+  assert.deepStrictEqual(plan?.args, [
+    "--with",
+    "mcp>=1.29,<3",
+    "python-mcp@1.2.3",
+    "mcp",
+    "serve",
+  ]);
 
-  const config = buildServerConfig(parseSource(plan!.target), {
+  const parsed = parseSource(plan!.target);
+  parsed.type = plan!.sourceType!;
+  const config = buildServerConfig(parsed, {
     args: plan!.args,
   });
   assert.deepStrictEqual(config, {
     command: "uvx",
     args: ["--with", "mcp>=1.29,<3", "python-mcp@1.2.3", "mcp", "serve"],
+  });
+});
+
+test("buildInstallPlanForEntry preserves spaces inside PyPI runtime argument values", async () => {
+  const plan = await buildInstallPlanForEntry(
+    {
+      name: "com.example/python-mcp",
+      description: "Python MCP server with a selected interpreter",
+      version: "1.2.3",
+      package: {
+        registryType: "pypi",
+        identifier: "python-mcp",
+        version: "1.2.3",
+        runtimeHint: "uvx",
+        runtimeArguments: [
+          {
+            type: "named",
+            name: "--python",
+            value: "C:\\Program Files\\Python\\python.exe",
+          },
+        ],
+        transport: { type: "stdio" },
+      },
+    },
+    { yes: true },
+  );
+
+  assert.ok(plan);
+  assert.strictEqual(plan.target, "uvx");
+  assert.strictEqual(plan.sourceType, "command");
+  assert.deepStrictEqual(plan.args, [
+    "--python",
+    "C:\\Program Files\\Python\\python.exe",
+    "python-mcp@1.2.3",
+  ]);
+
+  const parsed = parseSource(plan.target);
+  parsed.type = plan.sourceType!;
+  const config = buildServerConfig(parsed, { args: plan.args });
+  assert.deepStrictEqual(config, {
+    command: "uvx",
+    args: [
+      "--python",
+      "C:\\Program Files\\Python\\python.exe",
+      "python-mcp@1.2.3",
+    ],
   });
 });
 

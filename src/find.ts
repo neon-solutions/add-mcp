@@ -3,7 +3,7 @@ import {
   DEFAULT_FIND_REGISTRY_LABEL,
   DEFAULT_FIND_REGISTRY_URL,
 } from "./config.js";
-import type { TransportType } from "./types.js";
+import type { SourceType, TransportType } from "./types.js";
 import {
   type PackageArgPrompt,
   type RegistryPackageArgumentDefinition,
@@ -76,6 +76,7 @@ export interface FindCommandOptions {
 
 export interface FindInstallPlan {
   target: string;
+  sourceType?: SourceType;
   serverName: string;
   transport?: TransportType;
   headers?: Record<string, string>;
@@ -395,19 +396,29 @@ function formatPackageTarget(pkg: RegistryPackageDefinition): string {
   return pkg.identifier;
 }
 
+interface PackageSource {
+  target: string;
+  sourceType?: SourceType;
+  args: string[];
+}
+
 function buildPackageSource(
   pkg: RegistryPackageDefinition,
   runtimeArgv: string[],
-): string {
+): PackageSource {
   if (pkg.registryType !== "pypi") {
-    return pkg.identifier;
+    return { target: pkg.identifier, args: [] };
   }
 
   const version = pkg.version?.trim();
   const packageSpecifier = version
     ? `${pkg.identifier}@${version}`
     : pkg.identifier;
-  return ["uvx", ...runtimeArgv, packageSpecifier].join(" ");
+  return {
+    target: "uvx",
+    sourceType: "command",
+    args: [...runtimeArgv, packageSpecifier],
+  };
 }
 
 function transportLabel(entry: RegistryServerEntry): string {
@@ -556,6 +567,7 @@ async function resolveInteractiveRemote(
 
 function resolveNonInteractivePackage(pkg: RegistryPackageDefinition): {
   target: string;
+  sourceType?: SourceType;
   env?: Record<string, string>;
   headers?: Record<string, string>;
   args?: string[];
@@ -582,12 +594,15 @@ function resolveNonInteractivePackage(pkg: RegistryPackageDefinition): {
     definitionsFromPackage(pkg),
     buildPlaceholderValue("variable"),
   );
+  const source = buildPackageSource(pkg, runtimeArgv);
+  const args = [...source.args, ...packageArgv];
 
   return {
-    target: buildPackageSource(pkg, runtimeArgv),
+    target: source.target,
+    sourceType: source.sourceType,
     env: Object.keys(env).length > 0 ? env : undefined,
     headers: Object.keys(headers).length > 0 ? headers : undefined,
-    args: packageArgv.length > 0 ? packageArgv : undefined,
+    args: args.length > 0 ? args : undefined,
   };
 }
 
@@ -595,6 +610,7 @@ async function resolveInteractivePackage(
   pkg: RegistryPackageDefinition,
 ): Promise<{
   target: string;
+  sourceType?: SourceType;
   env?: Record<string, string>;
   headers?: Record<string, string>;
   args?: string[];
@@ -628,17 +644,19 @@ async function resolveInteractivePackage(
     promptPackageArg,
   );
   if (packageArgvResult.cancelled) return null;
+  const source = buildPackageSource(pkg, runtimeArgvResult.argv);
+  const args = [...source.args, ...packageArgvResult.argv];
 
   return {
-    target: buildPackageSource(pkg, runtimeArgvResult.argv),
+    target: source.target,
+    sourceType: source.sourceType,
     env:
       Object.keys(envResult.values).length > 0 ? envResult.values : undefined,
     headers:
       Object.keys(headerResult.values).length > 0
         ? headerResult.values
         : undefined,
-    args:
-      packageArgvResult.argv.length > 0 ? packageArgvResult.argv : undefined,
+    args: args.length > 0 ? args : undefined,
   };
 }
 
@@ -687,6 +705,7 @@ export async function buildInstallPlanForEntry(
 
     return {
       target: resolved.target,
+      sourceType: resolved.sourceType,
       serverName: resolveServerName(entry),
       env: resolved.env,
       headers: resolved.headers,

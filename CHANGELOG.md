@@ -2,7 +2,7 @@
 
 ## [2.4.0] - 2026-08-24
 
-- make `find` / `search` discover and install PyPI registry packages through `uvx`, preserving runtime arguments before the version-pinned package and package arguments after it; npm remains preferred when both package formats are available.
+- make `find` / `search` discover and install PyPI registry packages through `uvx`, preserving runtime argument boundaries (including values with spaces) before the version-pinned package and package arguments after it; npm remains preferred when both package formats are available.
 
 ## [2.3.0] - 2026-08-23
 

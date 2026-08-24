@@ -4,7 +4,7 @@ import { program } from "commander";
 import * as p from "@clack/prompts";
 import chalk from "chalk";
 import { homedir } from "os";
-import type { AgentType, TransportType } from "./types.js";
+import type { AgentType, SourceType, TransportType } from "./types.js";
 import { agentAliases } from "./types.js";
 import {
   agents,
@@ -543,7 +543,7 @@ async function runFindCommand(
     args: installPlan.args ?? options.args,
   };
 
-  await main(installPlan.target, mergedOptions);
+  await main(installPlan.target, mergedOptions, installPlan.sourceType);
 }
 
 program
@@ -1295,7 +1295,11 @@ function listAgents(): void {
   console.log();
 }
 
-async function main(target: string | undefined, options: Options) {
+async function main(
+  target: string | undefined,
+  options: Options,
+  sourceType?: SourceType,
+) {
   // --all just selects all agents, doesn't imply --yes or --global
   // Use --yes to skip prompts, --global to install globally
 
@@ -1341,9 +1345,12 @@ async function main(target: string | undefined, options: Options) {
   // Parse the source
   spinner.start("Parsing source...");
   const parsed = parseSource(target);
+  if (sourceType) {
+    parsed.type = sourceType;
+  }
   const isRemote = isRemoteSource(parsed);
-  const sourceType = isRemote ? "remote" : "local";
-  spinner.stop(`Source: ${chalk.cyan(parsed.value)} (${sourceType})`);
+  const sourceLabel = isRemote ? "remote" : "local";
+  spinner.stop(`Source: ${chalk.cyan(parsed.value)} (${sourceLabel})`);
 
   const headerValues = options.header ?? [];
   const headerResult = parseHeaders(headerValues);
