@@ -1350,6 +1350,7 @@ async function main(
   }
   const isRemote = isRemoteSource(parsed);
   const sourceLabel = isRemote ? "remote" : "local";
+  const summarySourceType = sourceType ?? sourceLabel;
   spinner.stop(`Source: ${chalk.cyan(parsed.value)} (${sourceLabel})`);
 
   const headerValues = options.header ?? [];
@@ -1800,7 +1801,7 @@ async function main(
   // Show summary
   const summaryLines: string[] = [];
   summaryLines.push(`${chalk.cyan("Server:")} ${serverName}`);
-  summaryLines.push(`${chalk.cyan("Type:")} ${sourceType}`);
+  summaryLines.push(`${chalk.cyan("Type:")} ${summarySourceType}`);
   if (autoApproveTools) {
     summaryLines.push(
       `${chalk.cyan("Auto-approve:")} ${

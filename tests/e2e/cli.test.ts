@@ -126,6 +126,27 @@ function seedFindRegistries(homeDir: string) {
   );
 }
 
+test("E2E CLI: direct installs show a defined summary type", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    ["https://mcp.example.com/mcp", "-a", "cursor", "-y"],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /Type:\s+remote/);
+  assert.doesNotMatch(output, /Type:\s+undefined/);
+});
+
 // Regression: https://github.com/neon-solutions/add-mcp/issues/29
 test("E2E CLI: absolute path with spaces is preserved as single command", () => {
   const projectDir = createTempDir();
