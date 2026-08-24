@@ -145,7 +145,7 @@ test("supportedFields reflects per-client capabilities", () => {
   // Clients with no extra field support declare an empty list.
   assert.deepStrictEqual(agents.vscode.supportedFields, []);
   assert.deepStrictEqual(agents["claude-desktop"].supportedFields, []);
-  assert.deepStrictEqual(agents.fx.supportedFields, []);
+  assert.deepStrictEqual(agents.fx.supportedFields, ["bearerTokenEnv"]);
 });
 
 // ============================================

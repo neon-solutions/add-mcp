@@ -127,6 +127,7 @@ export interface McpServerConfig {
    * separate settings file). It is never written into a server entry verbatim.
    */
   autoApproveTools?: string[];
+  bearerTokenEnv?: string;
 }
 
 export interface ConfigFile {

@@ -21,6 +21,9 @@ npx add-mcp https://mcp.example.com/sse --transport sse
 # Remote server with an auth header
 npx add-mcp https://mcp.example.com/mcp --header 'Authorization: Bearer ${TOKEN}'
 
+# Remote server; fx reads the bearer token from this env var
+npx add-mcp https://mcp.example.com/mcp --bearer-token-env NEON_API_KEY
+
 # Remote server with a request timeout and OAuth scopes (capability-gated)
 npx add-mcp https://mcp.example.com/mcp --timeout 30000 --scopes "read,write"
 
@@ -45,24 +48,25 @@ npx add-mcp https://mcp.example.com/mcp -g -a claude-code -y
 
 ## Options
 
-| Option                    | Description                                                              |
-| ------------------------- | ------------------------------------------------------------------------ |
-| `-g, --global`            | Install to user directory instead of project                             |
-| `-a, --agent <agent>`     | Target specific agents (e.g. `cursor`, `claude-code`). Repeatable.       |
-| `-t, --transport <type>`  | Transport type for remote servers: `http` (default), `sse`               |
-| `--type <type>`           | Alias for `--transport`                                                  |
-| `-h, --header <header>`   | HTTP header for remote servers (repeatable, `Key: Value`)                |
-| `--env <env>`             | Env var for local stdio servers (repeatable, `KEY=VALUE`)                |
-| `--args <args>`           | Arguments for local stdio servers                                        |
-| `--timeout <ms>`          | Request timeout (ms) for remote servers (capability-gated)               |
-| `--scopes <scopes>`       | OAuth scopes for remote servers, comma-separated (capability-gated)      |
-| `--oauth-scopes <scopes>` | Alias for `--scopes`                                                     |
-| `--auto-approve`          | Auto-approve MCP tool calls for supported agents (Codex, Claude Code)    |
-| `--approve-tool <tool>`   | Tool to auto-approve with `--auto-approve` (repeatable; defaults to all) |
-| `-n, --name <name>`       | Server name (auto-inferred if not provided)                              |
-| `-y, --yes`               | Skip all confirmation prompts                                            |
-| `--all`                   | Install to all agents                                                    |
-| `--gitignore`             | Add generated config files to `.gitignore`                               |
+| Option                      | Description                                                              |
+| --------------------------- | ------------------------------------------------------------------------ |
+| `-g, --global`              | Install to user directory instead of project                             |
+| `-a, --agent <agent>`       | Target specific agents (e.g. `cursor`, `claude-code`). Repeatable.       |
+| `-t, --transport <type>`    | Transport type for remote servers: `http` (default), `sse`               |
+| `--type <type>`             | Alias for `--transport`                                                  |
+| `-h, --header <header>`     | HTTP header for remote servers (repeatable, `Key: Value`)                |
+| `--bearer-token-env <name>` | Env var whose value fx sends as a bearer token (capability-gated)        |
+| `--env <env>`               | Env var for local stdio servers (repeatable, `KEY=VALUE`)                |
+| `--args <args>`             | Arguments for local stdio servers                                        |
+| `--timeout <ms>`            | Request timeout (ms) for remote servers (capability-gated)               |
+| `--scopes <scopes>`         | OAuth scopes for remote servers, comma-separated (capability-gated)      |
+| `--oauth-scopes <scopes>`   | Alias for `--scopes`                                                     |
+| `--auto-approve`            | Auto-approve MCP tool calls for supported agents (Codex, Claude Code)    |
+| `--approve-tool <tool>`     | Tool to auto-approve with `--auto-approve` (repeatable; defaults to all) |
+| `-n, --name <name>`         | Server name (auto-inferred if not provided)                              |
+| `-y, --yes`                 | Skip all confirmation prompts                                            |
+| `--all`                     | Install to all agents                                                    |
+| `--gitignore`               | Add generated config files to `.gitignore`                               |
 
 ## Transports
 
@@ -81,9 +85,10 @@ Not every MCP client understands every field. add-mcp keeps one canonical server
 | ------------------ | ----------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
 | Timeout            | `--timeout`                         | Claude Code, Gemini CLI, Grok Build, Kilo Code, Kimi Code, Kiro CLI | `timeout` (milliseconds); Grok Build `tool_timeout_sec` (seconds), Kimi Code `toolTimeoutMs` |
 | OAuth scopes       | `--scopes`                          | Cursor, Gemini CLI                                                  | Cursor `auth.scopes`, Gemini `oauth.scopes`                                                  |
+| Bearer token env   | `--bearer-token-env`                | fx                                                                  | `bearer_token_env`                                                                           |
 | Tool auto-approval | `--auto-approve` / `--approve-tool` | Codex, Claude Code                                                  | Codex approval modes; Claude Code permission allow rules                                     |
 
-When a targeted agent doesn't support a field, add-mcp drops it from that agent's config and prints a warning — other agents still receive it.
+When a targeted agent doesn't support a field, add-mcp drops it from that agent's config and prints a warning — other agents still receive it. `--timeout`, `--scopes`, and `--bearer-token-env` apply to remote servers only. When `--bearer-token-env` and `--header Authorization` are both set, fx omits the Authorization header and writes `bearer_token_env`; other agents keep the header.
 
 ## Auto-approving tool calls
 

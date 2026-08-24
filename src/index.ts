@@ -51,7 +51,11 @@ import {
   resolveArrayTemplates,
   resolveRecordTemplates,
 } from "./template.js";
-import { describeOptionalField, type OptionalField } from "./schema.js";
+import {
+  describeOptionalField,
+  isBearerTokenEnvName,
+  type OptionalField,
+} from "./schema.js";
 
 import packageJson from "../package.json" with { type: "json" };
 
@@ -164,6 +168,7 @@ interface Options {
   oauthScopes?: string;
   autoApprove?: boolean;
   approveTool?: string[];
+  bearerTokenEnv?: string;
   yes?: boolean;
   all?: boolean;
   gitignore?: boolean;
@@ -468,6 +473,10 @@ program
     "OAuth scopes to request for remote servers (comma-separated). Only applied to agents that support it (e.g. Cursor, Gemini CLI); dropped with a warning elsewhere.",
   )
   .option("--oauth-scopes <scopes>", "Alias for --scopes")
+  .option(
+    "--bearer-token-env <name>",
+    "Environment variable name whose value fx sends as a bearer token for remote servers. Written as bearer_token_env for fx; dropped with a warning elsewhere.",
+  )
   .option(
     "--auto-approve",
     "Auto-approve MCP tool calls for agents that support it (Codex, Claude Code). Dropped with a warning for other agents.",
@@ -1510,6 +1519,26 @@ async function main(target: string | undefined, options: Options) {
   const autoApproveTools =
     options.autoApprove || approveTools.length > 0 ? approveTools : undefined;
 
+  let resolvedBearerTokenEnv: string | undefined;
+  if (options.bearerTokenEnv !== undefined) {
+    const name = options.bearerTokenEnv.trim();
+    if (name.length === 0) {
+      p.log.error("Invalid --bearer-token-env. The name cannot be empty.");
+      process.exit(1);
+    }
+    if (!isBearerTokenEnvName(name)) {
+      p.log.error(
+        `--bearer-token-env takes an environment variable name ([A-Za-z_][A-Za-z0-9_]*). "${name}" is not a valid name.`,
+      );
+      process.exit(1);
+    }
+    if (isRemote) {
+      resolvedBearerTokenEnv = name;
+    } else {
+      p.log.warn("--bearer-token-env is only used for remote URLs, ignoring");
+    }
+  }
+
   // Build server config
   const serverConfig = buildServerConfig(parsed, {
     transport: resolvedTransport,
@@ -1525,6 +1554,7 @@ async function main(target: string | undefined, options: Options) {
     timeout: resolvedTimeout,
     oauthScopes: resolvedScopes,
     autoApproveTools,
+    bearerTokenEnv: resolvedBearerTokenEnv,
   });
 
   // Determine target agents
@@ -1877,6 +1907,19 @@ async function main(target: string | undefined, options: Options) {
       `${describeOptionalField(field)} is not supported by ${agentNames.join(", ")}; dropped from ${
         agentNames.length === 1 ? "that config" : "those configs"
       }.`,
+    );
+  }
+
+  if (
+    results.get("fx")?.success &&
+    resolvedBearerTokenEnv &&
+    serverConfig.headers &&
+    Object.keys(serverConfig.headers).some(
+      (name) => name.toLowerCase() === "authorization",
+    )
+  ) {
+    p.log.warn(
+      `Authorization header dropped from the fx config; fx reads the token from ${resolvedBearerTokenEnv}.`,
     );
   }
 

@@ -1529,7 +1529,7 @@ test("E2E: fx remote transform rejects a literal Authorization header", () => {
 
   assert.throws(
     () => agents.fx.transformConfig("example", config),
-    /bearer_token_env, header_env, or oauth/,
+    /--bearer-token-env/,
   );
 });
 

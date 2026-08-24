@@ -117,6 +117,7 @@ interface McpServerConfig {
   timeout?: number; // milliseconds; Claude Code, Gemini CLI, Grok Build, Kilo Code, Kimi Code, Kiro CLI
   oauthScopes?: string[]; // Cursor, Gemini CLI
   autoApproveTools?: string[]; // Codex, Claude Code; [] = all tools
+  bearerTokenEnv?: string; // fx writes bearer_token_env
 }
 ```
 
