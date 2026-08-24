@@ -3,7 +3,7 @@ import {
   DEFAULT_FIND_REGISTRY_LABEL,
   DEFAULT_FIND_REGISTRY_URL,
 } from "./config.js";
-import type { TransportType } from "./types.js";
+import type { SourceType, TransportType } from "./types.js";
 import {
   type PackageArgPrompt,
   type RegistryPackageArgumentDefinition,
@@ -42,6 +42,9 @@ export interface RegistryPackageDefinition {
   registryType: "npm" | "pypi" | "oci" | "nuget" | "mcpb";
   identifier: string;
   version?: string;
+  runtimeHint?: string;
+  /** Arguments passed to the package runtime before the package identifier. */
+  runtimeArguments?: RegistryPackageArgumentDefinition[];
   environmentVariables?: RegistryNamedVariableDefinition[];
   headers?: RegistryHeaderDefinition[];
   /** MCP registry / server.json package CLI arguments (positional vs named). */
@@ -73,6 +76,7 @@ export interface FindCommandOptions {
 
 export interface FindInstallPlan {
   target: string;
+  sourceType?: SourceType;
   serverName: string;
   transport?: TransportType;
   headers?: Record<string, string>;
@@ -265,12 +269,17 @@ function toEntry(item: RegistryServerListItem): RegistryServerEntry | null {
     return null;
   }
 
-  const npmPackage = (server.packages ?? []).find(
-    (pkg) => pkg.registryType === "npm",
+  const packages = server.packages ?? [];
+  const npmPackage = packages.find((pkg) => pkg.registryType === "npm");
+  const pypiPackage = packages.find(
+    (pkg) =>
+      pkg.registryType === "pypi" &&
+      (!pkg.runtimeHint || pkg.runtimeHint.trim().toLowerCase() === "uvx"),
   );
+  const installablePackage = npmPackage ?? pypiPackage;
 
   const hasRemotes = Array.isArray(server.remotes) && server.remotes.length > 0;
-  if (!npmPackage && !hasRemotes) {
+  if (!installablePackage && !hasRemotes) {
     return null;
   }
 
@@ -281,7 +290,7 @@ function toEntry(item: RegistryServerListItem): RegistryServerEntry | null {
     version: server.version,
     repositoryUrl: server.repository?.url,
     remotes: server.remotes,
-    package: npmPackage,
+    package: installablePackage,
   };
 }
 
@@ -385,6 +394,31 @@ function pickRemote(
 
 function formatPackageTarget(pkg: RegistryPackageDefinition): string {
   return pkg.identifier;
+}
+
+interface PackageSource {
+  target: string;
+  sourceType?: SourceType;
+  args: string[];
+}
+
+function buildPackageSource(
+  pkg: RegistryPackageDefinition,
+  runtimeArgv: string[],
+): PackageSource {
+  if (pkg.registryType !== "pypi") {
+    return { target: pkg.identifier, args: [] };
+  }
+
+  const version = pkg.version?.trim();
+  const packageSpecifier = version
+    ? `${pkg.identifier}@${version}`
+    : pkg.identifier;
+  return {
+    target: "uvx",
+    sourceType: "command",
+    args: [...runtimeArgv, packageSpecifier],
+  };
 }
 
 function transportLabel(entry: RegistryServerEntry): string {
@@ -532,6 +566,8 @@ async function resolveInteractiveRemote(
 }
 
 function resolveNonInteractivePackage(pkg: RegistryPackageDefinition): {
+  target: string;
+  sourceType?: SourceType;
   env?: Record<string, string>;
   headers?: Record<string, string>;
   args?: string[];
@@ -550,21 +586,31 @@ function resolveNonInteractivePackage(pkg: RegistryPackageDefinition): {
     }
   }
 
-  const argv = buildPackageArgumentsArgvNonInteractive(
+  const runtimeArgv = buildPackageArgumentsArgvNonInteractive(
+    pkg.registryType === "pypi" ? (pkg.runtimeArguments ?? []) : [],
+    buildPlaceholderValue("variable"),
+  );
+  const packageArgv = buildPackageArgumentsArgvNonInteractive(
     definitionsFromPackage(pkg),
     buildPlaceholderValue("variable"),
   );
+  const source = buildPackageSource(pkg, runtimeArgv);
+  const args = [...source.args, ...packageArgv];
 
   return {
+    target: source.target,
+    sourceType: source.sourceType,
     env: Object.keys(env).length > 0 ? env : undefined,
     headers: Object.keys(headers).length > 0 ? headers : undefined,
-    args: argv.length > 0 ? argv : undefined,
+    args: args.length > 0 ? args : undefined,
   };
 }
 
 async function resolveInteractivePackage(
   pkg: RegistryPackageDefinition,
 ): Promise<{
+  target: string;
+  sourceType?: SourceType;
   env?: Record<string, string>;
   headers?: Record<string, string>;
   args?: string[];
@@ -587,20 +633,30 @@ async function resolveInteractivePackage(
   );
   if (headerResult.cancelled) return null;
 
-  const argvResult = await buildPackageArgumentsArgvInteractive(
+  const runtimeArgvResult = await buildPackageArgumentsArgvInteractive(
+    pkg.registryType === "pypi" ? (pkg.runtimeArguments ?? []) : [],
+    promptPackageArg,
+  );
+  if (runtimeArgvResult.cancelled) return null;
+
+  const packageArgvResult = await buildPackageArgumentsArgvInteractive(
     definitionsFromPackage(pkg),
     promptPackageArg,
   );
-  if (argvResult.cancelled) return null;
+  if (packageArgvResult.cancelled) return null;
+  const source = buildPackageSource(pkg, runtimeArgvResult.argv);
+  const args = [...source.args, ...packageArgvResult.argv];
 
   return {
+    target: source.target,
+    sourceType: source.sourceType,
     env:
       Object.keys(envResult.values).length > 0 ? envResult.values : undefined,
     headers:
       Object.keys(headerResult.values).length > 0
         ? headerResult.values
         : undefined,
-    args: argvResult.argv.length > 0 ? argvResult.argv : undefined,
+    args: args.length > 0 ? args : undefined,
   };
 }
 
@@ -648,7 +704,8 @@ export async function buildInstallPlanForEntry(
     if (!resolved) return null;
 
     return {
-      target: formatPackageTarget(pkg),
+      target: resolved.target,
+      sourceType: resolved.sourceType,
       serverName: resolveServerName(entry),
       env: resolved.env,
       headers: resolved.headers,

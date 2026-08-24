@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.4.0] - 2026-08-24
+
+- make `find` / `search` discover and install PyPI registry packages through `uvx`, preserving runtime argument boundaries (including values with spaces) before the version-pinned package and package arguments after it; npm remains preferred when both package formats are available.
+- keep direct CLI installation summaries meaningful when no registry source type is present, instead of displaying `Type: undefined`.
+
 ## [2.3.0] - 2026-08-23
 
 - add `--bearer-token-env <name>` for remote servers. fx writes it as `bearer_token_env`. Other agents drop it with a warning. When the same run also passes `--header Authorization`, fx omits that header, warns, and keeps `bearer_token_env`; other agents keep the header. Authorization without `--bearer-token-env` still fails on fx. Empty, whitespace, and non-identifier names fail in the CLI and the SDK.
