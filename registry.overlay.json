@@ -271,5 +271,30 @@
         }
       ]
     }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "io.github.Get-Concord-AI/concord-mcp",
+      "title": "Concord MCP",
+      "description": "Cross-harness communication and shared work-state for AI coding agents.",
+      "repository": {
+        "url": "https://github.com/Get-Concord-AI/concord-mcp",
+        "source": "github",
+        "id": "1300719974"
+      },
+      "version": "0.10.1",
+      "websiteUrl": "https://getconcord.ai",
+      "packages": [
+        {
+          "registryType": "npm",
+          "identifier": "@concord-ai/concord-mcp",
+          "version": "0.10.1",
+          "transport": {
+            "type": "stdio"
+          }
+        }
+      ]
+    }
   }
 ]
