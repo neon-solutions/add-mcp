@@ -2401,6 +2401,28 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "io.github.helena-bioinformatics/ask-helena",
+      "title": "Ask Helena",
+      "description": "Official answers about Helena Bioinformatics and its products, with citations to public sources.",
+      "version": "1.0.4",
+      "websiteUrl": "https://www.helena.bio/ask",
+      "icons": [
+        {
+          "src": "https://www.helena.bio/images/logos/helena-favicon-48.png",
+          "mimeType": "image/png"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://api.helena.bio/ask/v1/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.colossyan/mcp",
       "title": "Assessment Generator",
       "description": "Colossyan is an AI video creation platform for turning documents, slides, and prompts into avatar-led training and enablement videos. It also offers voices, translation, custom avatars, and interactive video features.",
