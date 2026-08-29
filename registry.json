@@ -18302,6 +18302,28 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "io.github.helena-bioinformatics/noodle",
+      "title": "Noodle Biomedical Literature Discovery MCP",
+      "description": "Search biomedical papers, inspect publication records, and traverse citation or semantic graphs.",
+      "version": "0.2.0",
+      "websiteUrl": "https://noodle.helena.bio",
+      "icons": [
+        {
+          "src": "https://noodle.helena.bio/favicon.svg",
+          "mimeType": "image/svg+xml"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://api.helena.bio/noodle/v1/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "live.alpic/noodle-seed-mcp-server",
       "title": "Noodle Seed",
       "description": "Alpic is a cloud platform for building, deploying, hosting, and distributing MCP servers and ChatGPT apps. It also provides analytics, monitoring, testing, and related developer tooling for those AI-native applications.",
