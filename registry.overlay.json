@@ -292,22 +292,14 @@
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.cosmicjs/cosmic-hosted-mcp-agent-scope",
-      "title": "Cosmic",
-      "description": "Cosmic hosted MCP server for agent-scoped access to CMS buckets and content.",
+      "title": "Cosmic Agent",
+      "description": "Cosmic MCP for agent signup at /v1/agent (cosmic_agent_signup, verify, status).",
       "version": "1.0.0",
       "websiteUrl": "https://www.cosmicjs.com/docs/agent-skills",
       "remotes": [
         {
           "type": "streamable-http",
-          "url": "https://mcp.cosmicjs.com/v1/agent",
-          "headers": [
-            {
-              "name": "Authorization",
-              "description": "Agent key. Use Bearer <token>.",
-              "isRequired": true,
-              "isSecret": true
-            }
-          ]
+          "url": "https://mcp.cosmicjs.com/v1/agent"
         }
       ]
     }
@@ -337,21 +329,13 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "io.signoz/mcp",
       "title": "SigNoz",
-      "description": "SigNoz Cloud MCP server for metrics, traces, and logs.",
+      "description": "SigNoz Cloud US MCP server for metrics, traces, and logs. Sign in with OAuth in the agent after install.",
       "version": "1.0.0",
       "websiteUrl": "https://signoz.io/docs/ai/signoz-mcp-server/",
       "remotes": [
         {
           "type": "streamable-http",
-          "url": "https://mcp.us.signoz.cloud/mcp",
-          "headers": [
-            {
-              "name": "Authorization",
-              "description": "SigNoz API key. Use Bearer <token> or SIGNOZ-API-KEY.",
-              "isRequired": true,
-              "isSecret": true
-            }
-          ]
+          "url": "https://mcp.us.signoz.cloud/mcp"
         }
       ]
     }
@@ -361,21 +345,12 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.zillow/mcp",
       "title": "Zillow",
-      "description": "Zillow MCP server for real-estate listing search.",
+      "description": "Zillow MCP server for real-estate listing search. Sign in with OAuth in the agent after install.",
       "version": "1.0.0",
-      "websiteUrl": "https://mcp.zillow.com/mcp",
       "remotes": [
         {
           "type": "streamable-http",
-          "url": "https://mcp.zillow.com/mcp",
-          "headers": [
-            {
-              "name": "Authorization",
-              "description": "Bearer token.",
-              "isRequired": true,
-              "isSecret": true
-            }
-          ]
+          "url": "https://mcp.zillow.com/mcp"
         }
       ]
     }
