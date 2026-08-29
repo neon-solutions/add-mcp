@@ -317,7 +317,7 @@ The first time you run `find` or `search`, the CLI automatically saves the add-m
 
 ### Missing A Server in integrations.sh?
 
-The default add-mcp registry is generated from [integrations.sh](https://integrations.sh). To be listed in add-mcp, add your MCP server to integrations.sh. Package-only entries that integrations.sh cannot represent yet can still be contributed to add-mcp's `registry.overlay.json`.
+The default add-mcp registry is generated from [integrations.sh](https://integrations.sh). To be listed in add-mcp, add your MCP server to integrations.sh. Package-only servers, and remotes integrations.sh dropped that still speak MCP, go in `registry.overlay.json`.
 
 Maintainers can refresh the checked-in registry snapshot with:
 
