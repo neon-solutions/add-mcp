@@ -18305,7 +18305,7 @@
       "name": "io.github.helena-bioinformatics/noodle",
       "title": "Noodle Biomedical Literature Discovery MCP",
       "description": "Search biomedical papers, inspect publication records, and traverse citation or semantic graphs.",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "websiteUrl": "https://noodle.helena.bio",
       "icons": [
         {
