@@ -24,6 +24,7 @@ MCP servers can be installed to any of these agents. Project paths are relative 
 | Kiro CLI               | `kiro-cli`           | `.kiro/settings/mcp.json`                                                     | `~/.kiro/settings/mcp.json` (shared with the Kiro IDE)                                                          |
 | MCPorter               | `mcporter`           | `config/mcporter.json`                                                        | `~/.mcporter/mcporter.json` (or existing `~/.mcporter/mcporter.jsonc`)                                          |
 | OpenCode               | `opencode`           | `opencode.jsonc` (or existing `opencode.json` / `.opencode/` config)          | `~/.config/opencode/opencode.jsonc` (or existing `opencode.json`)                                               |
+| Pi                     | `pi`                 | `.pi/mcp.json`                                                                | `$PI_CODING_AGENT_DIR/mcp.json` (defaults to `~/.pi/agent/mcp.json`)                                            |
 | VS Code                | `vscode`             | `.vscode/mcp.json`                                                            | `~/Library/Application Support/Code/User/mcp.json`                                                              |
 | Windsurf               | `windsurf`           | —                                                                             | `~/.codeium/windsurf/mcp_config.json`                                                                           |
 | Zed                    | `zed`                | `.zed/settings.json`                                                          | `~/Library/Application Support/Zed/settings.json`                                                               |
@@ -40,6 +41,10 @@ MCP servers can be installed to any of these agents. Project paths are relative 
 | `kilo`, `kilocode`   | `kilo-code`  |
 | `kimi`               | `kimi-code`  |
 | `kiro`               | `kiro-cli`   |
+
+## Pi
+
+Pi support targets the [`pi-mcp-adapter`](https://github.com/nicobailon/pi-mcp-adapter) extension's Pi-owned config files. Install it with `pi install npm:pi-mcp-adapter` before using MCP servers in Pi.
 
 ## Troubleshooting
 

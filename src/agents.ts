@@ -17,6 +17,11 @@ function getKimiCodeHome(): string {
   return process.env.KIMI_CODE_HOME || join(home, ".kimi-code");
 }
 
+/** Resolve Pi's global agent directory, honoring its documented override. */
+function getPiAgentDir(): string {
+  return process.env.PI_CODING_AGENT_DIR || join(home, ".pi", "agent");
+}
+
 /**
  * Kilo Code resolves its global config through xdg-basedir on every platform,
  * so Windows uses `~/.config/kilo` rather than `%APPDATA%`.
@@ -438,6 +443,27 @@ function hasAuthorizationHeader(headers: Record<string, string>): boolean {
   return Object.keys(headers).some(
     (name) => name.toLowerCase() === "authorization",
   );
+}
+
+/**
+ * Pi uses the pi-mcp-adapter extension, whose standard server shape omits a
+ * transport discriminator and names its per-request timeout requestTimeoutMs.
+ */
+function transformPiConfig(
+  _serverName: string,
+  config: McpServerConfig,
+): unknown {
+  const entry = config.url
+    ? buildStandardRemote(config)
+    : buildStandardLocal(config);
+
+  delete entry.type;
+  if (typeof config.timeout === "number") {
+    delete entry.timeout;
+    entry.requestTimeoutMs = config.timeout;
+  }
+
+  return entry;
 }
 
 /**
@@ -988,6 +1014,23 @@ export const agents: Record<AgentType, AgentConfig> = {
     },
     resolveConfigPath: resolveOpenCodeConfigPath,
     transformConfig: transformOpenCodeConfig,
+  },
+
+  pi: {
+    name: "pi",
+    displayName: "Pi",
+    configPath: join(getPiAgentDir(), "mcp.json"),
+    localConfigPath: ".pi/mcp.json",
+    projectDetectPaths: [".pi"],
+    configKey: "mcpServers",
+    format: "json",
+    supportedTransports: ["stdio", "http", "sse"],
+    supportedFields: ["timeout"],
+    /** Detect Pi from its global agent directory. */
+    detectGlobalInstall: async () => {
+      return existsSync(getPiAgentDir());
+    },
+    transformConfig: transformPiConfig,
   },
 
   vscode: {

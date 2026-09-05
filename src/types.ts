@@ -18,6 +18,7 @@ export type AgentType =
   | "kiro-cli"
   | "mcporter"
   | "opencode"
+  | "pi"
   | "vscode"
   | "windsurf"
   | "zed";

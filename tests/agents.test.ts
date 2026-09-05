@@ -60,9 +60,9 @@ function cleanup() {
 // Agent Configuration Tests
 // ============================================
 
-test("getAgentTypes returns all 20 agents", () => {
+test("getAgentTypes returns all 21 agents", () => {
   const types = getAgentTypes();
-  assert.strictEqual(types.length, 20);
+  assert.strictEqual(types.length, 21);
   assert.ok(types.includes("antigravity"));
   assert.ok(types.includes("cline"));
   assert.ok(types.includes("cline-cli"));
@@ -80,6 +80,7 @@ test("getAgentTypes returns all 20 agents", () => {
   assert.ok(types.includes("kiro-cli"));
   assert.ok(types.includes("mcporter"));
   assert.ok(types.includes("opencode"));
+  assert.ok(types.includes("pi"));
   assert.ok(types.includes("vscode"));
   assert.ok(types.includes("windsurf"));
   assert.ok(types.includes("zed"));
@@ -142,6 +143,7 @@ test("supportedFields reflects per-client capabilities", () => {
   assert.deepStrictEqual(agents["kilo-code"].supportedFields, ["timeout"]);
   assert.deepStrictEqual(agents["kimi-code"].supportedFields, ["timeout"]);
   assert.deepStrictEqual(agents["kiro-cli"].supportedFields, ["timeout"]);
+  assert.deepStrictEqual(agents.pi.supportedFields, ["timeout"]);
   // Clients with no extra field support declare an empty list.
   assert.deepStrictEqual(agents.vscode.supportedFields, []);
   assert.deepStrictEqual(agents["claude-desktop"].supportedFields, []);
@@ -164,6 +166,7 @@ test("supportsProjectConfig - returns true for project-capable agents", () => {
   assert.strictEqual(supportsProjectConfig("kimi-code"), true);
   assert.strictEqual(supportsProjectConfig("kiro-cli"), true);
   assert.strictEqual(supportsProjectConfig("mcporter"), true);
+  assert.strictEqual(supportsProjectConfig("pi"), true);
   assert.strictEqual(supportsProjectConfig("codex"), true);
   assert.strictEqual(supportsProjectConfig("zed"), true);
 });
@@ -178,9 +181,9 @@ test("supportsProjectConfig - returns false for global-only agents", () => {
   assert.strictEqual(supportsProjectConfig("fx"), false);
 });
 
-test("getProjectCapableAgents returns 13 agents", () => {
+test("getProjectCapableAgents returns 14 agents", () => {
   const projectAgents = getProjectCapableAgents();
-  assert.strictEqual(projectAgents.length, 13);
+  assert.strictEqual(projectAgents.length, 14);
   assert.ok(projectAgents.includes("claude-code"));
   assert.ok(projectAgents.includes("cursor"));
   assert.ok(projectAgents.includes("vscode"));
@@ -192,6 +195,7 @@ test("getProjectCapableAgents returns 13 agents", () => {
   assert.ok(projectAgents.includes("kimi-code"));
   assert.ok(projectAgents.includes("kiro-cli"));
   assert.ok(projectAgents.includes("mcporter"));
+  assert.ok(projectAgents.includes("pi"));
   assert.ok(projectAgents.includes("codex"));
   assert.ok(projectAgents.includes("zed"));
 });
@@ -419,6 +423,14 @@ test("detectProjectAgents - detects .zed directory", () => {
   assert.ok(detected.includes("zed"));
 });
 
+test("detectProjectAgents - detects .pi directory", () => {
+  const tempDir = createTempDir();
+  mkdirSync(join(tempDir, ".pi"));
+
+  const detected = detectProjectAgents(tempDir);
+  assert.ok(detected.includes("pi"));
+});
+
 test("detectProjectAgents - detects config/mcporter.json", () => {
   const tempDir = createTempDir();
   mkdirSync(join(tempDir, "config"), { recursive: true });
@@ -491,6 +503,7 @@ test("isTransportSupported - most agents support http", () => {
     "kiro-cli",
     "mcporter",
     "opencode",
+    "pi",
     "vscode",
     "windsurf",
     "zed",
@@ -523,6 +536,7 @@ test("isTransportSupported - most agents support sse", () => {
     "kiro-cli",
     "mcporter",
     "opencode",
+    "pi",
     "vscode",
     "windsurf",
     "zed",
