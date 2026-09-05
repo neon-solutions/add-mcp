@@ -4,6 +4,7 @@ import { dirname, join } from "path";
 import { existsSync } from "fs";
 import type { AgentConfig, AgentType, McpServerConfig } from "./types.js";
 import { getLastSelectedAgents, saveSelectedAgents } from "./config.js";
+import { resolvedBearerTokenEnv } from "./schema.js";
 
 const home = homedir();
 const defaultGrokHome = join(home, ".grok");
@@ -426,6 +427,24 @@ function transformKiroCliConfig(
   return remoteConfig;
 }
 
+function headersWithoutAuthorization(
+  headers: Record<string, string>,
+): Record<string, string> {
+  const next: Record<string, string> = {};
+  for (const [name, value] of Object.entries(headers)) {
+    if (name.toLowerCase() !== "authorization") {
+      next[name] = value;
+    }
+  }
+  return next;
+}
+
+function hasAuthorizationHeader(headers: Record<string, string>): boolean {
+  return Object.keys(headers).some(
+    (name) => name.toLowerCase() === "authorization",
+  );
+}
+
 /**
  * Pi uses the pi-mcp-adapter extension, whose standard server shape omits a
  * transport discriminator and names its per-request timeout requestTimeoutMs.
@@ -456,14 +475,16 @@ function transformFxConfig(
   config: McpServerConfig,
 ): unknown {
   if (config.url) {
-    if (
-      config.headers &&
-      Object.keys(config.headers).some(
-        (name) => name.toLowerCase() === "authorization",
-      )
-    ) {
+    const bearerTokenEnv = resolvedBearerTokenEnv(config);
+    const headers = config.headers
+      ? bearerTokenEnv
+        ? headersWithoutAuthorization(config.headers)
+        : config.headers
+      : undefined;
+
+    if (headers && hasAuthorizationHeader(headers)) {
       throw new Error(
-        "fx rejects a literal Authorization header. Use a non-Authorization header, or set bearer_token_env, header_env, or oauth in ~/.fx/mcp.json.",
+        "fx rejects a literal Authorization header. Pass --bearer-token-env <name>, use a non-Authorization header, or set header_env or oauth in ~/.fx/mcp.json.",
       );
     }
 
@@ -472,8 +493,11 @@ function transformFxConfig(
       url: config.url,
       enabled: true,
     };
-    if (config.headers && Object.keys(config.headers).length > 0) {
-      entry.headers = config.headers;
+    if (headers && Object.keys(headers).length > 0) {
+      entry.headers = headers;
+    }
+    if (bearerTokenEnv) {
+      entry.bearer_token_env = bearerTokenEnv;
     }
     return entry;
   }
@@ -833,7 +857,7 @@ export const agents: Record<AgentType, AgentConfig> = {
     configKey: "mcp",
     format: "json",
     supportedTransports: ["stdio", "http", "sse"],
-    supportedFields: [],
+    supportedFields: ["bearerTokenEnv"],
     detectGlobalInstall: async () => {
       return existsSync(join(home, ".fx"));
     },

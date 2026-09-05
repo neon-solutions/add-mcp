@@ -10,7 +10,11 @@ import type { McpServerConfig } from "./types.js";
  * before its transform runs, guaranteeing that only known fields are ever
  * written to a client config.
  */
-export type OptionalField = "timeout" | "scopes" | "autoApprove";
+export type OptionalField =
+  | "timeout"
+  | "scopes"
+  | "autoApprove"
+  | "bearerTokenEnv";
 
 interface OptionalFieldSpec {
   /** Human-friendly label used in user-facing "dropped" warnings. */
@@ -46,7 +50,38 @@ const OPTIONAL_FIELD_SPECS: Record<OptionalField, OptionalFieldSpec> = {
       delete config.autoApproveTools;
     },
   },
+  bearerTokenEnv: {
+    label: "bearer token env var",
+    isSet: (config) => resolvedBearerTokenEnv(config) !== undefined,
+    clear: (config) => {
+      delete config.bearerTokenEnv;
+    },
+  },
 };
+
+const BEARER_TOKEN_ENV_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
+
+export function isBearerTokenEnvName(name: string): boolean {
+  return BEARER_TOKEN_ENV_NAME.test(name);
+}
+
+export function resolvedBearerTokenEnv(
+  config: McpServerConfig,
+): string | undefined {
+  if (typeof config.bearerTokenEnv !== "string") {
+    return undefined;
+  }
+  const name = config.bearerTokenEnv.trim();
+  return isBearerTokenEnvName(name) ? name : undefined;
+}
+
+export function invalidBearerTokenEnvMessage(value: string): string {
+  const name = value.trim();
+  if (name.length === 0) {
+    return "Invalid bearerTokenEnv. The name cannot be empty.";
+  }
+  return `Invalid bearerTokenEnv. "${name}" is not an environment variable name ([A-Za-z_][A-Za-z0-9_]*).`;
+}
 
 const ALL_OPTIONAL_FIELDS = Object.keys(
   OPTIONAL_FIELD_SPECS,
@@ -82,6 +117,15 @@ export function applyFieldSupport(
   // caller's nested objects/arrays.
   if (copy.oauthScopes) copy.oauthScopes = [...copy.oauthScopes];
   if (copy.autoApproveTools) copy.autoApproveTools = [...copy.autoApproveTools];
+
+  if (typeof copy.bearerTokenEnv === "string") {
+    const name = resolvedBearerTokenEnv(copy);
+    if (name) {
+      copy.bearerTokenEnv = name;
+    } else {
+      delete copy.bearerTokenEnv;
+    }
+  }
 
   const dropped: OptionalField[] = [];
   for (const field of ALL_OPTIONAL_FIELDS) {

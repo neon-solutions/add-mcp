@@ -271,5 +271,88 @@
         }
       ]
     }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.algolia/algolia-productivity-mcp",
+      "title": "Algolia Productivity",
+      "description": "Algolia Productivity MCP for searching and analyzing Algolia applications and indices.",
+      "version": "1.0.0",
+      "websiteUrl": "https://www.algolia.com/doc/guides/model-context-protocol/productivity-mcp",
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.algolia.com/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.cosmicjs/cosmic-hosted-mcp-agent-scope",
+      "title": "Cosmic Agent",
+      "description": "Cosmic MCP for agent signup at /v1/agent (cosmic_agent_signup, verify, status).",
+      "version": "1.0.0",
+      "websiteUrl": "https://www.cosmicjs.com/docs/agent-skills",
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.cosmicjs.com/v1/agent"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "org.mozilla/mcp",
+      "title": "MDN",
+      "description": "Official MDN Web Docs MCP server for documentation search and browser compatibility data.",
+      "repository": {
+        "url": "https://github.com/mdn/mcp",
+        "source": "github"
+      },
+      "version": "0.0.1",
+      "websiteUrl": "https://developer.mozilla.org/en-US/mcp",
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.mdn.mozilla.net/"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "io.signoz/mcp",
+      "title": "SigNoz",
+      "description": "SigNoz Cloud US MCP server for metrics, traces, and logs. Sign in with OAuth in the agent after install.",
+      "version": "1.0.0",
+      "websiteUrl": "https://signoz.io/docs/ai/signoz-mcp-server/",
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.us.signoz.cloud/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.zillow/mcp",
+      "title": "Zillow",
+      "description": "Zillow MCP server for real-estate listing search. Sign in with OAuth in the agent after install.",
+      "version": "1.0.0",
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.zillow.com/mcp"
+        }
+      ]
+    }
   }
 ]

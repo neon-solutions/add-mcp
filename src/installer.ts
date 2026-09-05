@@ -17,7 +17,12 @@ import type {
 import { agents } from "./agents.js";
 import { writeConfig, buildConfigWithKey } from "./formats/index.js";
 import { looksLikePath } from "./source-parser.js";
-import { applyFieldSupport, type OptionalField } from "./schema.js";
+import {
+  applyFieldSupport,
+  invalidBearerTokenEnvMessage,
+  isBearerTokenEnvName,
+  type OptionalField,
+} from "./schema.js";
 
 const home = homedir();
 
@@ -70,6 +75,7 @@ export interface BuildServerConfigOptions {
    * "all tools". Applies to remote and local servers alike.
    */
   autoApproveTools?: string[];
+  bearerTokenEnv?: string;
 }
 
 export interface UpdateGitignoreOptions {
@@ -106,6 +112,13 @@ export function buildServerConfig(
 
     if (options.autoApproveTools) {
       config.autoApproveTools = options.autoApproveTools;
+    }
+
+    if (typeof options.bearerTokenEnv === "string") {
+      const name = options.bearerTokenEnv.trim();
+      if (name.length > 0) {
+        config.bearerTokenEnv = name;
+      }
     }
 
     return config;
@@ -362,6 +375,17 @@ export function installServerForAgent(
   const configPath = getConfigPath(agent, options);
 
   try {
+    if (typeof serverConfig.bearerTokenEnv === "string") {
+      const name = serverConfig.bearerTokenEnv.trim();
+      if (!isBearerTokenEnvName(name)) {
+        return {
+          success: false,
+          path: configPath,
+          error: invalidBearerTokenEnvMessage(serverConfig.bearerTokenEnv),
+        };
+      }
+    }
+
     // Strip optional fields the agent can't represent, then transform the
     // gated config into the agent's native schema. Because every transform
     // builds a fresh object with only known keys, unsupported fields can never

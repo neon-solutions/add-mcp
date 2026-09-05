@@ -558,6 +558,179 @@ test("E2E CLI: fx remote install writes ~/.fx/mcp.json without -g", () => {
   });
 });
 
+test("E2E CLI: fx writes bearer_token_env", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "fx",
+      "-y",
+      "--name",
+      "example",
+      "--bearer-token-env",
+      "NEON_API_KEY",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const saved = JSON.parse(
+    readFileSync(join(homeDir, ".fx", "mcp.json"), "utf-8"),
+  ) as { mcp: Record<string, Record<string, unknown>> };
+  const server = saved.mcp.example;
+  assert.ok(server);
+  assert.strictEqual(server.bearer_token_env, "NEON_API_KEY");
+  assert.strictEqual("headers" in server, false);
+});
+
+test("E2E CLI: mixed fx then cursor keeps Authorization on Cursor and bearer_token_env on fx", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "fx",
+      "-a",
+      "cursor",
+      "-y",
+      "--name",
+      "example",
+      "--header",
+      "Authorization: Bearer token",
+      "--bearer-token-env",
+      "NEON_API_KEY",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /bearer token env var is not supported by Cursor/);
+  assert.match(
+    output,
+    /Authorization header dropped from the fx config; fx reads the token from NEON_API_KEY/,
+  );
+
+  const fxSaved = JSON.parse(
+    readFileSync(join(homeDir, ".fx", "mcp.json"), "utf-8"),
+  ) as { mcp: Record<string, Record<string, unknown>> };
+  const fxServer = fxSaved.mcp.example;
+  assert.ok(fxServer);
+  assert.strictEqual(fxServer.bearer_token_env, "NEON_API_KEY");
+  assert.strictEqual("headers" in fxServer, false);
+
+  const cursorSaved = JSON.parse(
+    readFileSync(join(homeDir, ".cursor", "mcp.json"), "utf-8"),
+  ) as { mcpServers: Record<string, Record<string, unknown>> };
+  const cursorServer = cursorSaved.mcpServers.example;
+  assert.ok(cursorServer);
+  assert.deepStrictEqual(cursorServer.headers, {
+    Authorization: "Bearer token",
+  });
+});
+
+test("E2E CLI: --bearer-token-env rejects a value in place of a name", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "fx",
+      "-y",
+      "--header",
+      "Authorization: Bearer token",
+      "--bearer-token-env",
+      "Bearer sk-live",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.notStrictEqual(result.status, 0);
+  assert.match(output, /not a valid name/);
+  assert.strictEqual(existsSync(join(homeDir, ".fx")), false);
+});
+
+test("E2E CLI: whitespace-only --bearer-token-env fails", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "fx",
+      "-y",
+      "--bearer-token-env",
+      "   ",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.notStrictEqual(result.status, 0);
+  assert.match(output, /Invalid --bearer-token-env/);
+  assert.strictEqual(existsSync(join(homeDir, ".fx")), false);
+});
+
+test("E2E CLI: --bearer-token-env is ignored for stdio installs", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "mcp-server-postgres",
+      "-a",
+      "fx",
+      "-y",
+      "--name",
+      "postgres",
+      "--bearer-token-env",
+      "NEON_API_KEY",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /--bearer-token-env is only used for remote URLs/);
+
+  const saved = JSON.parse(
+    readFileSync(join(homeDir, ".fx", "mcp.json"), "utf-8"),
+  ) as { mcp: Record<string, Record<string, unknown>> };
+  const server = saved.mcp.postgres;
+  assert.ok(server);
+  assert.strictEqual(server.type, "local");
+  assert.strictEqual("bearer_token_env" in server, false);
+});
+
 test("E2E CLI: fx rejects a literal Authorization header", () => {
   const projectDir = createTempDir();
   const homeDir = createTempDir();
@@ -579,7 +752,7 @@ test("E2E CLI: fx rejects a literal Authorization header", () => {
 
   const output = `${result.stdout}\n${result.stderr}`;
   assert.match(output, /literal Authorization header/);
-  assert.match(output, /bearer_token_env, header_env, or oauth/);
+  assert.match(output, /--bearer-token-env/);
   assert.strictEqual(existsSync(join(homeDir, ".fx")), false);
 });
 
