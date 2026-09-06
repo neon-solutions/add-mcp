@@ -33,6 +33,7 @@ import {
 } from "./find.js";
 import {
   buildServerConfig,
+  claudeCopilotGithubShadowError,
   getConfigKey,
   installServer,
   installServerForAgent,
@@ -1069,9 +1070,27 @@ async function runSyncCommand(options: Options): Promise<void> {
   const scope: "local" | "global" = options.global ? "global" : "local";
   let changeCount = 0;
 
+  const layoutError =
+    scope === "local" &&
+    detectedAgentTypes.has("github-copilot-cli") &&
+    detectedAgentTypes.has("claude-code")
+      ? claudeCopilotGithubShadowError(process.cwd())
+      : null;
+  if (layoutError) {
+    p.log.error(`GitHub Copilot CLI: ${layoutError}`);
+    p.log.error(`Claude Code: ${layoutError}`);
+  }
+
+  const skipShadowed = (agentType: AgentType): boolean =>
+    Boolean(layoutError) &&
+    (agentType === "github-copilot-cli" || agentType === "claude-code");
+
   // Write-first: install canonical names
   for (const rename of renames) {
     const { group, agentType } = rename;
+    if (skipShadowed(agentType)) {
+      continue;
+    }
     const result = installServerForAgent(
       group.canonicalName,
       buildServerConfigFromStored(group.canonicalConfig),
@@ -1089,6 +1108,9 @@ async function runSyncCommand(options: Options): Promise<void> {
 
   for (const addition of additions) {
     const { group, agentType } = addition;
+    if (skipShadowed(agentType)) {
+      continue;
+    }
     const result = installServerForAgent(
       group.canonicalName,
       buildServerConfigFromStored(group.canonicalConfig),
@@ -1110,6 +1132,9 @@ async function runSyncCommand(options: Options): Promise<void> {
     const agentConfig = agents[agentType];
     const entry = group.entries.find((e) => e.agentType === agentType);
     if (!entry) continue;
+    if (skipShadowed(agentType)) {
+      continue;
+    }
 
     try {
       // Re-read the key after writes. Sharing .mcp.json can fold a Copilot

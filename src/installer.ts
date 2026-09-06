@@ -368,6 +368,16 @@ export function getConfigKey(
   return agent.configKey;
 }
 
+export function claudeCopilotGithubShadowError(cwd: string): string | null {
+  if (existsSync(join(cwd, ".mcp.json"))) {
+    return null;
+  }
+  if (!existsSync(join(cwd, ".github", "mcp.json"))) {
+    return null;
+  }
+  return "Claude Code writes .mcp.json, which Copilot CLI prefers over the existing .github/mcp.json. Move those servers into .mcp.json or install the agents in separate runs after consolidating.";
+}
+
 function copilotClaudeGithubLayoutError(
   agentTypes: AgentType[],
   options: InstallServerOptions = {},
@@ -383,13 +393,7 @@ function copilotClaudeGithubLayoutError(
   ) {
     return null;
   }
-  if (existsSync(join(cwd, ".mcp.json"))) {
-    return null;
-  }
-  if (!existsSync(join(cwd, ".github", "mcp.json"))) {
-    return null;
-  }
-  return "Claude Code writes .mcp.json, which Copilot CLI prefers over the existing .github/mcp.json. Move those servers into .mcp.json or install the agents in separate runs after consolidating.";
+  return claudeCopilotGithubShadowError(cwd);
 }
 
 export function installServerForAgent(

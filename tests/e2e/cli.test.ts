@@ -1766,6 +1766,63 @@ test("sync: wrapping a Copilot bare map removes the old alias", () => {
   assert.strictEqual(servers.z, undefined);
 });
 
+test("sync: does not create .mcp.json that hides .github/mcp.json", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+
+  mkdirSync(join(projectDir, ".github"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".github", "mcp.json"),
+    JSON.stringify({
+      mcpServers: {
+        keep: {
+          type: "http",
+          url: "https://keep.example.invalid/mcp",
+          headers: { "X-Tenant": "copilot" },
+        },
+      },
+    }),
+  );
+  mkdirSync(join(projectDir, ".claude"), { recursive: true });
+  mkdirSync(join(projectDir, ".cursor"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".cursor", "mcp.json"),
+    JSON.stringify({
+      mcpServers: {
+        keep: {
+          type: "http",
+          url: "https://keep.example.invalid/mcp",
+          headers: { "X-Tenant": "cursor" },
+        },
+        added: { type: "http", url: "https://new.example.invalid/mcp" },
+      },
+    }),
+  );
+
+  const result = runCli(["sync", "-y"], projectDir, homeDir);
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  assert.strictEqual(existsSync(join(projectDir, ".mcp.json")), false);
+  const github = JSON.parse(
+    readFileSync(join(projectDir, ".github", "mcp.json"), "utf-8"),
+  );
+  assert.ok(github.mcpServers.keep);
+
+  const listed = runCli(
+    ["list", "-a", "github-copilot-cli"],
+    projectDir,
+    homeDir,
+  );
+  assert.strictEqual(listed.status, 0, `${listed.stdout}\n${listed.stderr}`);
+  const output = `${listed.stdout}\n${listed.stderr}`;
+  assert.match(output, /keep/);
+  assert.doesNotMatch(output, /added/);
+});
+
 test("sync: reconstructs required fields when syncing Cursor -> Claude Code", () => {
   const homeDir = createTempDir();
   const projectDir = createTempDir();
