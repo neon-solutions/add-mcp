@@ -1475,6 +1475,35 @@ test("list: comment-only .mcp.json does not abort listing VS Code servers", () =
   assert.match(output, /keep/);
 });
 
+test("list: a malformed Copilot .mcp.json does not abort listing VS Code servers", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+  writeFileSync(
+    join(projectDir, ".mcp.json"),
+    `{
+  "mcpServers": {
+    "keep": { "url": "https://copilot.example.com/mcp" },
+  }
+}
+`,
+  );
+  mkdirSync(join(projectDir, ".vscode"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".vscode", "mcp.json"),
+    JSON.stringify({
+      servers: { vscode: { url: "https://vscode.example.com/mcp" } },
+    }),
+  );
+
+  const result = runCli(["list"], projectDir, homeDir);
+  assert.notStrictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /VS Code/);
+  assert.match(output, /vscode/);
+  assert.match(output, /GitHub Copilot CLI/);
+  assert.match(output, /Invalid JSON/);
+});
+
 test("list: shows 'not detected' when -a targets absent agent", () => {
   const homeDir = createTempDir();
   const projectDir = createTempDir();
@@ -1800,11 +1829,10 @@ test("sync: does not create .mcp.json that hides .github/mcp.json", () => {
   );
 
   const result = runCli(["sync", "-y"], projectDir, homeDir);
-  if (result.status !== 0) {
-    throw new Error(
-      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
-    );
-  }
+  assert.notStrictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /Blocked/);
+  assert.match(output, /Merge the servers/);
 
   assert.strictEqual(existsSync(join(projectDir, ".mcp.json")), false);
   const github = JSON.parse(
@@ -1818,9 +1846,9 @@ test("sync: does not create .mcp.json that hides .github/mcp.json", () => {
     homeDir,
   );
   assert.strictEqual(listed.status, 0, `${listed.stdout}\n${listed.stderr}`);
-  const output = `${listed.stdout}\n${listed.stderr}`;
-  assert.match(output, /keep/);
-  assert.doesNotMatch(output, /added/);
+  const listedOutput = `${listed.stdout}\n${listed.stderr}`;
+  assert.match(listedOutput, /keep/);
+  assert.doesNotMatch(listedOutput, /added/);
 });
 
 test("sync: reconstructs required fields when syncing Cursor -> Claude Code", () => {
@@ -2418,6 +2446,68 @@ test("E2E CLI: github-copilot-cli project install writes .mcp.json, not .vscode/
   assert.strictEqual(server.type, "http");
   assert.strictEqual(server.url, "https://mcp.example.com/mcp");
   assert.ok(!("tools" in server));
+});
+
+test("E2E CLI: github-copilot-cli writes strict JSON into a comment-only .mcp.json", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+  writeFileSync(join(projectDir, ".mcp.json"), "// MCP configuration\n");
+
+  const result = runCli(
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "github-copilot-cli",
+      "-y",
+      "--name",
+      "ghc",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const text = readFileSync(join(projectDir, ".mcp.json"), "utf-8");
+  assert.doesNotMatch(text, /^\s*\/\//m);
+  const saved = JSON.parse(text);
+  assert.ok(saved.mcpServers.ghc);
+});
+
+test("E2E CLI: claude-code does not create .mcp.json that hides .github/mcp.json", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+  mkdirSync(join(projectDir, ".github"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".github", "mcp.json"),
+    JSON.stringify({
+      mcpServers: {
+        keep: { type: "http", url: "https://keep.example.com/mcp" },
+      },
+    }),
+  );
+
+  const result = runCli(
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "claude-code",
+      "-y",
+      "--name",
+      "added",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  assert.strictEqual(existsSync(join(projectDir, ".mcp.json")), false);
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /\.github\/mcp\.json/);
+  assert.match(output, /Merge the servers/);
 });
 
 test("E2E CLI: --timeout and --scopes map per agent and warn on drop", () => {

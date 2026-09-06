@@ -17,7 +17,7 @@ import {
 } from "./toml.js";
 import { ROOT_CONFIG_KEY } from "./utils.js";
 
-export { setNestedValue } from "./json.js";
+export { setNestedValue, rewriteJsoncAsJson } from "./json.js";
 export {
   deepMerge,
   dropReplacedServers,

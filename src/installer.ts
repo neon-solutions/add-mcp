@@ -15,7 +15,11 @@ import type {
   TransportType,
 } from "./types.js";
 import { agents, githubCopilotCliProjectConfigKey } from "./agents.js";
-import { writeConfig, buildConfigWithKey } from "./formats/index.js";
+import {
+  writeConfig,
+  buildConfigWithKey,
+  rewriteJsoncAsJson,
+} from "./formats/index.js";
 import { looksLikePath } from "./source-parser.js";
 import {
   applyFieldSupport,
@@ -368,6 +372,15 @@ export function getConfigKey(
   return agent.configKey;
 }
 
+export function rewriteCopilotCliConfig(
+  agentType: AgentType,
+  configPath: string,
+): void {
+  if (agentType === "github-copilot-cli") {
+    rewriteJsoncAsJson(configPath);
+  }
+}
+
 export function claudeCopilotGithubShadowError(cwd: string): string | null {
   if (existsSync(join(cwd, ".mcp.json"))) {
     return null;
@@ -375,7 +388,7 @@ export function claudeCopilotGithubShadowError(cwd: string): string | null {
   if (!existsSync(join(cwd, ".github", "mcp.json"))) {
     return null;
   }
-  return "Claude Code writes .mcp.json, which Copilot CLI prefers over the existing .github/mcp.json. Move those servers into .mcp.json or install the agents in separate runs after consolidating.";
+  return "No changes made for Claude Code or GitHub Copilot CLI. Merge the servers from `.github/mcp.json` into `.mcp.json` under `mcpServers`, resolve duplicate names, then rerun this command.";
 }
 
 function copilotClaudeGithubLayoutError(
@@ -432,6 +445,19 @@ export function installServerForAgent(
       local: Boolean(options.local),
     });
 
+    if (options.local && agentType === "claude-code") {
+      const layoutError = claudeCopilotGithubShadowError(
+        options.cwd || process.cwd(),
+      );
+      if (layoutError) {
+        return {
+          success: false,
+          path: configPath,
+          error: layoutError,
+        };
+      }
+    }
+
     const dir = dirname(configPath);
     if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true });
@@ -441,6 +467,7 @@ export function installServerForAgent(
     const config = buildConfigWithKey(configKey, serverName, transformedConfig);
 
     writeConfig(configPath, config, agent.format, configKey);
+    rewriteCopilotCliConfig(agentType, configPath);
 
     // Match fx's private profile permissions because --env may contain secrets.
     if (agentType === "fx") {

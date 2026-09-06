@@ -103,6 +103,18 @@ export function writeJsonConfig(
   writeFileSync(filePath, JSON.stringify(mergedConfig, null, 2));
 }
 
+/** Copilot CLI rejects JSONC. Rewrite the file as strict JSON after a Copilot write. */
+export function rewriteJsoncAsJson(filePath: string): void {
+  if (!existsSync(filePath)) {
+    return;
+  }
+  const parsed: unknown = jsonc.parse(readFileSync(filePath, "utf-8"));
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    return;
+  }
+  writeFileSync(filePath, `${JSON.stringify(parsed, null, 2)}\n`);
+}
+
 export function removeJsonConfigKey(
   filePath: string,
   configKey: string,

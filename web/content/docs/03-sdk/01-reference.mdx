@@ -65,7 +65,7 @@ function listInstalledServers(options: {
 }): Promise<AgentServers[]>;
 ```
 
-When `agents` is provided, those agents are included even if not detected (with `detected: false`).
+When `agents` is provided, those agents are included even if not detected (with `detected: false`). A detected agent whose config cannot be read is still returned, with `servers: []` and `error` set to the failure message.
 
 ## detectProjectAgents
 
@@ -186,6 +186,8 @@ interface AgentServers {
   scope: "local" | "global";
   configPath: string;
   servers: InstalledServer[];
+  /** Set when this agent's config could not be read */
+  error?: string;
 }
 
 interface InstalledServer {
@@ -196,7 +198,7 @@ interface InstalledServer {
   agentType: AgentType;
   scope: "local" | "global";
   configPath: string;
-  /** Key in the config file this server was read from */
+  /** Key in the config file this server was read from. `""` means the file root (a Copilot CLI bare name map). */
   configKey: string;
 }
 ```

@@ -28,7 +28,6 @@ import {
   type McpServerConfig,
 } from "../src/lib.js";
 import { invalidBearerTokenEnvMessage } from "../src/schema.js";
-import * as jsonc from "jsonc-parser";
 
 const remote = (url: string): McpServerConfig => ({ type: "http", url });
 const pkg = (name: string): McpServerConfig => ({
@@ -611,9 +610,9 @@ await test("github-copilot-cli installs into a comment-only .mcp.json", () => {
     { local: true, cwd: dir },
   );
   assert.ok(installed.success, installed.error);
-  const written = jsonc.parse(
-    readFileSync(join(dir, ".mcp.json"), "utf-8"),
-  ) as Record<string, unknown>;
+  const text = readFileSync(join(dir, ".mcp.json"), "utf-8");
+  assert.doesNotMatch(text, /^\s*\/\//m);
+  const written = readJson(join(dir, ".mcp.json"));
   const ghc = (written.mcpServers as Record<string, Record<string, unknown>>)
     .ghc;
   assert.ok(ghc);
@@ -660,13 +659,12 @@ await test("listInstalledServers continues when .mcp.json is comment-only beside
   );
 });
 
-await test("listInstalledServers fails on bare-word .mcp.json", async () => {
+await test("listInstalledServers reports Invalid JSON on bare-word .mcp.json without throwing", async () => {
   const dir = createTempDir();
   writeFileSync(join(dir, ".mcp.json"), "not json");
-  await assert.rejects(
-    () => listInstalledServers({ cwd: dir }),
-    /Invalid JSON/,
-  );
+  const list = await listInstalledServers({ cwd: dir });
+  const copilot = list.find((a) => a.agentType === "github-copilot-cli");
+  assert.ok(copilot?.error?.includes("Invalid JSON"));
 });
 
 await test("claude-code install lifts a Copilot bare .mcp.json into mcpServers", () => {
@@ -695,6 +693,91 @@ await test("claude-code install lifts a Copilot bare .mcp.json into mcpServers",
   assert.ok(claude);
   assert.strictEqual(keep.url, "https://keep.example.com/mcp");
   assert.strictEqual(claude.url, "https://claude.example.com/mcp");
+});
+
+await test("github-copilot-cli strips comments from an existing project file", () => {
+  const dir = createTempDir();
+  writeFileSync(
+    join(dir, ".mcp.json"),
+    `{
+  // keep this comment
+  "mcpServers": {
+    "old": { "type": "http", "url": "https://old.example.com/mcp" }
+  }
+}
+`,
+  );
+
+  const installed = upsertServer(
+    "github-copilot-cli",
+    "ghc",
+    remote("https://mcp.example.com/api"),
+    { local: true, cwd: dir },
+  );
+  assert.ok(installed.success, installed.error);
+  const text = readFileSync(join(dir, ".mcp.json"), "utf-8");
+  assert.doesNotMatch(text, /^\s*\/\//m);
+  const written = readJson(join(dir, ".mcp.json"));
+  const servers = written.mcpServers as Record<string, Record<string, unknown>>;
+  assert.ok(servers.old);
+  assert.ok(servers.ghc);
+});
+
+await test("claude-code refuses to create .mcp.json that hides .github/mcp.json", () => {
+  const dir = createTempDir();
+  mkdirSync(join(dir, ".github"), { recursive: true });
+  writeFileSync(
+    join(dir, ".github", "mcp.json"),
+    JSON.stringify({
+      mcpServers: {
+        keep: { type: "http", url: "https://keep.example.com/mcp" },
+      },
+    }),
+  );
+
+  const installed = upsertServer(
+    "claude-code",
+    "claude",
+    remote("https://claude.example.com/mcp"),
+    { local: true, cwd: dir },
+  );
+  assert.strictEqual(installed.success, false);
+  assert.ok(installed.error?.includes(".github/mcp.json"));
+  assert.ok(installed.error?.includes("Merge the servers"));
+  assert.strictEqual(existsSync(join(dir, ".mcp.json")), false);
+});
+
+await test("listInstalledServers reports a Copilot read error without dropping VS Code", async () => {
+  const dir = createTempDir();
+  writeFileSync(
+    join(dir, ".mcp.json"),
+    `{
+  "mcpServers": {
+    "keep": { "url": "https://copilot.example.com/mcp" },
+  }
+}
+`,
+  );
+  mkdirSync(join(dir, ".vscode"), { recursive: true });
+  writeFileSync(
+    join(dir, ".vscode", "mcp.json"),
+    JSON.stringify({
+      servers: { vscode: { url: "https://vscode.example.com/mcp" } },
+    }),
+  );
+
+  const list = await listInstalledServers({ cwd: dir });
+  const vscode = list.find((a) => a.agentType === "vscode");
+  const copilot = list.find((a) => a.agentType === "github-copilot-cli");
+  assert.ok(vscode);
+  assert.deepStrictEqual(
+    vscode.servers.map((s) => s.serverName),
+    ["vscode"],
+  );
+  assert.ok(copilot);
+  assert.ok(copilot.error?.includes("Invalid JSON"));
+  assert.ok(copilot.error?.includes(join(dir, ".mcp.json")));
+  assert.deepStrictEqual(copilot.servers, []);
 });
 
 cleanup();

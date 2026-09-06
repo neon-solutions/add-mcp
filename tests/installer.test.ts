@@ -983,10 +983,34 @@ test("installServer - mixed claude-code and github-copilot-cli refuse to shadow 
   assert.strictEqual(results.get("claude-code")?.success, false);
   assert.strictEqual(results.get("github-copilot-cli")?.success, false);
   assert.ok(results.get("claude-code")?.error?.includes(".github/mcp.json"));
+  assert.ok(results.get("claude-code")?.error?.includes("Merge the servers"));
   assert.strictEqual(existsSync(join(tempDir, ".mcp.json")), false);
   assert.ok(
     (readJsonConfig(githubPath).mcpServers as Record<string, unknown>).keep,
   );
+});
+
+test("installServerForAgent - claude-code refuses to create .mcp.json that hides .github/mcp.json", () => {
+  const tempDir = createTempDir();
+  mkdirSync(join(tempDir, ".github"), { recursive: true });
+  writeFileSync(
+    join(tempDir, ".github", "mcp.json"),
+    JSON.stringify({
+      mcpServers: { keep: { type: "http", url: "https://keep.example.com" } },
+    }),
+  );
+
+  const parsed = parseSource("https://mcp.example.com/mcp");
+  const config = buildServerConfig(parsed);
+  const result = installServerForAgent("example", config, "claude-code", {
+    local: true,
+    cwd: tempDir,
+  });
+
+  assert.strictEqual(result.success, false);
+  assert.ok(result.error?.includes(".github/mcp.json"));
+  assert.ok(result.error?.includes("Merge the servers"));
+  assert.strictEqual(existsSync(join(tempDir, ".mcp.json")), false);
 });
 
 test("installServer - claude-code then github-copilot-cli share .mcp.json", () => {

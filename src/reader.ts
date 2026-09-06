@@ -25,6 +25,8 @@ export interface AgentServers {
   scope: "local" | "global";
   configPath: string;
   servers: InstalledServer[];
+  /** Present when this agent's config could not be read */
+  error?: string;
 }
 
 /**
@@ -144,6 +146,30 @@ export function readServersForAgent(
   };
 }
 
+function readServersForAgentSafe(
+  agentType: AgentType,
+  options: { scope: "local" | "global"; cwd?: string },
+): AgentServers {
+  try {
+    return readServersForAgent(agentType, options);
+  } catch (error) {
+    const agent = agents[agentType];
+    const installOptions: InstallOptions = {
+      local: options.scope === "local",
+      cwd: options.cwd,
+    };
+    return {
+      agentType,
+      displayName: agent.displayName,
+      detected: true,
+      scope: options.scope,
+      configPath: getConfigPath(agent, installOptions),
+      servers: [],
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
 /**
  * Gather installed servers across detected (or explicitly specified) agents.
  * When `agents` is provided, those agents are included even if not detected
@@ -169,7 +195,7 @@ export async function listInstalledServers(options: {
       const detected = detectedSet.has(agentType);
       if (detected) {
         results.push(
-          readServersForAgent(agentType, { scope, cwd: options.cwd }),
+          readServersForAgentSafe(agentType, { scope, cwd: options.cwd }),
         );
       } else {
         const agent = agents[agentType];
@@ -194,7 +220,9 @@ export async function listInstalledServers(options: {
       : detectProjectAgents(options.cwd);
 
     for (const agentType of detected) {
-      results.push(readServersForAgent(agentType, { scope, cwd: options.cwd }));
+      results.push(
+        readServersForAgentSafe(agentType, { scope, cwd: options.cwd }),
+      );
     }
   }
 
