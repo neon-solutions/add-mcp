@@ -1730,6 +1730,42 @@ test("sync: renames servers to canonical name across agents with -y", () => {
   );
 });
 
+test("sync: wrapping a Copilot bare map removes the old alias", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+
+  writeFileSync(
+    join(projectDir, ".mcp.json"),
+    JSON.stringify({
+      z: { url: "https://example.invalid/mcp" },
+    }),
+  );
+  mkdirSync(join(projectDir, ".cursor"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".cursor", "mcp.json"),
+    JSON.stringify({
+      mcpServers: {
+        a: { url: "https://example.invalid/mcp" },
+      },
+    }),
+  );
+
+  const result = runCli(["sync", "-y"], projectDir, homeDir);
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const written = JSON.parse(
+    readFileSync(join(projectDir, ".mcp.json"), "utf-8"),
+  ) as Record<string, unknown>;
+  assert.strictEqual(written.z, undefined);
+  const servers = written.mcpServers as Record<string, unknown>;
+  assert.ok(servers.a);
+  assert.strictEqual(servers.z, undefined);
+});
+
 test("sync: reconstructs required fields when syncing Cursor -> Claude Code", () => {
   const homeDir = createTempDir();
   const projectDir = createTempDir();

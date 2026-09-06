@@ -33,6 +33,7 @@ import {
 } from "./find.js";
 import {
   buildServerConfig,
+  getConfigKey,
   installServer,
   installServerForAgent,
   updateGitignoreWithPaths,
@@ -1111,10 +1112,12 @@ async function runSyncCommand(options: Options): Promise<void> {
     if (!entry) continue;
 
     try {
+      // Re-read the key after writes. Sharing .mcp.json can fold a Copilot
+      // bare map under mcpServers, so the listed key is stale.
       removeServerFromConfig(
         entry.configPath,
         agentConfig.format,
-        getConfigKeyForServer(entry),
+        getConfigKey(agentConfig, { local: scope === "local" }),
         oldName,
       );
     } catch (error) {
