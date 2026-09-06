@@ -762,10 +762,19 @@ async function runRemoveCommand(
     agents: explicitAgents.length > 0 ? explicitAgents : undefined,
   });
 
-  const matches = findMatchingServers(agentServersList, query);
+  const hadReadError = reportAgentReadErrors(agentServersList);
+  const matches = findMatchingServers(
+    agentServersList.filter((agentServers) => !agentServers.error),
+    query,
+  );
 
   if (matches.length === 0) {
-    p.log.info(`No matching servers found for '${query}'`);
+    if (!hadReadError) {
+      p.log.info(`No matching servers found for '${query}'`);
+    }
+    if (hadReadError) {
+      process.exitCode = 1;
+    }
     console.log();
     return;
   }
@@ -849,7 +858,22 @@ async function runRemoveCommand(
     }
   }
 
+  if (hadReadError) {
+    process.exitCode = 1;
+  }
+
   console.log();
+}
+
+function reportAgentReadErrors(agentServersList: AgentServers[]): boolean {
+  let hadError = false;
+  for (const agentServers of agentServersList) {
+    if (agentServers.error) {
+      p.log.error(`${agentServers.displayName}: ${agentServers.error}`);
+      hadError = true;
+    }
+  }
+  return hadError;
 }
 
 function getConfigKeyForServer(server: InstalledServer): string {
@@ -983,18 +1007,26 @@ async function runSyncCommand(options: Options): Promise<void> {
     global: options.global,
   });
 
-  const agentsWithServers = agentServersList.filter(
-    (a) => a.servers.length > 0,
-  );
+  const hadReadError = reportAgentReadErrors(agentServersList);
+  if (hadReadError) {
+    process.exitCode = 1;
+  }
 
-  if (agentServersList.length < 2) {
+  const readable = agentServersList.filter((a) => !a.error);
+
+  if (hadReadError && readable.length < 2) {
+    console.log();
+    return;
+  }
+
+  if (readable.length < 2) {
     p.log.info("Need at least 2 detected agents to sync");
     console.log();
     return;
   }
 
-  const groups = buildSyncGroups(agentServersList);
-  const detectedAgentTypes = new Set(agentServersList.map((a) => a.agentType));
+  const groups = buildSyncGroups(readable);
+  const detectedAgentTypes = new Set(readable.map((a) => a.agentType));
 
   // Determine what needs to change
   const renames: Array<{
@@ -1058,7 +1090,9 @@ async function runSyncCommand(options: Options): Promise<void> {
     blockedAdditions.length === 0 &&
     skipped.length === 0
   ) {
-    p.log.info("All servers are already in sync");
+    if (!hadReadError) {
+      p.log.info("All servers are already in sync");
+    }
     console.log();
     return;
   }
@@ -1113,7 +1147,7 @@ async function runSyncCommand(options: Options): Promise<void> {
     if (layoutError) {
       p.log.error(layoutError);
       process.exitCode = 1;
-    } else {
+    } else if (!hadReadError) {
       p.log.info(
         "All servers are already in sync (some skipped due to conflicts)",
       );

@@ -1504,6 +1504,35 @@ test("list: a malformed Copilot .mcp.json does not abort listing VS Code servers
   assert.match(output, /Invalid JSON/);
 });
 
+test("remove: unreadable Copilot config is an error, not a missing server", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+  mkdirSync(join(projectDir, ".github"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".github", "mcp.json"),
+    `{
+  "mcpServers": {
+    "keep": { "url": "https://keep.example.com/mcp" },
+  }
+}
+`,
+  );
+
+  const result = runCli(
+    ["remove", "keep", "-a", "github-copilot-cli", "-y"],
+    projectDir,
+    homeDir,
+  );
+  assert.notStrictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /Invalid JSON/);
+  assert.doesNotMatch(output, /No matching servers found/);
+  assert.match(
+    readFileSync(join(projectDir, ".github", "mcp.json"), "utf-8"),
+    /keep/,
+  );
+});
+
 test("list: shows 'not detected' when -a targets absent agent", () => {
   const homeDir = createTempDir();
   const projectDir = createTempDir();
@@ -1849,6 +1878,56 @@ test("sync: does not create .mcp.json that hides .github/mcp.json", () => {
   const listedOutput = `${listed.stdout}\n${listed.stderr}`;
   assert.match(listedOutput, /keep/);
   assert.doesNotMatch(listedOutput, /added/);
+});
+
+test("sync: unreadable Copilot config is not treated as empty", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+
+  mkdirSync(join(projectDir, ".github"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".github", "mcp.json"),
+    `{
+  "mcpServers": {
+    "keep": { "url": "https://keep.example.invalid/mcp" },
+  }
+}
+`,
+  );
+  mkdirSync(join(projectDir, ".cursor"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".cursor", "mcp.json"),
+    JSON.stringify({ mcpServers: {} }),
+  );
+
+  const empty = runCli(["sync", "-y"], projectDir, homeDir);
+  assert.notStrictEqual(empty.status, 0, `${empty.stdout}\n${empty.stderr}`);
+  const emptyOutput = `${empty.stdout}\n${empty.stderr}`;
+  assert.match(emptyOutput, /Invalid JSON/);
+  assert.doesNotMatch(emptyOutput, /already in sync/);
+
+  writeFileSync(
+    join(projectDir, ".cursor", "mcp.json"),
+    JSON.stringify({
+      mcpServers: {
+        added: { type: "http", url: "https://new.example.invalid/mcp" },
+      },
+    }),
+  );
+
+  const result = runCli(["sync", "-y"], projectDir, homeDir);
+  assert.notStrictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /Invalid JSON/);
+  assert.doesNotMatch(output, /Failed to add/);
+  assert.match(
+    readFileSync(join(projectDir, ".github", "mcp.json"), "utf-8"),
+    /keep/,
+  );
+  assert.doesNotMatch(
+    readFileSync(join(projectDir, ".github", "mcp.json"), "utf-8"),
+    /added/,
+  );
 });
 
 test("sync: reconstructs required fields when syncing Cursor -> Claude Code", () => {
