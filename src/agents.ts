@@ -605,8 +605,11 @@ function parseCopilotProjectFile(configPath: string): Record<string, unknown> {
     readFileSync(configPath, "utf-8"),
     errors,
   );
-  // Empty and comment-only files parse as undefined with ValueExpected.
-  if (parsed === undefined) {
+  // Empty and comment-only files parse as undefined with only ValueExpected.
+  if (
+    parsed === undefined &&
+    errors.every((error) => error.error === jsonc.ParseErrorCode.ValueExpected)
+  ) {
     return {};
   }
   if (errors.length > 0) {

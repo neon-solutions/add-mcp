@@ -550,6 +550,38 @@ await test("github-copilot-cli refuses malformed project JSON and leaves the fil
   assert.strictEqual(readFileSync(path, "utf-8"), "{ not json");
 });
 
+await test("github-copilot-cli refuses bare-word project JSON and leaves the file", () => {
+  const dir = createTempDir();
+  const path = join(dir, ".mcp.json");
+  writeFileSync(path, "not json");
+
+  const installed = upsertServer(
+    "github-copilot-cli",
+    "ghc",
+    remote("https://mcp.example.com/api"),
+    { local: true, cwd: dir },
+  );
+  assert.strictEqual(installed.success, false);
+  assert.ok(installed.error?.includes(path));
+  assert.strictEqual(readFileSync(path, "utf-8"), "not json");
+});
+
+await test("github-copilot-cli refuses an unterminated comment and leaves the file", () => {
+  const dir = createTempDir();
+  const path = join(dir, ".mcp.json");
+  writeFileSync(path, "/* unterminated");
+
+  const installed = upsertServer(
+    "github-copilot-cli",
+    "ghc",
+    remote("https://mcp.example.com/api"),
+    { local: true, cwd: dir },
+  );
+  assert.strictEqual(installed.success, false);
+  assert.ok(installed.error?.includes(path));
+  assert.strictEqual(readFileSync(path, "utf-8"), "/* unterminated");
+});
+
 await test("github-copilot-cli installs into an empty .mcp.json", () => {
   const dir = createTempDir();
   writeFileSync(join(dir, ".mcp.json"), "");
@@ -625,6 +657,15 @@ await test("listInstalledServers continues when .mcp.json is comment-only beside
   assert.deepStrictEqual(
     vscode.servers.map((s) => s.serverName),
     ["keep"],
+  );
+});
+
+await test("listInstalledServers fails on bare-word .mcp.json", async () => {
+  const dir = createTempDir();
+  writeFileSync(join(dir, ".mcp.json"), "not json");
+  await assert.rejects(
+    () => listInstalledServers({ cwd: dir }),
+    /Invalid JSON/,
   );
 });
 
