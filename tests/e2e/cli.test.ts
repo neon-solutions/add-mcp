@@ -2250,6 +2250,45 @@ test("E2E CLI: OpenCode global install reuses existing opencode.json", () => {
   assert.strictEqual(server.type, "local");
 });
 
+test("E2E CLI: github-copilot-cli project install writes .mcp.json, not .vscode/mcp.json", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "github-copilot-cli",
+      "-y",
+      "--name",
+      "ghc",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  assert.strictEqual(existsSync(join(projectDir, ".mcp.json")), true);
+  assert.strictEqual(
+    existsSync(join(projectDir, ".vscode", "mcp.json")),
+    false,
+  );
+
+  const saved = JSON.parse(
+    readFileSync(join(projectDir, ".mcp.json"), "utf-8"),
+  );
+  const server = saved.mcpServers.ghc as Record<string, unknown>;
+  assert.ok(server);
+  assert.strictEqual(server.type, "http");
+  assert.strictEqual(server.url, "https://mcp.example.com/mcp");
+  assert.ok(!("tools" in server));
+});
+
 test("E2E CLI: --timeout and --scopes map per agent and warn on drop", () => {
   const projectDir = createTempDir();
   const homeDir = createTempDir();

@@ -12,6 +12,7 @@ import {
   mkdirSync,
   rmSync,
   readFileSync,
+  writeFileSync,
   existsSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -273,8 +274,8 @@ await test("upsertServer trims padded bearerTokenEnv and does not leak it to an 
   assert.ok(result.success, result.error);
   assert.deepStrictEqual(result.droppedFields, ["bearerTokenEnv"]);
 
-  const written = readJson(join(dir, ".vscode", "mcp.json"));
-  const server = (written.servers as Record<string, Record<string, unknown>>)
+  const written = readJson(join(dir, ".mcp.json"));
+  const server = (written.mcpServers as Record<string, Record<string, unknown>>)
     .example;
   assert.ok(server);
   assert.strictEqual("bearerTokenEnv" in server, false);
@@ -298,7 +299,7 @@ await test("upsertServer rejects whitespace-only bearerTokenEnv and writes nothi
 
   assert.strictEqual(result.success, false);
   assert.strictEqual(result.error, invalidBearerTokenEnvMessage("   "));
-  assert.strictEqual(existsSync(join(dir, ".vscode", "mcp.json")), false);
+  assert.strictEqual(existsSync(join(dir, ".mcp.json")), false);
 });
 
 await test("upsertServer rejects a bearerTokenEnv that is not an env var name", () => {
@@ -320,10 +321,10 @@ await test("upsertServer rejects a bearerTokenEnv that is not an env var name", 
     result.error,
     invalidBearerTokenEnvMessage("Bearer sk-live"),
   );
-  assert.strictEqual(existsSync(join(dir, ".vscode", "mcp.json")), false);
+  assert.strictEqual(existsSync(join(dir, ".mcp.json")), false);
 });
 
-await test("upsertServer + removeServer honor github-copilot-cli local `servers` key", () => {
+await test("upsertServer + removeServer honor github-copilot-cli local mcpServers key", () => {
   const dir = createTempDir();
 
   const installed = upsertServer(
@@ -334,17 +335,22 @@ await test("upsertServer + removeServer honor github-copilot-cli local `servers`
   );
   assert.ok(installed.success, installed.error);
 
-  const written = readJson(join(dir, ".vscode", "mcp.json"));
-  // Local copilot config uses `servers`, not `mcpServers`.
+  const written = readJson(join(dir, ".mcp.json"));
   assert.ok(
-    written.servers && (written.servers as Record<string, unknown>).ghc,
-    "expected `servers.ghc` under local github-copilot-cli config",
+    written.mcpServers && (written.mcpServers as Record<string, unknown>).ghc,
+    "expected `mcpServers.ghc` under local github-copilot-cli config",
   );
   assert.strictEqual(
-    written.mcpServers,
+    written.servers,
     undefined,
-    "expected no `mcpServers` key under local copilot config",
+    "expected no `servers` key under local copilot config",
   );
+  const ghc = (written.mcpServers as Record<string, Record<string, unknown>>)
+    .ghc;
+  assert.ok(ghc);
+  assert.strictEqual(ghc.type, "http");
+  assert.strictEqual(ghc.url, "https://mcp.example.com/api");
+  assert.strictEqual("tools" in ghc, false);
 
   const removed = removeServer("github-copilot-cli", "ghc", {
     local: true,
@@ -353,9 +359,194 @@ await test("upsertServer + removeServer honor github-copilot-cli local `servers`
   assert.ok(removed.success);
   assert.strictEqual(removed.removed, true);
 
-  const after = readJson(join(dir, ".vscode", "mcp.json"));
-  const servers = (after.servers ?? {}) as Record<string, unknown>;
-  assert.ok(!servers.ghc, "ghc should be removed from local servers key");
+  const after = readJson(join(dir, ".mcp.json"));
+  const mcpServers = (after.mcpServers ?? {}) as Record<string, unknown>;
+  assert.ok(!mcpServers.ghc, "ghc should be removed from local mcpServers key");
+});
+
+await test("github-copilot-cli local reuses .github/mcp.json when .mcp.json is absent", () => {
+  const dir = createTempDir();
+  mkdirSync(join(dir, ".github"), { recursive: true });
+  writeFileSync(
+    join(dir, ".github", "mcp.json"),
+    JSON.stringify({
+      mcpServers: {
+        existing: { type: "http", url: "https://existing.example.com/mcp" },
+      },
+    }),
+  );
+
+  const installed = upsertServer(
+    "github-copilot-cli",
+    "ghc",
+    remote("https://mcp.example.com/api"),
+    { local: true, cwd: dir },
+  );
+  assert.ok(installed.success, installed.error);
+  assert.ok(installed.path.endsWith(join(".github", "mcp.json")));
+  assert.strictEqual(existsSync(join(dir, ".mcp.json")), false);
+
+  const written = readJson(join(dir, ".github", "mcp.json"));
+  const servers = written.mcpServers as Record<string, unknown>;
+  assert.ok(servers.existing);
+  assert.ok(servers.ghc);
+});
+
+await test("github-copilot-cli local prefers .mcp.json over .github/mcp.json", () => {
+  const dir = createTempDir();
+  mkdirSync(join(dir, ".github"), { recursive: true });
+  writeFileSync(join(dir, ".mcp.json"), JSON.stringify({ mcpServers: {} }));
+  writeFileSync(
+    join(dir, ".github", "mcp.json"),
+    JSON.stringify({
+      mcpServers: { hidden: { url: "https://hidden.example" } },
+    }),
+  );
+
+  const installed = upsertServer(
+    "github-copilot-cli",
+    "ghc",
+    remote("https://mcp.example.com/api"),
+    { local: true, cwd: dir },
+  );
+  assert.ok(installed.success, installed.error);
+  assert.ok(installed.path.endsWith(".mcp.json"));
+
+  const mcp = readJson(join(dir, ".mcp.json"));
+  assert.ok((mcp.mcpServers as Record<string, unknown>).ghc);
+  const github = readJson(join(dir, ".github", "mcp.json"));
+  assert.ok((github.mcpServers as Record<string, unknown>).hidden);
+  assert.strictEqual(
+    (github.mcpServers as Record<string, unknown>).ghc,
+    undefined,
+  );
+});
+
+await test("github-copilot-cli local does not write .vscode/mcp.json", () => {
+  const dir = createTempDir();
+  mkdirSync(join(dir, ".vscode"));
+  const vscodePath = join(dir, ".vscode", "mcp.json");
+  const original = '{"servers":{"keep":{"command":"npx"}}}\n';
+  writeFileSync(vscodePath, original);
+
+  const installed = upsertServer(
+    "github-copilot-cli",
+    "ghc",
+    remote("https://mcp.example.com/api"),
+    { local: true, cwd: dir },
+  );
+  assert.ok(installed.success, installed.error);
+  assert.strictEqual(readFileSync(vscodePath, "utf-8"), original);
+  assert.ok(existsSync(join(dir, ".mcp.json")));
+});
+
+await test("github-copilot-cli list and remove work on a bare project map", async () => {
+  const dir = createTempDir();
+  writeFileSync(
+    join(dir, ".mcp.json"),
+    JSON.stringify({
+      ghc: { type: "http", url: "https://mcp.example.com/api" },
+    }),
+  );
+
+  const listed = await listInstalledServers({
+    agents: ["github-copilot-cli"],
+    cwd: dir,
+  });
+  const copilot = listed.find((a) => a.agentType === "github-copilot-cli");
+  assert.ok(copilot);
+  assert.strictEqual(copilot.servers[0]?.serverName, "ghc");
+  assert.strictEqual(copilot.servers[0]?.configKey, "");
+
+  const removed = removeServer("github-copilot-cli", "ghc", {
+    local: true,
+    cwd: dir,
+  });
+  assert.ok(removed.success);
+  assert.strictEqual(removed.removed, true);
+  const after = readJson(join(dir, ".mcp.json"));
+  assert.strictEqual(after.ghc, undefined);
+});
+
+await test("github-copilot-cli upsert adds to a bare project map without wrapping", () => {
+  const dir = createTempDir();
+  writeFileSync(
+    join(dir, ".mcp.json"),
+    JSON.stringify({
+      existing: { type: "http", url: "https://existing.example.com/mcp" },
+    }),
+  );
+
+  const installed = upsertServer(
+    "github-copilot-cli",
+    "ghc",
+    remote("https://mcp.example.com/api"),
+    { local: true, cwd: dir },
+  );
+  assert.ok(installed.success, installed.error);
+  const written = readJson(join(dir, ".mcp.json"));
+  assert.strictEqual(written.mcpServers, undefined);
+  assert.ok(written.existing);
+  assert.ok(written.ghc);
+});
+
+await test("github-copilot-cli rejects a VS Code servers wrapper at .mcp.json", () => {
+  const dir = createTempDir();
+  writeFileSync(
+    join(dir, ".mcp.json"),
+    JSON.stringify({
+      servers: { keep: { command: "npx" } },
+    }),
+  );
+  const original = readFileSync(join(dir, ".mcp.json"), "utf-8");
+
+  const installed = upsertServer(
+    "github-copilot-cli",
+    "ghc",
+    remote("https://mcp.example.com/api"),
+    { local: true, cwd: dir },
+  );
+  assert.strictEqual(installed.success, false);
+  assert.ok(installed.error?.includes("servers"));
+  assert.strictEqual(readFileSync(join(dir, ".mcp.json"), "utf-8"), original);
+});
+
+await test("github-copilot-cli treats a bare server named servers as a server map", () => {
+  const dir = createTempDir();
+  writeFileSync(
+    join(dir, ".mcp.json"),
+    JSON.stringify({
+      servers: { type: "http", url: "https://named-servers.example.com/mcp" },
+    }),
+  );
+
+  const installed = upsertServer(
+    "github-copilot-cli",
+    "ghc",
+    remote("https://mcp.example.com/api"),
+    { local: true, cwd: dir },
+  );
+  assert.ok(installed.success, installed.error);
+  const written = readJson(join(dir, ".mcp.json"));
+  assert.ok(written.servers);
+  assert.ok(written.ghc);
+  assert.strictEqual(written.mcpServers, undefined);
+});
+
+await test("github-copilot-cli refuses malformed project JSON and leaves the file", () => {
+  const dir = createTempDir();
+  const path = join(dir, ".mcp.json");
+  writeFileSync(path, "{ not json");
+
+  const installed = upsertServer(
+    "github-copilot-cli",
+    "ghc",
+    remote("https://mcp.example.com/api"),
+    { local: true, cwd: dir },
+  );
+  assert.strictEqual(installed.success, false);
+  assert.ok(installed.error?.includes(path));
+  assert.strictEqual(readFileSync(path, "utf-8"), "{ not json");
 });
 
 cleanup();

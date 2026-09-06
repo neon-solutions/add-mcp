@@ -11,6 +11,7 @@ import {
   deepMerge,
   dropReplacedServers,
   getNestedValue,
+  ROOT_CONFIG_KEY,
 } from "../src/formats/index.js";
 
 let passed = 0;
@@ -147,6 +148,25 @@ test("dropReplacedServers is a no-op when the config key is missing", () => {
   dropReplacedServers(existing, incoming, "mcp_servers");
 
   assert.deepStrictEqual(existing, { unrelated: true });
+});
+
+test("getNestedValue with ROOT_CONFIG_KEY returns the object", () => {
+  const obj = { ghc: { url: "https://mcp.example.com/api" } };
+  assert.deepStrictEqual(getNestedValue(obj, ROOT_CONFIG_KEY), obj);
+});
+
+test("dropReplacedServers at ROOT_CONFIG_KEY deletes the named server", () => {
+  const existing = {
+    ghc: { url: "https://old.example.com" },
+    keep: { url: "https://keep.example.com" },
+  };
+  const incoming = { ghc: { url: "https://new.example.com" } };
+
+  dropReplacedServers(existing, incoming, ROOT_CONFIG_KEY);
+
+  assert.deepStrictEqual(existing, {
+    keep: { url: "https://keep.example.com" },
+  });
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

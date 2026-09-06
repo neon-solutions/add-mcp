@@ -1,6 +1,6 @@
 {
   "name": "add-mcp",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "Add MCP servers to your favorite coding agents with a single command.",
   "author": "Andre Landgraf <andre@neon.tech>",
   "license": "Apache-2.0",

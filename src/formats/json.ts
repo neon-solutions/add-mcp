@@ -2,7 +2,13 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import { dirname } from "path";
 import * as jsonc from "jsonc-parser";
 import type { ConfigFile } from "../types.js";
-import { deepMerge, dropReplacedServers, getNestedValue } from "./utils.js";
+import {
+  deepMerge,
+  dropReplacedServers,
+  getNestedValue,
+  jsoncPath,
+  ROOT_CONFIG_KEY,
+} from "./utils.js";
 
 function detectIndent(text: string): {
   tabSize: number;
@@ -66,7 +72,7 @@ export function writeJsonConfig(
 
   if (originalContent) {
     try {
-      const configKeyPath = configKey.split(".");
+      const configKeyPath = jsoncPath(configKey);
       const newValue = getNestedValue(mergedConfig, configKey);
       const edits = jsonc.modify(originalContent, configKeyPath, newValue, {
         formattingOptions: detectIndent(originalContent),
@@ -92,7 +98,7 @@ export function removeJsonConfigKey(
   }
 
   const originalContent = readFileSync(filePath, "utf-8");
-  const configKeyPath = configKey.split(".");
+  const configKeyPath = jsoncPath(configKey);
 
   try {
     const edits = jsonc.modify(
@@ -121,6 +127,17 @@ export function setNestedValue(
   path: string,
   value: unknown,
 ): void {
+  if (path === ROOT_CONFIG_KEY) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      return;
+    }
+    for (const key of Object.keys(obj)) {
+      delete obj[key];
+    }
+    Object.assign(obj, value);
+    return;
+  }
+
   const keys = path.split(".");
   const lastKey = keys.pop();
 

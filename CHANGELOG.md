@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.3.1] - 2026-09-06
+
+- write GitHub Copilot CLI project installs to `.mcp.json` (or an existing `.github/mcp.json`) with `mcpServers`, matching Copilot CLI 1.0.22+. `.vscode/mcp.json` stays the VS Code agent path. A project `.mcp.json` is shared with Claude Code; removing a server from either agent removes it for both.
+
 ## [2.3.0] - 2026-08-23
 
 - add `--bearer-token-env <name>` for remote servers. fx writes it as `bearer_token_env`. Other agents drop it with a warning. When the same run also passes `--header Authorization`, fx omits that header, warns, and keeps `bearer_token_env`; other agents keep the header. Authorization without `--bearer-token-env` still fails on fx. Empty, whitespace, and non-identifier names fail in the CLI and the SDK.

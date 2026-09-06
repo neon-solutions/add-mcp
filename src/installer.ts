@@ -14,7 +14,7 @@ import type {
   ParsedSource,
   TransportType,
 } from "./types.js";
-import { agents } from "./agents.js";
+import { agents, githubCopilotCliProjectConfigKey } from "./agents.js";
 import { writeConfig, buildConfigWithKey } from "./formats/index.js";
 import { looksLikePath } from "./source-parser.js";
 import {
@@ -358,11 +358,38 @@ export function getConfigKey(
   agent: AgentConfig,
   options: InstallOptions = {},
 ): string {
+  if (options.local && agent.name === "github-copilot-cli") {
+    return githubCopilotCliProjectConfigKey(getConfigPath(agent, options));
+  }
   if (options.local && agent.localConfigKey) {
     return agent.localConfigKey;
   }
 
   return agent.configKey;
+}
+
+function copilotClaudeGithubLayoutError(
+  agentTypes: AgentType[],
+  options: InstallServerOptions = {},
+): string | null {
+  const cwd = options.cwd || process.cwd();
+  const copilotLocal = options.routing?.get("github-copilot-cli") === "local";
+  const claudeLocal = options.routing?.get("claude-code") === "local";
+  if (
+    !agentTypes.includes("github-copilot-cli") ||
+    !agentTypes.includes("claude-code") ||
+    !copilotLocal ||
+    !claudeLocal
+  ) {
+    return null;
+  }
+  if (existsSync(join(cwd, ".mcp.json"))) {
+    return null;
+  }
+  if (!existsSync(join(cwd, ".github", "mcp.json"))) {
+    return null;
+  }
+  return "Claude Code writes .mcp.json, which Copilot CLI prefers over the existing .github/mcp.json. Move those servers into .mcp.json or install the agents in separate runs after consolidating.";
 }
 
 export function installServerForAgent(
@@ -459,8 +486,21 @@ export function installServer(
   options: InstallServerOptions = {},
 ): Map<AgentType, InstallResult> {
   const results = new Map<AgentType, InstallResult>();
+  const layoutError = copilotClaudeGithubLayoutError(agentTypes, options);
 
   for (const agentType of agentTypes) {
+    if (
+      layoutError &&
+      (agentType === "github-copilot-cli" || agentType === "claude-code")
+    ) {
+      results.set(agentType, {
+        success: false,
+        path: "",
+        error: layoutError,
+      });
+      continue;
+    }
+
     const routing = options.routing?.get(agentType);
     const installOptions: InstallOptions = {
       local: routing === "local",

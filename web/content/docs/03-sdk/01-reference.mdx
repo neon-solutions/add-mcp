@@ -196,5 +196,7 @@ interface InstalledServer {
   agentType: AgentType;
   scope: "local" | "global";
   configPath: string;
+  /** Key in the config file this server was read from */
+  configKey: string;
 }
 ```

@@ -825,11 +825,7 @@ async function runRemoveCommand(
 }
 
 function getConfigKeyForServer(server: InstalledServer): string {
-  const agent = agents[server.agentType];
-  if (server.scope === "local" && agent.localConfigKey) {
-    return agent.localConfigKey;
-  }
-  return agent.configKey;
+  return server.configKey;
 }
 
 // ── sync implementation ──────────────────────────────────────────────────

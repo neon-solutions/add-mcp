@@ -58,7 +58,18 @@ export function dropReplacedServers(
   }
 }
 
+/** Empty string means the file root is the server map (Copilot CLI bare format). */
+export const ROOT_CONFIG_KEY = "";
+
+export function jsoncPath(configKey: string): string[] {
+  return configKey === ROOT_CONFIG_KEY ? [] : configKey.split(".");
+}
+
 export function getNestedValue(obj: ConfigFile, path: string): unknown {
+  if (path === ROOT_CONFIG_KEY) {
+    return obj;
+  }
+
   const keys = path.split(".");
   let current: unknown = obj;
 

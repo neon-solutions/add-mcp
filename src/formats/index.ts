@@ -15,9 +15,15 @@ import {
   writeTomlConfig,
   removeTomlConfigKey,
 } from "./toml.js";
+import { ROOT_CONFIG_KEY } from "./utils.js";
 
 export { setNestedValue } from "./json.js";
-export { deepMerge, dropReplacedServers, getNestedValue } from "./utils.js";
+export {
+  deepMerge,
+  dropReplacedServers,
+  getNestedValue,
+  ROOT_CONFIG_KEY,
+} from "./utils.js";
 
 export function readConfig(filePath: string, format: ConfigFormat): ConfigFile {
   switch (format) {
@@ -79,6 +85,9 @@ export function buildConfigWithKey(
   serverName: string,
   serverConfig: unknown,
 ): ConfigFile {
+  if (configKey === ROOT_CONFIG_KEY) {
+    return { [serverName]: serverConfig };
+  }
   const config: ConfigFile = {};
   const servers: ConfigFile = {};
   servers[serverName] = serverConfig;

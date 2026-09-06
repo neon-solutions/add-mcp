@@ -14,6 +14,8 @@ export interface InstalledServer {
   agentType: AgentType;
   scope: "local" | "global";
   configPath: string;
+  /** Key in the config file where this server was read from */
+  configKey: string;
 }
 
 export interface AgentServers {
@@ -126,6 +128,7 @@ export function readServersForAgent(
           agentType,
           scope: options.scope,
           configPath,
+          configKey,
         });
       }
     }
