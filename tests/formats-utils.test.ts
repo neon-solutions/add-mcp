@@ -189,6 +189,9 @@ test("isBareServerMap is false for mcpServers, empty objects, and mixed keys", (
     }),
     false,
   );
+  assert.strictEqual(isBareServerMap(undefined), false);
+  assert.strictEqual(isBareServerMap(null), false);
+  assert.strictEqual(isBareServerMap([]), false);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

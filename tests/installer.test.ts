@@ -26,6 +26,7 @@ import {
 import { agents } from "../src/agents.js";
 import { parseSource } from "../src/source-parser.js";
 import { applyFieldSupport } from "../src/schema.js";
+import * as jsonc from "jsonc-parser";
 import * as TOML from "@iarna/toml";
 import type { AgentType } from "../src/types.js";
 
@@ -517,6 +518,36 @@ test("installServerForAgent - VS Code drops both timeout and scopes", () => {
   assert.strictEqual(server.url, "https://mcp.example.com/mcp");
   assert.ok(!("timeout" in server));
   assert.ok(!("oauthScopes" in server));
+});
+
+test("installServerForAgent - VS Code installs into an empty mcp.json", () => {
+  const tempDir = createTempDir();
+  mkdirSync(join(tempDir, ".vscode"), { recursive: true });
+  writeFileSync(join(tempDir, ".vscode", "mcp.json"), "");
+  const result = installRemoteWith("vscode", tempDir, {});
+  assert.ok(result.success, result.error);
+
+  const saved = readJsonConfig(join(tempDir, ".vscode", "mcp.json"));
+  const server = (saved.servers as Record<string, Record<string, unknown>>)
+    .example;
+  assert.ok(server);
+  assert.strictEqual(server.url, "https://mcp.example.com/mcp");
+});
+
+test("installServerForAgent - VS Code installs into a comment-only mcp.json", () => {
+  const tempDir = createTempDir();
+  mkdirSync(join(tempDir, ".vscode"), { recursive: true });
+  writeFileSync(join(tempDir, ".vscode", "mcp.json"), "// MCP configuration\n");
+  const result = installRemoteWith("vscode", tempDir, {});
+  assert.ok(result.success, result.error);
+
+  const saved = jsonc.parse(
+    readFileSync(join(tempDir, ".vscode", "mcp.json"), "utf-8"),
+  ) as Record<string, unknown>;
+  const server = (saved.servers as Record<string, Record<string, unknown>>)
+    .example;
+  assert.ok(server);
+  assert.strictEqual(server.url, "https://mcp.example.com/mcp");
 });
 
 // ============================================

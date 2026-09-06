@@ -73,8 +73,13 @@ function looksLikeServerEntry(value: unknown): boolean {
   );
 }
 
+function isConfigObject(value: unknown): value is ConfigFile {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
 /** Copilot CLI project files may store servers as a name map at the file root. */
-export function isBareServerMap(obj: ConfigFile): boolean {
+export function isBareServerMap(obj: unknown): boolean {
+  if (!isConfigObject(obj)) return false;
   if (obj.mcpServers !== undefined) return false;
   const values = Object.values(obj);
   return values.length > 0 && values.every(looksLikeServerEntry);

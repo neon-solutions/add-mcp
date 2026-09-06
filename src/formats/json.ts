@@ -65,7 +65,11 @@ export function writeJsonConfig(
 
   if (existsSync(filePath)) {
     originalContent = readFileSync(filePath, "utf-8");
-    existingConfig = jsonc.parse(originalContent) as ConfigFile;
+    // jsonc.parse returns undefined for empty and comment-only files.
+    const parsed: unknown = jsonc.parse(originalContent);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      existingConfig = parsed as ConfigFile;
+    }
   }
 
   // Copilot CLI ignores root keys once mcpServers exists. Fold a bare map
