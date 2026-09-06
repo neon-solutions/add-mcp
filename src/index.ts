@@ -779,6 +779,19 @@ async function runRemoveCommand(
     return;
   }
 
+  if (
+    matches.some(
+      (server) =>
+        (server.agentType === "claude-code" ||
+          server.agentType === "github-copilot-cli") &&
+        server.configPath.endsWith(".mcp.json"),
+    )
+  ) {
+    p.log.warn(
+      "`.mcp.json` is shared by Claude Code and GitHub Copilot CLI. Removing a server from either removes it for both.",
+    );
+  }
+
   // Build selection options
   const matchOptions = matches.map((m, i) => ({
     value: i,
@@ -818,7 +831,6 @@ async function runRemoveCommand(
 
   let removedCount = 0;
   const affectedAgents = new Set<string>();
-  let removedSharedDotMcp = false;
 
   for (const idx of selectedIndices) {
     const server = matches[idx]!;
@@ -833,13 +845,6 @@ async function runRemoveCommand(
       rewriteCopilotCliConfig(server.agentType, server.configPath);
       removedCount++;
       affectedAgents.add(agent.displayName);
-      if (
-        (server.agentType === "claude-code" ||
-          server.agentType === "github-copilot-cli") &&
-        server.configPath.endsWith(".mcp.json")
-      ) {
-        removedSharedDotMcp = true;
-      }
     } catch (error) {
       p.log.error(
         `Failed to remove ${server.serverName} from ${agent.displayName}: ${error instanceof Error ? error.message : "Unknown error"}`,
@@ -851,11 +856,6 @@ async function runRemoveCommand(
     p.log.success(
       `Removed ${removedCount} server${removedCount !== 1 ? "s" : ""} from ${affectedAgents.size} agent${affectedAgents.size !== 1 ? "s" : ""}`,
     );
-    if (removedSharedDotMcp) {
-      p.log.warn(
-        "`.mcp.json` is shared by Claude Code and GitHub Copilot CLI. Removing a server from either removes it for both.",
-      );
-    }
   }
 
   if (hadReadError) {
@@ -2053,5 +2053,14 @@ async function main(target: string | undefined, options: Options) {
   }
 
   console.log();
-  p.outro(chalk.green("Done!"));
+  if (failed.length === 0) {
+    p.outro(chalk.green("Done!"));
+    return;
+  }
+  process.exitCode = 1;
+  if (successful.length === 0) {
+    p.outro(chalk.red("Failed"));
+    return;
+  }
+  p.outro(chalk.yellow("Installed with errors"));
 }

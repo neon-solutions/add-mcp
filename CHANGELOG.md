@@ -6,6 +6,7 @@
 - write Copilot CLI project files as strict JSON. Copilot CLI rejects comments and would otherwise skip the file after a successful install.
 - refuse local Claude Code and Copilot CLI writes that would create `.mcp.json` beside an existing `.github/mcp.json`.
 - keep `list` going when one agent's config is unreadable, print that agent's error, and exit nonzero. `remove` and `sync` report the same read errors, skip that agent's file, and exit nonzero instead of treating it as empty.
+- exit nonzero when any selected agent fails to install, and print `Failed` or `Installed with errors` instead of `Done!`.
 - skip confirming a `sync` plan that cannot run, and exit nonzero when Copilot/Claude writes are blocked.
 
 ## [2.3.0] - 2026-08-23

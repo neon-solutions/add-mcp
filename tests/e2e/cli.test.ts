@@ -753,6 +753,7 @@ test("E2E CLI: fx rejects a literal Authorization header", () => {
   const output = `${result.stdout}\n${result.stderr}`;
   assert.match(output, /literal Authorization header/);
   assert.match(output, /--bearer-token-env/);
+  assert.notStrictEqual(result.status, 0);
   assert.strictEqual(existsSync(join(homeDir, ".fx")), false);
 });
 
@@ -2585,8 +2586,11 @@ test("E2E CLI: claude-code does not create .mcp.json that hides .github/mcp.json
 
   assert.strictEqual(existsSync(join(projectDir, ".mcp.json")), false);
   const output = `${result.stdout}\n${result.stderr}`;
+  assert.notStrictEqual(result.status, 0, output);
   assert.match(output, /\.github\/mcp\.json/);
   assert.match(output, /Merge the servers/);
+  assert.match(output, /Failed/);
+  assert.doesNotMatch(output, /Done!/);
 });
 
 test("E2E CLI: --timeout and --scopes map per agent and warn on drop", () => {
