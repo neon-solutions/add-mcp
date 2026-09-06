@@ -549,6 +549,34 @@ await test("github-copilot-cli refuses malformed project JSON and leaves the fil
   assert.strictEqual(readFileSync(path, "utf-8"), "{ not json");
 });
 
+await test("claude-code install lifts a Copilot bare .mcp.json into mcpServers", () => {
+  const dir = createTempDir();
+  writeFileSync(
+    join(dir, ".mcp.json"),
+    JSON.stringify({
+      keep: { type: "http", url: "https://keep.example.com/mcp" },
+    }),
+  );
+
+  const installed = upsertServer(
+    "claude-code",
+    "claude",
+    remote("https://claude.example.com/mcp"),
+    { local: true, cwd: dir },
+  );
+  assert.ok(installed.success, installed.error);
+
+  const written = readJson(join(dir, ".mcp.json"));
+  assert.strictEqual(written.keep, undefined);
+  const servers = written.mcpServers as Record<string, Record<string, unknown>>;
+  const keep = servers.keep;
+  const claude = servers.claude;
+  assert.ok(keep);
+  assert.ok(claude);
+  assert.strictEqual(keep.url, "https://keep.example.com/mcp");
+  assert.strictEqual(claude.url, "https://claude.example.com/mcp");
+});
+
 cleanup();
 
 console.log(`\n${passed} passed, ${failed} failed`);

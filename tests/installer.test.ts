@@ -1049,6 +1049,42 @@ test("installServerForAgent - last writer wins timeout on shared .mcp.json (copi
   assert.strictEqual(afterClaudeServer.timeout, 30000);
 });
 
+test("installServer - mixed claude-code and github-copilot-cli lift a bare .mcp.json", () => {
+  const tempDir = createTempDir();
+  writeFileSync(
+    join(tempDir, ".mcp.json"),
+    JSON.stringify({
+      keep: { type: "http", url: "https://keep.example.com/mcp" },
+    }),
+  );
+
+  const parsed = parseSource("https://mcp.example.com/mcp");
+  const config = buildServerConfig(parsed);
+  const results = installServer(
+    "example",
+    config,
+    ["claude-code", "github-copilot-cli"],
+    {
+      routing: new Map<AgentType, "local" | "global">([
+        ["claude-code", "local"],
+        ["github-copilot-cli", "local"],
+      ]),
+      cwd: tempDir,
+    },
+  );
+
+  assert.ok(results.get("claude-code")?.success);
+  assert.ok(results.get("github-copilot-cli")?.success);
+  const saved = readJsonConfig(join(tempDir, ".mcp.json"));
+  assert.strictEqual(saved.keep, undefined);
+  const servers = saved.mcpServers as Record<string, Record<string, unknown>>;
+  const keep = servers.keep;
+  const example = servers.example;
+  assert.ok(keep);
+  assert.ok(example);
+  assert.strictEqual(keep.url, "https://keep.example.com/mcp");
+});
+
 test("installServer - github-copilot-cli global uses mcpServers key and CLI schema", () => {
   const tempDir = createTempDir();
   const originalPath = agents["github-copilot-cli"].configPath;

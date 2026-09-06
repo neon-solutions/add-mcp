@@ -6,6 +6,7 @@ import * as jsonc from "jsonc-parser";
 import type { AgentConfig, AgentType, McpServerConfig } from "./types.js";
 import { getLastSelectedAgents, saveSelectedAgents } from "./config.js";
 import { resolvedBearerTokenEnv } from "./schema.js";
+import { isBareServerMap } from "./formats/utils.js";
 
 const home = homedir();
 const defaultGrokHome = join(home, ".grok");
@@ -629,15 +630,7 @@ export function githubCopilotCliProjectConfigKey(configPath: string): string {
       `${configPath} uses VS Code's "servers" key. Copilot CLI reads mcpServers in .mcp.json or .github/mcp.json; use --agent vscode for .vscode/mcp.json.`,
     );
   }
-  if (
-    obj.mcpServers &&
-    typeof obj.mcpServers === "object" &&
-    !Array.isArray(obj.mcpServers)
-  ) {
-    return "mcpServers";
-  }
-  const values = Object.values(obj);
-  if (values.length > 0 && values.every(looksLikeServerEntry)) {
+  if (isBareServerMap(obj)) {
     return "";
   }
   return "mcpServers";

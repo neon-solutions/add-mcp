@@ -12,6 +12,7 @@ import {
   dropReplacedServers,
   getNestedValue,
   ROOT_CONFIG_KEY,
+  isBareServerMap,
 } from "../src/formats/index.js";
 
 let passed = 0;
@@ -167,6 +168,27 @@ test("dropReplacedServers at ROOT_CONFIG_KEY deletes the named server", () => {
   assert.deepStrictEqual(existing, {
     keep: { url: "https://keep.example.com" },
   });
+});
+
+test("isBareServerMap is true for a Copilot root name map", () => {
+  assert.strictEqual(
+    isBareServerMap({
+      ghc: { type: "http", url: "https://mcp.example.com/api" },
+    }),
+    true,
+  );
+});
+
+test("isBareServerMap is false for mcpServers, empty objects, and mixed keys", () => {
+  assert.strictEqual(isBareServerMap({ mcpServers: {} }), false);
+  assert.strictEqual(isBareServerMap({}), false);
+  assert.strictEqual(
+    isBareServerMap({
+      ghc: { url: "https://mcp.example.com/api" },
+      disabled: false,
+    }),
+    false,
+  );
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

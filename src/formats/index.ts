@@ -23,6 +23,7 @@ export {
   dropReplacedServers,
   getNestedValue,
   ROOT_CONFIG_KEY,
+  isBareServerMap,
 } from "./utils.js";
 
 export function readConfig(filePath: string, format: ConfigFormat): ConfigFile {

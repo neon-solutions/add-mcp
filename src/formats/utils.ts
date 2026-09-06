@@ -61,6 +61,25 @@ export function dropReplacedServers(
 /** Empty string means the file root is the server map (Copilot CLI bare format). */
 export const ROOT_CONFIG_KEY = "";
 
+function looksLikeServerEntry(value: unknown): boolean {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+  const entry = value as Record<string, unknown>;
+  return (
+    typeof entry.command === "string" ||
+    typeof entry.url === "string" ||
+    typeof entry.type === "string"
+  );
+}
+
+/** Copilot CLI project files may store servers as a name map at the file root. */
+export function isBareServerMap(obj: ConfigFile): boolean {
+  if (obj.mcpServers !== undefined) return false;
+  const values = Object.values(obj);
+  return values.length > 0 && values.every(looksLikeServerEntry);
+}
+
 export function jsoncPath(configKey: string): string[] {
   return configKey === ROOT_CONFIG_KEY ? [] : configKey.split(".");
 }

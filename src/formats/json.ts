@@ -8,6 +8,7 @@ import {
   getNestedValue,
   jsoncPath,
   ROOT_CONFIG_KEY,
+  isBareServerMap,
 } from "./utils.js";
 
 function detectIndent(text: string): {
@@ -67,13 +68,23 @@ export function writeJsonConfig(
     existingConfig = jsonc.parse(originalContent) as ConfigFile;
   }
 
+  // Copilot CLI ignores root keys once mcpServers exists. Fold a bare map
+  // into mcpServers before writing that wrapper, or those servers vanish.
+  const replaceDocument =
+    configKey !== ROOT_CONFIG_KEY && isBareServerMap(existingConfig);
+  if (replaceDocument) {
+    existingConfig = { mcpServers: { ...existingConfig } };
+  }
+
   dropReplacedServers(existingConfig, config, configKey);
   const mergedConfig = deepMerge(existingConfig, config);
 
   if (originalContent) {
     try {
-      const configKeyPath = jsoncPath(configKey);
-      const newValue = getNestedValue(mergedConfig, configKey);
+      const configKeyPath = replaceDocument ? [] : jsoncPath(configKey);
+      const newValue = replaceDocument
+        ? mergedConfig
+        : getNestedValue(mergedConfig, configKey);
       const edits = jsonc.modify(originalContent, configKeyPath, newValue, {
         formattingOptions: detectIndent(originalContent),
       });
