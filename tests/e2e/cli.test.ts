@@ -1437,6 +1437,44 @@ test("list: shows 'no servers configured' when agent detected but empty", () => 
   assert.match(output, /no servers configured/);
 });
 
+test("list: empty .mcp.json does not abort listing VS Code servers", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+  writeFileSync(join(projectDir, ".mcp.json"), "");
+  mkdirSync(join(projectDir, ".vscode"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".vscode", "mcp.json"),
+    JSON.stringify({
+      servers: { keep: { url: "https://keep.example.com/mcp" } },
+    }),
+  );
+
+  const result = runCli(["list"], projectDir, homeDir);
+  assert.strictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /VS Code/);
+  assert.match(output, /keep/);
+});
+
+test("list: comment-only .mcp.json does not abort listing VS Code servers", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+  writeFileSync(join(projectDir, ".mcp.json"), "// MCP configuration\n");
+  mkdirSync(join(projectDir, ".vscode"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".vscode", "mcp.json"),
+    JSON.stringify({
+      servers: { keep: { url: "https://keep.example.com/mcp" } },
+    }),
+  );
+
+  const result = runCli(["list"], projectDir, homeDir);
+  assert.strictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /VS Code/);
+  assert.match(output, /keep/);
+});
+
 test("list: shows 'not detected' when -a targets absent agent", () => {
   const homeDir = createTempDir();
   const projectDir = createTempDir();

@@ -28,6 +28,7 @@ import {
   type McpServerConfig,
 } from "../src/lib.js";
 import { invalidBearerTokenEnvMessage } from "../src/schema.js";
+import * as jsonc from "jsonc-parser";
 
 const remote = (url: string): McpServerConfig => ({ type: "http", url });
 const pkg = (name: string): McpServerConfig => ({
@@ -547,6 +548,84 @@ await test("github-copilot-cli refuses malformed project JSON and leaves the fil
   assert.strictEqual(installed.success, false);
   assert.ok(installed.error?.includes(path));
   assert.strictEqual(readFileSync(path, "utf-8"), "{ not json");
+});
+
+await test("github-copilot-cli installs into an empty .mcp.json", () => {
+  const dir = createTempDir();
+  writeFileSync(join(dir, ".mcp.json"), "");
+
+  const installed = upsertServer(
+    "github-copilot-cli",
+    "ghc",
+    remote("https://mcp.example.com/api"),
+    { local: true, cwd: dir },
+  );
+  assert.ok(installed.success, installed.error);
+  const written = readJson(join(dir, ".mcp.json"));
+  const ghc = (written.mcpServers as Record<string, Record<string, unknown>>)
+    .ghc;
+  assert.ok(ghc);
+  assert.strictEqual(ghc.url, "https://mcp.example.com/api");
+});
+
+await test("github-copilot-cli installs into a comment-only .mcp.json", () => {
+  const dir = createTempDir();
+  writeFileSync(join(dir, ".mcp.json"), "// MCP configuration\n");
+
+  const installed = upsertServer(
+    "github-copilot-cli",
+    "ghc",
+    remote("https://mcp.example.com/api"),
+    { local: true, cwd: dir },
+  );
+  assert.ok(installed.success, installed.error);
+  const written = jsonc.parse(
+    readFileSync(join(dir, ".mcp.json"), "utf-8"),
+  ) as Record<string, unknown>;
+  const ghc = (written.mcpServers as Record<string, Record<string, unknown>>)
+    .ghc;
+  assert.ok(ghc);
+  assert.strictEqual(ghc.url, "https://mcp.example.com/api");
+});
+
+await test("listInstalledServers continues when .mcp.json is empty beside VS Code", async () => {
+  const dir = createTempDir();
+  writeFileSync(join(dir, ".mcp.json"), "");
+  mkdirSync(join(dir, ".vscode"), { recursive: true });
+  writeFileSync(
+    join(dir, ".vscode", "mcp.json"),
+    JSON.stringify({
+      servers: { keep: { url: "https://keep.example.com/mcp" } },
+    }),
+  );
+
+  const list = await listInstalledServers({ cwd: dir });
+  const vscode = list.find((a) => a.agentType === "vscode");
+  assert.ok(vscode);
+  assert.deepStrictEqual(
+    vscode.servers.map((s) => s.serverName),
+    ["keep"],
+  );
+});
+
+await test("listInstalledServers continues when .mcp.json is comment-only beside VS Code", async () => {
+  const dir = createTempDir();
+  writeFileSync(join(dir, ".mcp.json"), "// MCP configuration\n");
+  mkdirSync(join(dir, ".vscode"), { recursive: true });
+  writeFileSync(
+    join(dir, ".vscode", "mcp.json"),
+    JSON.stringify({
+      servers: { keep: { url: "https://keep.example.com/mcp" } },
+    }),
+  );
+
+  const list = await listInstalledServers({ cwd: dir });
+  const vscode = list.find((a) => a.agentType === "vscode");
+  assert.ok(vscode);
+  assert.deepStrictEqual(
+    vscode.servers.map((s) => s.serverName),
+    ["keep"],
+  );
 });
 
 await test("claude-code install lifts a Copilot bare .mcp.json into mcpServers", () => {

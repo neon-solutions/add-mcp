@@ -605,10 +605,14 @@ function parseCopilotProjectFile(configPath: string): Record<string, unknown> {
     readFileSync(configPath, "utf-8"),
     errors,
   );
-  if (errors.length > 0 || parsed === undefined || parsed === null) {
+  // Empty and comment-only files parse as undefined with ValueExpected.
+  if (parsed === undefined) {
+    return {};
+  }
+  if (errors.length > 0) {
     throw new Error(`Invalid JSON in ${configPath}`);
   }
-  if (typeof parsed !== "object" || Array.isArray(parsed)) {
+  if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
     throw new Error(`${configPath} must be a JSON object`);
   }
   return parsed as Record<string, unknown>;
