@@ -7,9 +7,15 @@
  */
 
 import assert from "node:assert";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import {
+  mkdtempSync,
+  mkdirSync,
+  writeFileSync,
+  rmSync,
+  chmodSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import {
   agents,
   getAgentTypes,
@@ -20,6 +26,8 @@ import {
   detectProjectAgents,
   isTransportSupported,
   buildAgentSelectionChoices,
+  resolveClaudeDesktopWindowsConfigPath,
+  detectClaudeDesktopWindowsInstall,
 } from "../src/agents.js";
 import type { AgentType } from "../src/types.js";
 
@@ -721,6 +729,303 @@ test("buildAgentSelectionChoices orders detected, last selected, then remaining"
   assert.ok(zedChoice);
   assert.ok(zedChoice.hint.includes("selected last time"));
 });
+
+function claudeWin(root: string) {
+  return {
+    roamingConfigPath: join(
+      root,
+      "Roaming",
+      "Claude",
+      "claude_desktop_config.json",
+    ),
+    roamingClaudeDir: join(root, "Roaming", "Claude"),
+    packagesDir: join(root, "Packages"),
+  };
+}
+
+function msixConfigPath(root: string, pfn: string) {
+  return join(
+    root,
+    "Packages",
+    pfn,
+    "LocalCache",
+    "Roaming",
+    "Claude",
+    "claude_desktop_config.json",
+  );
+}
+
+function seedClassicConfig(root: string) {
+  const { roamingConfigPath } = claudeWin(root);
+  mkdirSync(dirname(roamingConfigPath), { recursive: true });
+  writeFileSync(roamingConfigPath, '{"mcpServers":{}}');
+}
+
+function seedMsixConfig(root: string, pfn: string) {
+  const path = msixConfigPath(root, pfn);
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, '{"mcpServers":{}}');
+}
+
+test("resolveClaudeDesktopWindowsConfigPath - only classic file uses C", () => {
+  const root = createTempDir();
+  seedClassicConfig(root);
+  mkdirSync(join(root, "Packages", "Claude_abc123"), { recursive: true });
+  const { roamingConfigPath, packagesDir } = claudeWin(root);
+  assert.strictEqual(
+    resolveClaudeDesktopWindowsConfigPath({ roamingConfigPath, packagesDir }),
+    roamingConfigPath,
+  );
+});
+
+test("resolveClaudeDesktopWindowsConfigPath - only MSIX file uses M", () => {
+  const root = createTempDir();
+  seedMsixConfig(root, "Claude_abc123");
+  const { roamingConfigPath, packagesDir } = claudeWin(root);
+  assert.strictEqual(
+    resolveClaudeDesktopWindowsConfigPath({ roamingConfigPath, packagesDir }),
+    msixConfigPath(root, "Claude_abc123"),
+  );
+});
+
+test("resolveClaudeDesktopWindowsConfigPath - both files uses M", () => {
+  const root = createTempDir();
+  seedClassicConfig(root);
+  seedMsixConfig(root, "Claude_abc123");
+  const { roamingConfigPath, packagesDir } = claudeWin(root);
+  assert.strictEqual(
+    resolveClaudeDesktopWindowsConfigPath({ roamingConfigPath, packagesDir }),
+    msixConfigPath(root, "Claude_abc123"),
+  );
+});
+
+test("resolveClaudeDesktopWindowsConfigPath - unique package with no files uses M", () => {
+  const root = createTempDir();
+  mkdirSync(join(root, "Packages", "Claude_abc123"), { recursive: true });
+  const { roamingConfigPath, packagesDir } = claudeWin(root);
+  assert.strictEqual(
+    resolveClaudeDesktopWindowsConfigPath({ roamingConfigPath, packagesDir }),
+    msixConfigPath(root, "Claude_abc123"),
+  );
+});
+
+test("resolveClaudeDesktopWindowsConfigPath - unique package with LocalCache dir uses M", () => {
+  const root = createTempDir();
+  mkdirSync(dirname(msixConfigPath(root, "Claude_abc123")), {
+    recursive: true,
+  });
+  const { roamingConfigPath, packagesDir } = claudeWin(root);
+  assert.strictEqual(
+    resolveClaudeDesktopWindowsConfigPath({ roamingConfigPath, packagesDir }),
+    msixConfigPath(root, "Claude_abc123"),
+  );
+});
+
+test("resolveClaudeDesktopWindowsConfigPath - only classic dir uses C", () => {
+  const root = createTempDir();
+  mkdirSync(join(root, "Roaming", "Claude"), { recursive: true });
+  const { roamingConfigPath, packagesDir } = claudeWin(root);
+  assert.strictEqual(
+    resolveClaudeDesktopWindowsConfigPath({ roamingConfigPath, packagesDir }),
+    roamingConfigPath,
+  );
+});
+
+test("resolveClaudeDesktopWindowsConfigPath - nothing uses C", () => {
+  const root = createTempDir();
+  const { roamingConfigPath, packagesDir } = claudeWin(root);
+  assert.strictEqual(
+    resolveClaudeDesktopWindowsConfigPath({ roamingConfigPath, packagesDir }),
+    roamingConfigPath,
+  );
+});
+
+test("resolveClaudeDesktopWindowsConfigPath - classic file plus two empty packages uses C", () => {
+  const root = createTempDir();
+  seedClassicConfig(root);
+  mkdirSync(join(root, "Packages", "Claude_aaa"), { recursive: true });
+  mkdirSync(join(root, "Packages", "Claude_bbb"), { recursive: true });
+  const { roamingConfigPath, packagesDir } = claudeWin(root);
+  assert.strictEqual(
+    resolveClaudeDesktopWindowsConfigPath({ roamingConfigPath, packagesDir }),
+    roamingConfigPath,
+  );
+});
+
+test("resolveClaudeDesktopWindowsConfigPath - two MSIX files throws", () => {
+  const root = createTempDir();
+  seedMsixConfig(root, "Claude_aaa");
+  seedMsixConfig(root, "Claude_bbb");
+  const { roamingConfigPath, packagesDir } = claudeWin(root);
+  assert.throws(
+    () =>
+      resolveClaudeDesktopWindowsConfigPath({ roamingConfigPath, packagesDir }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.message.includes("more than one MSIX config file") &&
+      error.message.includes(msixConfigPath(root, "Claude_aaa")) &&
+      error.message.includes(msixConfigPath(root, "Claude_bbb")) &&
+      error.message.includes(
+        "Keep claude_desktop_config.json in only one Claude_* package.",
+      ),
+  );
+});
+
+test("resolveClaudeDesktopWindowsConfigPath - two empty packages throws", () => {
+  const root = createTempDir();
+  mkdirSync(join(root, "Packages", "Claude_aaa"), { recursive: true });
+  mkdirSync(join(root, "Packages", "Claude_bbb"), { recursive: true });
+  const { roamingConfigPath, packagesDir } = claudeWin(root);
+  assert.throws(
+    () =>
+      resolveClaudeDesktopWindowsConfigPath({ roamingConfigPath, packagesDir }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.message.includes("more than one MSIX package") &&
+      error.message.includes(join(root, "Packages", "Claude_aaa")) &&
+      error.message.includes(join(root, "Packages", "Claude_bbb")) &&
+      error.message.includes(
+        "Keep one Claude_* package, or put claude_desktop_config.json in exactly one of them.",
+      ),
+  );
+});
+
+test("resolveClaudeDesktopWindowsConfigPath - one of two packages has M", () => {
+  const root = createTempDir();
+  mkdirSync(join(root, "Packages", "Claude_aaa"), { recursive: true });
+  seedMsixConfig(root, "Claude_bbb");
+  const { roamingConfigPath, packagesDir } = claudeWin(root);
+  assert.strictEqual(
+    resolveClaudeDesktopWindowsConfigPath({ roamingConfigPath, packagesDir }),
+    msixConfigPath(root, "Claude_bbb"),
+  );
+});
+
+test("resolveClaudeDesktopWindowsConfigPath - ignores Claude-Data and Claude without publisher", () => {
+  const root = createTempDir();
+  mkdirSync(join(root, "Packages", "Claude-Data"), { recursive: true });
+  mkdirSync(join(root, "Packages", "Claude"), { recursive: true });
+  const { roamingConfigPath, packagesDir } = claudeWin(root);
+  assert.strictEqual(
+    resolveClaudeDesktopWindowsConfigPath({ roamingConfigPath, packagesDir }),
+    roamingConfigPath,
+  );
+});
+
+test("detectClaudeDesktopWindowsInstall - classic dir", () => {
+  const root = createTempDir();
+  mkdirSync(join(root, "Roaming", "Claude"), { recursive: true });
+  const { roamingClaudeDir, packagesDir } = claudeWin(root);
+  assert.strictEqual(
+    detectClaudeDesktopWindowsInstall({ roamingClaudeDir, packagesDir }),
+    true,
+  );
+});
+
+test("detectClaudeDesktopWindowsInstall - package root only", () => {
+  const root = createTempDir();
+  mkdirSync(join(root, "Packages", "Claude_abc123"), { recursive: true });
+  const { roamingClaudeDir, packagesDir } = claudeWin(root);
+  assert.strictEqual(
+    detectClaudeDesktopWindowsInstall({ roamingClaudeDir, packagesDir }),
+    true,
+  );
+});
+
+test("detectClaudeDesktopWindowsInstall - no evidence", () => {
+  const root = createTempDir();
+  const { roamingClaudeDir, packagesDir } = claudeWin(root);
+  assert.strictEqual(
+    detectClaudeDesktopWindowsInstall({ roamingClaudeDir, packagesDir }),
+    false,
+  );
+});
+
+if (process.platform !== "win32") {
+  test("resolveClaudeDesktopWindowsConfigPath - inaccessible C with M uses M", () => {
+    const root = createTempDir();
+    seedClassicConfig(root);
+    seedMsixConfig(root, "Claude_abc123");
+    const classicDir = dirname(claudeWin(root).roamingConfigPath);
+    chmodSync(classicDir, 0);
+    try {
+      const { roamingConfigPath, packagesDir } = claudeWin(root);
+      assert.strictEqual(
+        resolveClaudeDesktopWindowsConfigPath({
+          roamingConfigPath,
+          packagesDir,
+        }),
+        msixConfigPath(root, "Claude_abc123"),
+      );
+    } finally {
+      chmodSync(classicDir, 0o755);
+    }
+  });
+
+  test("resolveClaudeDesktopWindowsConfigPath - inaccessible C with empty package does not select M", () => {
+    const root = createTempDir();
+    seedClassicConfig(root);
+    mkdirSync(join(root, "Packages", "Claude_abc123"), { recursive: true });
+    const classicDir = dirname(claudeWin(root).roamingConfigPath);
+    chmodSync(classicDir, 0);
+    try {
+      const { roamingConfigPath, packagesDir } = claudeWin(root);
+      assert.throws(
+        () =>
+          resolveClaudeDesktopWindowsConfigPath({
+            roamingConfigPath,
+            packagesDir,
+          }),
+        (error: unknown) =>
+          error instanceof Error &&
+          error.message.includes("not readable") &&
+          error.message.includes(roamingConfigPath),
+      );
+    } finally {
+      chmodSync(classicDir, 0o755);
+    }
+  });
+
+  test("resolveClaudeDesktopWindowsConfigPath - inaccessible M does not select C", () => {
+    const root = createTempDir();
+    seedClassicConfig(root);
+    seedMsixConfig(root, "Claude_abc123");
+    const msixDir = dirname(msixConfigPath(root, "Claude_abc123"));
+    chmodSync(msixDir, 0);
+    try {
+      const { roamingConfigPath, packagesDir } = claudeWin(root);
+      assert.throws(
+        () =>
+          resolveClaudeDesktopWindowsConfigPath({
+            roamingConfigPath,
+            packagesDir,
+          }),
+        (error: unknown) =>
+          error instanceof Error &&
+          error.message.includes("not readable") &&
+          error.message.includes(msixConfigPath(root, "Claude_abc123")),
+      );
+    } finally {
+      chmodSync(msixDir, 0o755);
+    }
+  });
+
+  test("detectClaudeDesktopWindowsInstall - inaccessible packages dir does not throw", () => {
+    const root = createTempDir();
+    const packagesDir = join(root, "Packages");
+    mkdirSync(packagesDir, { recursive: true });
+    chmodSync(packagesDir, 0);
+    try {
+      const { roamingClaudeDir } = claudeWin(root);
+      assert.strictEqual(
+        detectClaudeDesktopWindowsInstall({ roamingClaudeDir, packagesDir }),
+        true,
+      );
+    } finally {
+      chmodSync(packagesDir, 0o755);
+    }
+  });
+}
 
 // Cleanup and summary
 cleanup();

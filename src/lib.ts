@@ -2,7 +2,7 @@ import { existsSync } from "fs";
 import type { AgentType, McpServerConfig } from "./types.js";
 import { agents } from "./agents.js";
 import {
-  getConfigPath,
+  getConfigPathSafe,
   getConfigKey,
   installServerForAgent,
   rewriteCopilotCliConfig,
@@ -91,26 +91,44 @@ function doRemove(
   options: InstallOptions,
 ): RemoveServerResult {
   const agent = agents[agentType];
-  const configPath = getConfigPath(agent, options);
-
-  if (!existsSync(configPath)) {
-    return { success: true, path: configPath, removed: false };
+  const resolved = getConfigPathSafe(agent, options);
+  if (!resolved.ok) {
+    return {
+      success: false,
+      path: resolved.path,
+      removed: false,
+      error: resolved.error,
+    };
   }
+  const configPath = resolved.path;
 
-  if (agentType === "opencode") {
-    const removed = removeOpenCodeServer(configPath, serverName);
-    return { success: true, path: configPath, removed };
+  try {
+    if (!existsSync(configPath)) {
+      return { success: true, path: configPath, removed: false };
+    }
+
+    if (agentType === "opencode") {
+      const removed = removeOpenCodeServer(configPath, serverName);
+      return { success: true, path: configPath, removed };
+    }
+
+    const configKey = getConfigKey(agent, options);
+    const fullConfig = readConfig(configPath, agent.format);
+    if (!hasServer(getNestedValue(fullConfig, configKey), serverName)) {
+      return { success: true, path: configPath, removed: false };
+    }
+
+    removeServerFromConfig(configPath, agent.format, configKey, serverName);
+    rewriteCopilotCliConfig(agentType, configPath);
+    return { success: true, path: configPath, removed: true };
+  } catch (e) {
+    return {
+      success: false,
+      path: configPath,
+      removed: false,
+      error: e instanceof Error ? e.message : "Unknown error",
+    };
   }
-
-  const configKey = getConfigKey(agent, options);
-  const fullConfig = readConfig(configPath, agent.format);
-  if (!hasServer(getNestedValue(fullConfig, configKey), serverName)) {
-    return { success: true, path: configPath, removed: false };
-  }
-
-  removeServerFromConfig(configPath, agent.format, configKey, serverName);
-  rewriteCopilotCliConfig(agentType, configPath);
-  return { success: true, path: configPath, removed: true };
 }
 
 export function removeServer(
@@ -120,15 +138,5 @@ export function removeServer(
 ): RemoveServerResult {
   const error = validate(agentType, options.local);
   if (error) return { success: false, path: "", removed: false, error };
-  const known = agentType as AgentType;
-  try {
-    return doRemove(known, serverName, options);
-  } catch (e) {
-    return {
-      success: false,
-      path: getConfigPath(agents[known], options),
-      removed: false,
-      error: e instanceof Error ? e.message : "Unknown error",
-    };
-  }
+  return doRemove(agentType as AgentType, serverName, options);
 }

@@ -359,6 +359,25 @@ export function getConfigPath(
   return agent.configPath;
 }
 
+export type ResolvedConfigPath =
+  | { ok: true; path: string }
+  | { ok: false; path: ""; error: string };
+
+export function getConfigPathSafe(
+  agent: AgentConfig,
+  options: InstallOptions = {},
+): ResolvedConfigPath {
+  try {
+    return { ok: true, path: getConfigPath(agent, options) };
+  } catch (error) {
+    return {
+      ok: false,
+      path: "",
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
 export function getConfigKey(
   agent: AgentConfig,
   options: InstallOptions = {},
@@ -417,7 +436,15 @@ export function installServerForAgent(
   options: InstallOptions = {},
 ): InstallResult {
   const agent = agents[agentType];
-  const configPath = getConfigPath(agent, options);
+  const resolved = getConfigPathSafe(agent, options);
+  if (!resolved.ok) {
+    return {
+      success: false,
+      path: resolved.path,
+      error: resolved.error,
+    };
+  }
+  const configPath = resolved.path;
 
   try {
     if (typeof serverConfig.bearerTokenEnv === "string") {

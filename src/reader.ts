@@ -2,6 +2,7 @@ import type { AgentType, ConfigFile } from "./types.js";
 import { agents, detectProjectAgents, detectGlobalAgents } from "./agents.js";
 import {
   getConfigPath,
+  getConfigPathSafe,
   getConfigKey,
   type InstallOptions,
 } from "./installer.js";
@@ -108,7 +109,23 @@ export function readServersForAgent(
     local: options.scope === "local",
     cwd: options.cwd,
   };
-  const configPath = getConfigPath(agent, installOptions);
+  return readServersAtPath(
+    agentType,
+    options,
+    getConfigPath(agent, installOptions),
+  );
+}
+
+function readServersAtPath(
+  agentType: AgentType,
+  options: { scope: "local" | "global"; cwd?: string },
+  configPath: string,
+): AgentServers {
+  const agent = agents[agentType];
+  const installOptions: InstallOptions = {
+    local: options.scope === "local",
+    cwd: options.cwd,
+  };
 
   if (agentType === "opencode") {
     const servers: InstalledServer[] = listOpenCodeServers(configPath).map(
@@ -173,20 +190,32 @@ function readServersForAgentSafe(
   agentType: AgentType,
   options: { scope: "local" | "global"; cwd?: string },
 ): AgentServers {
-  try {
-    return readServersForAgent(agentType, options);
-  } catch (error) {
-    const agent = agents[agentType];
-    const installOptions: InstallOptions = {
-      local: options.scope === "local",
-      cwd: options.cwd,
-    };
+  const agent = agents[agentType];
+  const installOptions: InstallOptions = {
+    local: options.scope === "local",
+    cwd: options.cwd,
+  };
+  const resolved = getConfigPathSafe(agent, installOptions);
+  if (!resolved.ok) {
     return {
       agentType,
       displayName: agent.displayName,
       detected: true,
       scope: options.scope,
-      configPath: getConfigPath(agent, installOptions),
+      configPath: resolved.path,
+      servers: [],
+      error: resolved.error,
+    };
+  }
+  try {
+    return readServersAtPath(agentType, options, resolved.path);
+  } catch (error) {
+    return {
+      agentType,
+      displayName: agent.displayName,
+      detected: true,
+      scope: options.scope,
+      configPath: resolved.path,
       servers: [],
       error: error instanceof Error ? error.message : String(error),
     };
@@ -226,13 +255,15 @@ export async function listInstalledServers(options: {
           local: scope === "local",
           cwd: options.cwd,
         };
+        const resolved = getConfigPathSafe(agent, installOptions);
         results.push({
           agentType,
           displayName: agent.displayName,
           detected: false,
           scope,
-          configPath: getConfigPath(agent, installOptions),
+          configPath: resolved.path,
           servers: [],
+          ...(resolved.ok ? {} : { error: resolved.error }),
         });
       }
     }

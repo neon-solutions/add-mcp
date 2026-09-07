@@ -14,11 +14,13 @@ import {
   readFileSync,
   writeFileSync,
   existsSync,
+  chmodSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 
 import {
+  agents,
   detectProjectAgents,
   detectGlobalAgents,
   upsertServer,
@@ -885,6 +887,117 @@ await test("opencode upsert and list refuse truncated JSONC and leave the file",
   assert.deepStrictEqual(opencode.servers, []);
   assert.strictEqual(readFileSync(path, "utf-8"), truncated);
 });
+
+await test("removeServer keeps the captured path when a later resolve would fail", () => {
+  const dir = createTempDir();
+  const selected = join(dir, "claude_desktop_config.json");
+  mkdirSync(selected);
+  const original = agents["claude-desktop"].resolveConfigPath;
+  let calls = 0;
+  agents["claude-desktop"].resolveConfigPath = () => {
+    calls += 1;
+    if (calls > 1) {
+      throw new Error("second resolve must not run");
+    }
+    return selected;
+  };
+  try {
+    const removed = removeServer("claude-desktop", "filesystem");
+    assert.strictEqual(removed.success, false);
+    assert.strictEqual(removed.path, selected);
+    assert.strictEqual(removed.removed, false);
+    assert.ok(removed.error);
+    assert.ok(!removed.error.includes("second resolve must not run"));
+    assert.strictEqual(calls, 1);
+  } finally {
+    agents["claude-desktop"].resolveConfigPath = original;
+  }
+});
+
+await test("claude-desktop resolver throw is an SDK error with empty path", async () => {
+  const original = agents["claude-desktop"].resolveConfigPath;
+  agents["claude-desktop"].resolveConfigPath = () => {
+    throw new Error("Claude Desktop has more than one MSIX package:\n  a\n  b");
+  };
+  try {
+    const upsert = upsertServer(
+      "claude-desktop",
+      "filesystem",
+      pkg("@modelcontextprotocol/server-filesystem"),
+    );
+    assert.strictEqual(upsert.success, false);
+    assert.strictEqual(upsert.path, "");
+    assert.match(upsert.error ?? "", /more than one MSIX package/);
+
+    const removed = removeServer("claude-desktop", "filesystem");
+    assert.strictEqual(removed.success, false);
+    assert.strictEqual(removed.path, "");
+    assert.strictEqual(removed.removed, false);
+    assert.match(removed.error ?? "", /more than one MSIX package/);
+
+    const list = await listInstalledServers({
+      agents: ["claude-desktop"],
+      cwd: createTempDir(),
+    });
+    const desktop = list.find((entry) => entry.agentType === "claude-desktop");
+    assert.ok(desktop);
+    assert.strictEqual(desktop.detected, false);
+    assert.strictEqual(desktop.configPath, "");
+    assert.match(desktop.error ?? "", /more than one MSIX package/);
+
+    const originalDetect = agents["claude-desktop"].detectGlobalInstall;
+    agents["claude-desktop"].detectGlobalInstall = async () => true;
+    try {
+      const detectedList = await listInstalledServers({
+        global: true,
+        agents: ["claude-desktop"],
+      });
+      const detectedDesktop = detectedList.find(
+        (entry) => entry.agentType === "claude-desktop",
+      );
+      assert.ok(detectedDesktop);
+      assert.strictEqual(detectedDesktop.detected, true);
+      assert.strictEqual(detectedDesktop.configPath, "");
+      assert.match(detectedDesktop.error ?? "", /more than one MSIX package/);
+    } finally {
+      agents["claude-desktop"].detectGlobalInstall = originalDetect;
+    }
+  } finally {
+    agents["claude-desktop"].resolveConfigPath = original;
+  }
+});
+
+if (process.platform !== "win32") {
+  await test("claude-desktop unreadable selected file keeps that path", async () => {
+    const dir = createTempDir();
+    const selected = join(dir, "LocalCache", "claude_desktop_config.json");
+    mkdirSync(dirname(selected), { recursive: true });
+    writeFileSync(selected, '{"mcpServers":{}}');
+    const original = agents["claude-desktop"].resolveConfigPath;
+    const originalDetect = agents["claude-desktop"].detectGlobalInstall;
+    agents["claude-desktop"].resolveConfigPath = () => selected;
+    agents["claude-desktop"].detectGlobalInstall = async () => true;
+    chmodSync(selected, 0);
+    try {
+      const list = await listInstalledServers({
+        global: true,
+        agents: ["claude-desktop"],
+      });
+      const desktop = list.find(
+        (entry) => entry.agentType === "claude-desktop",
+      );
+      assert.ok(desktop);
+      assert.strictEqual(desktop.configPath, selected);
+      assert.ok(desktop.error);
+      assert.ok(!desktop.error.includes(agents["claude-desktop"].configPath));
+      assert.deepStrictEqual(desktop.servers, []);
+    } finally {
+      chmodSync(selected, 0o644);
+      agents["claude-desktop"].resolveConfigPath = original;
+      agents["claude-desktop"].detectGlobalInstall = originalDetect;
+    }
+  });
+}
 
 cleanup();
 
