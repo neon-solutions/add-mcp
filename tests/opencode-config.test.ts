@@ -495,6 +495,54 @@ test("relocate carries enabled:false into native disabled:true", () => {
   });
 });
 
+test("relocate maps V1 timeout and OAuth into native V2 fields", () => {
+  const path = write(
+    createTempDir(),
+    JSON.stringify({
+      mcp: {
+        postgres: {
+          type: "remote",
+          url: "https://mcp.postgres.example.com/mcp",
+          enabled: false,
+          timeout: 15000,
+          oauth: {
+            clientId: "configured-client",
+            clientSecret: "configured-secret",
+            callbackPort: 19876,
+            redirectUri: "http://127.0.0.1:19876/callback",
+          },
+        },
+        servers: {
+          pg: {
+            type: "remote",
+            url: "https://mcp.postgres.example.com/mcp",
+            disabled: true,
+            timeout: { request: 15000 },
+            oauth: { client_id: "configured-client" },
+          },
+        },
+      },
+    }),
+  );
+  relocateOpenCodeServer(path, "postgres", "pg");
+  const listed = listOpenCodeServers(path);
+  assert.strictEqual(listed.length, 1);
+  assert.strictEqual(listed[0]?.serverName, "pg");
+  assert.strictEqual(listed[0]?.configKey, "mcp.servers");
+  assert.deepStrictEqual(listed[0]?.config, {
+    type: "remote",
+    url: "https://mcp.postgres.example.com/mcp",
+    disabled: true,
+    timeout: { request: 15000 },
+    oauth: {
+      client_id: "configured-client",
+      client_secret: "configured-secret",
+      callback_port: 19876,
+      redirect_uri: "http://127.0.0.1:19876/callback",
+    },
+  });
+});
+
 test("relocate carries native disabled:true into legacy enabled:false", () => {
   const path = write(
     createTempDir(),
@@ -506,7 +554,13 @@ test("relocate carries native disabled:true into legacy enabled:false", () => {
             type: "remote",
             url: "https://example.com/mcp",
             disabled: true,
-            oauth: { client_id: "configured-client" },
+            timeout: { request: 15000, startup: 45_000 },
+            oauth: {
+              client_id: "configured-client",
+              client_secret: "configured-secret",
+              callback_port: 19876,
+              redirect_uri: "http://127.0.0.1:19876/callback",
+            },
           },
         },
       },
@@ -519,9 +573,38 @@ test("relocate carries native disabled:true into legacy enabled:false", () => {
   assert.strictEqual(moved.configKey, "mcp");
   assert.strictEqual(moved.config.enabled, false);
   assert.strictEqual("disabled" in moved.config, false);
+  assert.strictEqual(moved.config.timeout, 15000);
   assert.deepStrictEqual(moved.config.oauth, {
-    client_id: "configured-client",
+    clientId: "configured-client",
+    clientSecret: "configured-secret",
+    callbackPort: 19876,
+    redirectUri: "http://127.0.0.1:19876/callback",
   });
+});
+
+test("relocate drops a native startup-only timeout on the legacy map", () => {
+  const path = write(
+    createTempDir(),
+    JSON.stringify({
+      mcp: {
+        keep: { type: "remote", url: "https://keep.example.com/mcp" },
+        servers: {
+          "long-name": {
+            type: "local",
+            command: ["node", "server.js"],
+            timeout: { startup: 45_000 },
+          },
+        },
+      },
+    }),
+  );
+  relocateOpenCodeServer(path, "long-name", "short");
+  const moved = listOpenCodeServers(path).find(
+    (entry) => entry.serverName === "short",
+  );
+  assert.ok(moved);
+  assert.strictEqual(moved.configKey, "mcp");
+  assert.strictEqual("timeout" in moved.config, false);
 });
 
 cleanup();

@@ -255,6 +255,65 @@ export function resolveOpenCodeUpsertKey(
   return OPENCODE_LEGACY_CONFIG_KEY;
 }
 
+const OAUTH_LEGACY_TO_NATIVE: Record<string, string> = {
+  clientId: "client_id",
+  clientSecret: "client_secret",
+  callbackPort: "callback_port",
+  redirectUri: "redirect_uri",
+};
+
+const OAUTH_NATIVE_TO_LEGACY: Record<string, string> = {
+  client_id: "clientId",
+  client_secret: "clientSecret",
+  callback_port: "callbackPort",
+  redirect_uri: "redirectUri",
+};
+
+function renameOAuthFields(
+  oauth: JsonObject,
+  names: Record<string, string>,
+): JsonObject {
+  const next: JsonObject = {};
+  const targetNames = new Set(Object.values(names));
+  for (const [key, value] of Object.entries(oauth)) {
+    const mapped = names[key];
+    if (mapped) {
+      if (!Object.hasOwn(next, mapped)) {
+        next[mapped] = value;
+      }
+      continue;
+    }
+    if (targetNames.has(key) && Object.hasOwn(next, key)) {
+      continue;
+    }
+    next[key] = value;
+  }
+  return next;
+}
+
+function translateTimeout(
+  timeout: unknown,
+  toNative: boolean,
+): unknown | undefined {
+  if (toNative) {
+    if (typeof timeout === "number") {
+      // V1's millisecond timeout is the request timeout.
+      return { request: timeout };
+    }
+    if (isJsonObject(timeout)) {
+      return timeout;
+    }
+    return undefined;
+  }
+  if (typeof timeout === "number") {
+    return timeout;
+  }
+  if (isJsonObject(timeout) && typeof timeout.request === "number") {
+    return timeout.request;
+  }
+  return undefined;
+}
+
 function translateOpenCodeEntry(
   config: JsonObject,
   fromKey: OpenCodeUpsertKey,
@@ -264,21 +323,38 @@ function translateOpenCodeEntry(
   if (fromKey === toKey) {
     return next;
   }
-  if (toKey === OPENCODE_NATIVE_CONFIG_KEY) {
+  const toNative = toKey === OPENCODE_NATIVE_CONFIG_KEY;
+  if (toNative) {
     const disabled = next.disabled === true || next.enabled === false;
     delete next.enabled;
     delete next.disabled;
     if (disabled) {
       next.disabled = true;
     }
-    return next;
+  } else {
+    if (next.disabled === true) {
+      next.enabled = false;
+    } else if (typeof next.enabled !== "boolean") {
+      next.enabled = true;
+    }
+    delete next.disabled;
   }
-  if (next.disabled === true) {
-    next.enabled = false;
-  } else if (typeof next.enabled !== "boolean") {
-    next.enabled = true;
+
+  if ("timeout" in next) {
+    const timeout = translateTimeout(next.timeout, toNative);
+    if (timeout === undefined) {
+      delete next.timeout;
+    } else {
+      next.timeout = timeout;
+    }
   }
-  delete next.disabled;
+
+  if (isJsonObject(next.oauth)) {
+    next.oauth = renameOAuthFields(
+      next.oauth,
+      toNative ? OAUTH_LEGACY_TO_NATIVE : OAUTH_NATIVE_TO_LEGACY,
+    );
+  }
   return next;
 }
 

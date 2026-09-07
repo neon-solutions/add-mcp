@@ -3151,6 +3151,58 @@ test("E2E CLI: sync renames a native OpenCode alias inside mcp.servers", () => {
   assert.strictEqual(servers.pg.disabled, true);
 });
 
+test("E2E CLI: sync rename maps V1 timeout and OAuth into native OpenCode", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+  mkdirSync(join(projectDir, ".cursor"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".cursor", "mcp.json"),
+    JSON.stringify({
+      mcpServers: {
+        pg: { url: "https://mcp.postgres.example.com/mcp" },
+      },
+    }),
+  );
+  writeFileSync(
+    join(projectDir, "opencode.jsonc"),
+    JSON.stringify({
+      mcp: {
+        postgres: {
+          type: "remote",
+          url: "https://mcp.postgres.example.com/mcp",
+          enabled: false,
+          timeout: 15000,
+          oauth: { clientId: "configured-client" },
+        },
+        servers: {
+          pg: {
+            type: "remote",
+            url: "https://mcp.postgres.example.com/mcp",
+            disabled: true,
+            timeout: { request: 15000 },
+            oauth: { client_id: "configured-client" },
+          },
+        },
+      },
+    }),
+  );
+
+  const result = runCli(["sync", "-y"], projectDir, homeDir);
+  assert.strictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  const mcp = JSON.parse(
+    readFileSync(join(projectDir, "opencode.jsonc"), "utf-8"),
+  ).mcp as Record<string, unknown>;
+  const servers = mcp.servers as Record<string, Record<string, unknown>>;
+  assert.strictEqual(mcp.postgres, undefined);
+  assert.deepStrictEqual(servers.pg, {
+    type: "remote",
+    url: "https://mcp.postgres.example.com/mcp",
+    disabled: true,
+    timeout: { request: 15000 },
+    oauth: { client_id: "configured-client" },
+  });
+});
+
 test("E2E CLI: sync mixed-file rename writes a new ordinary name as legacy", () => {
   const homeDir = createTempDir();
   const projectDir = createTempDir();
