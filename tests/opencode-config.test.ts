@@ -8,6 +8,7 @@ import {
   isOpenCodeServerEntry,
   listOpenCodeServers,
   readOpenCodeLayout,
+  relocateOpenCodeServer,
   removeOpenCodeServer,
   resolveOpenCodeUpsertKey,
 } from "../src/opencode-config.js";
@@ -393,6 +394,76 @@ test("mcp.servers as a non-object is rejected", () => {
       error.message === `${path} mcp.servers must be a JSON object`,
   );
   assert.strictEqual(readFileSync(path, "utf-8"), contents);
+});
+
+test("ValueExpected tokens that are not empty files are rejected", () => {
+  for (const contents of ["}", "]", ",", "/* unterminated"]) {
+    const path = write(createTempDir(), contents);
+    assert.throws(
+      () => listOpenCodeServers(path),
+      (error: unknown) =>
+        error instanceof Error && error.message === `Invalid JSON in ${path}`,
+    );
+    assert.strictEqual(readFileSync(path, "utf-8"), contents);
+  }
+});
+
+test("V1 servers named toString and constructor stay legacy entries", () => {
+  const path = write(
+    createTempDir(),
+    JSON.stringify({
+      mcp: {
+        toString: { type: "remote", url: "https://to-string.example.com/mcp" },
+        constructor: {
+          type: "remote",
+          url: "https://constructor.example.com/mcp",
+        },
+      },
+    }),
+  );
+  const listed = listOpenCodeServers(path);
+  const byName = new Map(listed.map((entry) => [entry.serverName, entry]));
+  assert.strictEqual(byName.get("toString")?.configKey, "mcp");
+  assert.strictEqual(
+    byName.get("toString")?.config.url,
+    "https://to-string.example.com/mcp",
+  );
+  assert.strictEqual(byName.get("constructor")?.configKey, "mcp");
+  assert.strictEqual(
+    byName.get("constructor")?.config.url,
+    "https://constructor.example.com/mcp",
+  );
+});
+
+test("relocate keeps native settings when the name stays in mcp.servers", () => {
+  const path = write(
+    createTempDir(),
+    JSON.stringify({
+      mcp: {
+        servers: {
+          postgres: {
+            type: "local",
+            command: ["node", "server.js"],
+            cwd: "./tools",
+            disabled: true,
+            timeout: { startup: 45_000 },
+          },
+        },
+      },
+    }),
+  );
+  relocateOpenCodeServer(path, "postgres", "pg");
+  const listed = listOpenCodeServers(path);
+  assert.strictEqual(listed.length, 1);
+  assert.strictEqual(listed[0]?.serverName, "pg");
+  assert.strictEqual(listed[0]?.configKey, "mcp.servers");
+  assert.deepStrictEqual(listed[0]?.config, {
+    type: "local",
+    command: ["node", "server.js"],
+    cwd: "./tools",
+    disabled: true,
+    timeout: { startup: 45_000 },
+  });
 });
 
 cleanup();

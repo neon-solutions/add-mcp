@@ -49,7 +49,10 @@ import {
   type InstalledServer,
 } from "./reader.js";
 import { removeServerFromConfig } from "./formats/index.js";
-import { removeOpenCodeServer } from "./opencode-config.js";
+import {
+  removeOpenCodeServer,
+  relocateOpenCodeServer,
+} from "./opencode-config.js";
 import {
   hasTemplateVars,
   resolveArrayTemplates,
@@ -1201,7 +1204,30 @@ async function runSyncCommand(options: Options): Promise<void> {
 
   // Write-first: install canonical names
   for (const rename of actionRenames) {
-    const { group, agentType } = rename;
+    const { group, agentType, oldName } = rename;
+    if (agentType === "opencode") {
+      const source = group.entries.find(
+        (item) => item.agentType === "opencode" && item.serverName === oldName,
+      );
+      if (!source) {
+        mutationFailed = true;
+        p.log.error(
+          `Failed to write ${group.canonicalName} to ${agents.opencode.displayName}: missing source entry ${oldName}`,
+        );
+        continue;
+      }
+      try {
+        relocateOpenCodeServer(source.configPath, oldName, group.canonicalName);
+        changeCount++;
+        renamed.add(rename);
+      } catch (error) {
+        mutationFailed = true;
+        p.log.error(
+          `Failed to write ${group.canonicalName} to ${agents.opencode.displayName}: ${error instanceof Error ? error.message : "Unknown error"}`,
+        );
+      }
+      continue;
+    }
     const result = installServerForAgent(
       group.canonicalName,
       buildServerConfigFromStored(group.canonicalConfig),

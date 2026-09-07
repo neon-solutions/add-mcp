@@ -1,6 +1,10 @@
 import { existsSync, readFileSync } from "fs";
 import * as jsonc from "jsonc-parser";
-import { removeJsonConfigKey } from "./formats/json.js";
+import {
+  removeJsonConfigKey,
+  writeJsonConfig,
+  setNestedValue,
+} from "./formats/json.js";
 
 export const OPENCODE_LEGACY_CONFIG_KEY = "mcp";
 export const OPENCODE_NATIVE_CONFIG_KEY = "mcp.servers";
@@ -80,14 +84,16 @@ function parseOpenCodeJsonc(configPath: string): JsonObject {
     return {};
   }
 
+  const text = readFileSync(configPath, "utf-8");
   const errors: jsonc.ParseError[] = [];
-  const parsed: unknown = jsonc.parse(
-    readFileSync(configPath, "utf-8"),
-    errors,
-    { allowTrailingComma: true },
-  );
+  const parsed: unknown = jsonc.parse(text, errors, {
+    allowTrailingComma: true,
+  });
+  // ValueExpected also fires for tokens like `}` and `,`. Only a file that
+  // is empty after comments are stripped is an empty config.
   if (
     parsed === undefined &&
+    jsonc.stripComments(text).trim() === "" &&
     errors.every((error) => error.error === jsonc.ParseErrorCode.ValueExpected)
   ) {
     return {};
@@ -178,13 +184,16 @@ export function listOpenCodeServers(
 
   const servers: OpenCodeListedServer[] = [];
   for (const serverName of names) {
-    const nativeEntry = nativeListed[serverName];
-    if (nativeEntry) {
-      servers.push({
-        serverName,
-        config: nativeEntry,
-        configKey: OPENCODE_NATIVE_CONFIG_KEY,
-      });
+    // A V1 server named `toString` must not pick up Object.prototype.toString.
+    if (Object.hasOwn(nativeListed, serverName)) {
+      const nativeEntry = nativeListed[serverName];
+      if (nativeEntry) {
+        servers.push({
+          serverName,
+          config: nativeEntry,
+          configKey: OPENCODE_NATIVE_CONFIG_KEY,
+        });
+      }
       continue;
     }
     if (layout.nativeMap && Object.hasOwn(layout.nativeMap, serverName)) {
@@ -244,6 +253,57 @@ export function resolveOpenCodeUpsertKey(
   }
 
   return OPENCODE_LEGACY_CONFIG_KEY;
+}
+
+function translateOpenCodeEntry(
+  config: JsonObject,
+  fromKey: OpenCodeUpsertKey,
+  toKey: OpenCodeUpsertKey,
+): JsonObject {
+  const next: JsonObject = { ...config };
+  if (fromKey === toKey) {
+    return next;
+  }
+  if (toKey === OPENCODE_NATIVE_CONFIG_KEY) {
+    delete next.enabled;
+    delete next.disabled;
+    return next;
+  }
+  if (next.disabled === true) {
+    next.enabled = false;
+  } else if (typeof next.enabled !== "boolean") {
+    next.enabled = true;
+  }
+  delete next.disabled;
+  return next;
+}
+
+export function relocateOpenCodeServer(
+  configPath: string,
+  oldName: string,
+  newName: string,
+): void {
+  if (oldName === newName) {
+    return;
+  }
+
+  const existing = listOpenCodeServers(configPath).find(
+    (entry) => entry.serverName === oldName,
+  );
+  if (!existing) {
+    throw new Error(`${configPath} has no OpenCode server named "${oldName}"`);
+  }
+
+  const destKey = resolveOpenCodeUpsertKey(configPath, newName);
+  const written = translateOpenCodeEntry(
+    existing.config,
+    existing.configKey,
+    destKey,
+  );
+  const document: JsonObject = {};
+  setNestedValue(document, destKey, { [newName]: written });
+  writeJsonConfig(configPath, document, destKey);
+  removeOpenCodeServer(configPath, oldName);
 }
 
 export function removeOpenCodeServer(

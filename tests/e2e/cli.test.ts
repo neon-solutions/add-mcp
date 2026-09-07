@@ -3127,6 +3127,8 @@ test("E2E CLI: sync renames a native OpenCode alias inside mcp.servers", () => {
           postgres: {
             type: "remote",
             url: "https://mcp.postgres.example.com/mcp",
+            cwd: "./tools",
+            disabled: true,
           },
         },
       },
@@ -3145,6 +3147,8 @@ test("E2E CLI: sync renames a native OpenCode alias inside mcp.servers", () => {
   assert.ok(servers.pg);
   assert.strictEqual(servers.postgres, undefined);
   assert.strictEqual(mcp.pg, undefined);
+  assert.strictEqual(servers.pg.cwd, "./tools");
+  assert.strictEqual(servers.pg.disabled, true);
 });
 
 test("E2E CLI: sync mixed-file rename writes a new ordinary name as legacy", () => {
@@ -3374,6 +3378,53 @@ test("E2E CLI: OpenCode malformed config does not abort listing Cursor and exits
     readFileSync(join(projectDir, "opencode.jsonc"), "utf-8"),
     truncated,
   );
+});
+
+test("E2E CLI: OpenCode rejects a lone closing brace and leaves the file", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+  const malformed = "}";
+  writeFileSync(join(projectDir, "opencode.jsonc"), malformed);
+
+  const add = runCli(
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "opencode",
+      "-y",
+      "--name",
+      "example",
+    ],
+    projectDir,
+    homeDir,
+  );
+  assert.notStrictEqual(add.status, 0, `${add.stdout}\n${add.stderr}`);
+  assert.strictEqual(
+    readFileSync(join(projectDir, "opencode.jsonc"), "utf-8"),
+    malformed,
+  );
+});
+
+test("E2E CLI: OpenCode lists a V1 server named toString", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+  writeFileSync(
+    join(projectDir, "opencode.jsonc"),
+    JSON.stringify({
+      mcp: {
+        toString: {
+          type: "remote",
+          url: "https://to-string.example.com/mcp",
+        },
+      },
+    }),
+  );
+
+  const result = runCli(["list", "-a", "opencode"], projectDir, homeDir);
+  assert.strictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /toString/);
+  assert.match(output, /https:\/\/to-string\.example\.com\/mcp/);
 });
 
 cleanup();
