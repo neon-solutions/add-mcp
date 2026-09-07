@@ -22,6 +22,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import yaml from "js-yaml";
 import * as TOML from "@iarna/toml";
+import * as jsonc from "jsonc-parser";
 import { parseSource } from "../../src/source-parser.js";
 import {
   buildServerConfig,
@@ -1582,6 +1583,279 @@ test("E2E: Install to multiple agents", () => {
   const copilotConfig = readJsonConfig(join(tempDir, ".mcp.json"));
   const copilotServers = copilotConfig.mcpServers as Record<string, unknown>;
   assert.ok(copilotServers.example);
+});
+
+test("E2E: OpenCode native-only file adds under mcp.servers without enabled", () => {
+  const tempDir = createTempDir();
+  writeFileSync(
+    join(tempDir, "opencode.jsonc"),
+    JSON.stringify({
+      mcp: {
+        timeout: { startup: 4000 },
+        servers: {
+          keep: { type: "remote", url: "https://keep.example.com/mcp" },
+        },
+      },
+    }),
+  );
+
+  const result = installServerForAgent(
+    "example",
+    buildServerConfig(parseSource("https://mcp.example.com/mcp"), {
+      headers: { Authorization: "Bearer token" },
+    }),
+    "opencode",
+    { local: true, cwd: tempDir },
+  );
+  assert.strictEqual(result.success, true);
+
+  const saved = readJsonConfig(join(tempDir, "opencode.jsonc"));
+  const mcp = saved.mcp as Record<string, Record<string, unknown>>;
+  const servers = mcp.servers as unknown as Record<
+    string,
+    Record<string, unknown>
+  >;
+  assert.ok(servers.keep);
+  assert.ok(servers.example);
+  assert.deepStrictEqual(mcp.timeout, { startup: 4000 });
+  assert.strictEqual(servers.example.type, "remote");
+  assert.strictEqual(servers.example.url, "https://mcp.example.com/mcp");
+  assert.deepStrictEqual(servers.example.headers, {
+    Authorization: "Bearer token",
+  });
+  assert.strictEqual("enabled" in servers.example, false);
+  assert.strictEqual("disabled" in servers.example, false);
+  assert.strictEqual(mcp.example, undefined);
+});
+
+test("E2E: OpenCode empty native map adds under mcp.servers", () => {
+  const tempDir = createTempDir();
+  writeFileSync(
+    join(tempDir, "opencode.jsonc"),
+    JSON.stringify({ mcp: { servers: {} } }),
+  );
+
+  const result = installServerForAgent(
+    "example",
+    buildServerConfig(parseSource("https://mcp.example.com/mcp")),
+    "opencode",
+    { local: true, cwd: tempDir },
+  );
+  assert.strictEqual(result.success, true);
+  const mcp = readJsonConfig(join(tempDir, "opencode.jsonc")).mcp as Record<
+    string,
+    Record<string, unknown>
+  >;
+  const servers = mcp.servers as unknown as Record<
+    string,
+    Record<string, unknown>
+  >;
+  assert.ok(servers.example);
+  assert.strictEqual(servers.example.url, "https://mcp.example.com/mcp");
+  assert.strictEqual(mcp.example, undefined);
+});
+
+test("E2E: OpenCode mixed file updates native vs legacy in place and adds new names as legacy", () => {
+  const tempDir = createTempDir();
+  writeFileSync(
+    join(tempDir, "opencode.jsonc"),
+    JSON.stringify({
+      mcp: {
+        legacy: {
+          type: "remote",
+          url: "https://legacy.example.com/mcp",
+          enabled: false,
+        },
+        servers: {
+          native: {
+            type: "local",
+            command: ["npx", "-y", "old-package"],
+            disabled: true,
+          },
+        },
+      },
+    }),
+  );
+
+  const nativeResult = installServerForAgent(
+    "native",
+    buildServerConfig(parseSource("https://native.example.com/mcp"), {
+      headers: { Authorization: "native" },
+    }),
+    "opencode",
+    { local: true, cwd: tempDir },
+  );
+  const legacyResult = installServerForAgent(
+    "legacy",
+    buildServerConfig(parseSource("https://legacy-new.example.com/mcp")),
+    "opencode",
+    { local: true, cwd: tempDir },
+  );
+  const added = installServerForAgent(
+    "added",
+    buildServerConfig(parseSource("mcp-server-postgres"), {
+      env: { LOG_LEVEL: "info" },
+    }),
+    "opencode",
+    { local: true, cwd: tempDir },
+  );
+  assert.ok(nativeResult.success && legacyResult.success && added.success);
+
+  const mcp = readJsonConfig(join(tempDir, "opencode.jsonc")).mcp as Record<
+    string,
+    Record<string, unknown>
+  >;
+  const servers = mcp.servers as unknown as Record<
+    string,
+    Record<string, unknown>
+  >;
+  assert.ok(servers.native);
+  assert.ok(mcp.legacy);
+  assert.ok(mcp.added);
+  assert.strictEqual(servers.native.type, "remote");
+  assert.strictEqual(servers.native.url, "https://native.example.com/mcp");
+  assert.strictEqual("command" in servers.native, false);
+  assert.strictEqual("disabled" in servers.native, false);
+  assert.strictEqual("enabled" in servers.native, false);
+  assert.strictEqual(mcp.legacy.type, "remote");
+  assert.strictEqual(mcp.legacy.url, "https://legacy-new.example.com/mcp");
+  assert.strictEqual(mcp.legacy.enabled, true);
+  assert.strictEqual(mcp.added.type, "local");
+  assert.deepStrictEqual(mcp.added.command, [
+    "npx",
+    "-y",
+    "mcp-server-postgres",
+  ]);
+  assert.deepStrictEqual(mcp.added.environment, { LOG_LEVEL: "info" });
+  assert.strictEqual(mcp.added.enabled, true);
+});
+
+test("E2E: OpenCode duplicate-name update replaces native and leaves hidden legacy", () => {
+  const tempDir = createTempDir();
+  writeFileSync(
+    join(tempDir, "opencode.jsonc"),
+    JSON.stringify({
+      mcp: {
+        dup: {
+          type: "remote",
+          url: "https://legacy-dup.example.com/mcp",
+          enabled: false,
+        },
+        servers: {
+          dup: {
+            type: "remote",
+            url: "https://native-dup.example.com/mcp",
+            disabled: true,
+          },
+        },
+      },
+    }),
+  );
+
+  const result = installServerForAgent(
+    "dup",
+    buildServerConfig(parseSource("https://replaced.example.com/mcp")),
+    "opencode",
+    { local: true, cwd: tempDir },
+  );
+  assert.strictEqual(result.success, true);
+  const mcp = readJsonConfig(join(tempDir, "opencode.jsonc")).mcp as Record<
+    string,
+    Record<string, unknown>
+  >;
+  const servers = mcp.servers as unknown as Record<
+    string,
+    Record<string, unknown>
+  >;
+  assert.ok(servers.dup);
+  assert.ok(mcp.dup);
+  assert.strictEqual(servers.dup.url, "https://replaced.example.com/mcp");
+  assert.strictEqual("disabled" in servers.dup, false);
+  assert.strictEqual(mcp.dup.url, "https://legacy-dup.example.com/mcp");
+  assert.strictEqual(mcp.dup.enabled, false);
+});
+
+test("E2E: OpenCode comment-only file writes legacy shape", () => {
+  const tempDir = createTempDir();
+  writeFileSync(join(tempDir, "opencode.jsonc"), "// MCP configuration\n");
+
+  const result = installServerForAgent(
+    "example",
+    buildServerConfig(parseSource("https://mcp.example.com/mcp")),
+    "opencode",
+    { local: true, cwd: tempDir },
+  );
+  assert.strictEqual(result.success, true);
+  const saved = jsonc.parse(
+    readFileSync(join(tempDir, "opencode.jsonc"), "utf-8"),
+  ) as { mcp?: Record<string, Record<string, unknown>> };
+  assert.ok(saved.mcp);
+  const example = saved.mcp.example;
+  assert.ok(example);
+  assert.strictEqual(example.type, "remote");
+  assert.strictEqual(example.enabled, true);
+});
+
+test("E2E: same remote install leaves Kilo on V1 while native OpenCode omits enabled", () => {
+  const tempDir = createTempDir();
+  writeFileSync(
+    join(tempDir, "opencode.jsonc"),
+    JSON.stringify({ mcp: { servers: {} } }),
+  );
+  const config = buildServerConfig(parseSource("https://mcp.example.com/mcp"), {
+    timeout: 4000,
+  });
+
+  const openCode = installServerForAgent("example", config, "opencode", {
+    local: true,
+    cwd: tempDir,
+  });
+  const kilo = installServerForAgent("example", config, "kilo-code", {
+    local: true,
+    cwd: tempDir,
+  });
+  assert.ok(openCode.success && kilo.success);
+
+  const openMcp = readJsonConfig(join(tempDir, "opencode.jsonc")).mcp as Record<
+    string,
+    Record<string, unknown>
+  >;
+  const kiloMcp = readJsonConfig(join(tempDir, "kilo.json")).mcp as Record<
+    string,
+    Record<string, unknown>
+  >;
+  const native = openMcp.servers as unknown as Record<
+    string,
+    Record<string, unknown>
+  >;
+  assert.ok(native.example);
+  assert.ok(kiloMcp.example);
+  assert.strictEqual("enabled" in native.example, false);
+  assert.strictEqual(openMcp.example, undefined);
+  assert.strictEqual(kiloMcp.example.enabled, true);
+  assert.strictEqual(kiloMcp.example.timeout, 4000);
+  assert.strictEqual(kiloMcp.servers, undefined);
+});
+
+test("E2E: OpenCode refuses a truncated JSONC file and leaves it unchanged", () => {
+  const tempDir = createTempDir();
+  const truncated = `{
+  "mcp": {
+    "keep": { "type": "remote", "url": "https://keep.example.com/mcp"
+`;
+  const path = join(tempDir, "opencode.jsonc");
+  writeFileSync(path, truncated);
+
+  const result = installServerForAgent(
+    "example",
+    buildServerConfig(parseSource("https://mcp.example.com/mcp")),
+    "opencode",
+    { local: true, cwd: tempDir },
+  );
+  assert.strictEqual(result.success, false);
+  assert.ok(result.error?.includes(path));
+  assert.ok(result.error?.includes("Invalid JSON"));
+  assert.strictEqual(readFileSync(path, "utf-8"), truncated);
 });
 
 // Cleanup and summary

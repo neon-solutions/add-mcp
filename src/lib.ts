@@ -14,6 +14,7 @@ import {
   removeServerFromConfig,
   getNestedValue,
 } from "./formats/index.js";
+import { removeOpenCodeServer } from "./opencode-config.js";
 
 export {
   agents,
@@ -91,12 +92,17 @@ function doRemove(
 ): RemoveServerResult {
   const agent = agents[agentType];
   const configPath = getConfigPath(agent, options);
-  const configKey = getConfigKey(agent, options);
 
   if (!existsSync(configPath)) {
     return { success: true, path: configPath, removed: false };
   }
 
+  if (agentType === "opencode") {
+    const removed = removeOpenCodeServer(configPath, serverName);
+    return { success: true, path: configPath, removed };
+  }
+
+  const configKey = getConfigKey(agent, options);
   const fullConfig = readConfig(configPath, agent.format);
   if (!hasServer(getNestedValue(fullConfig, configKey), serverName)) {
     return { success: true, path: configPath, removed: false };

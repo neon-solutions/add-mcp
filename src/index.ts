@@ -50,6 +50,11 @@ import {
 } from "./reader.js";
 import { removeServerFromConfig } from "./formats/index.js";
 import {
+  listOpenCodeServers,
+  removeOpenCodeServer,
+  relocateOpenCodeServer,
+} from "./opencode-config.js";
+import {
   hasTemplateVars,
   resolveArrayTemplates,
   resolveRecordTemplates,
@@ -831,21 +836,27 @@ async function runRemoveCommand(
 
   let removedCount = 0;
   const affectedAgents = new Set<string>();
+  let mutationFailed = false;
 
   for (const idx of selectedIndices) {
     const server = matches[idx]!;
     const agent = agents[server.agentType];
     try {
-      removeServerFromConfig(
-        server.configPath,
-        agent.format,
-        getConfigKeyForServer(server),
-        server.serverName,
-      );
-      rewriteCopilotCliConfig(server.agentType, server.configPath);
+      if (server.agentType === "opencode") {
+        removeOpenCodeServer(server.configPath, server.serverName);
+      } else {
+        removeServerFromConfig(
+          server.configPath,
+          agent.format,
+          getConfigKeyForServer(server),
+          server.serverName,
+        );
+        rewriteCopilotCliConfig(server.agentType, server.configPath);
+      }
       removedCount++;
       affectedAgents.add(agent.displayName);
     } catch (error) {
+      mutationFailed = true;
       p.log.error(
         `Failed to remove ${server.serverName} from ${agent.displayName}: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
@@ -858,7 +869,7 @@ async function runRemoveCommand(
     );
   }
 
-  if (hadReadError) {
+  if (hadReadError || mutationFailed) {
     process.exitCode = 1;
   }
 
@@ -1189,10 +1200,35 @@ async function runSyncCommand(options: Options): Promise<void> {
   }
 
   let changeCount = 0;
+  let mutationFailed = false;
+  const renamed = new Set<(typeof actionRenames)[number]>();
 
   // Write-first: install canonical names
   for (const rename of actionRenames) {
-    const { group, agentType } = rename;
+    const { group, agentType, oldName } = rename;
+    if (agentType === "opencode") {
+      const source = group.entries.find(
+        (item) => item.agentType === "opencode" && item.serverName === oldName,
+      );
+      if (!source) {
+        mutationFailed = true;
+        p.log.error(
+          `Failed to write ${group.canonicalName} to ${agents.opencode.displayName}: missing source entry ${oldName}`,
+        );
+        continue;
+      }
+      try {
+        relocateOpenCodeServer(source.configPath, oldName, group.canonicalName);
+        changeCount++;
+        renamed.add(rename);
+      } catch (error) {
+        mutationFailed = true;
+        p.log.error(
+          `Failed to write ${group.canonicalName} to ${agents.opencode.displayName}: ${error instanceof Error ? error.message : "Unknown error"}`,
+        );
+      }
+      continue;
+    }
     const result = installServerForAgent(
       group.canonicalName,
       buildServerConfigFromStored(group.canonicalConfig),
@@ -1201,7 +1237,9 @@ async function runSyncCommand(options: Options): Promise<void> {
     );
     if (result.success) {
       changeCount++;
+      renamed.add(rename);
     } else {
+      mutationFailed = true;
       p.log.error(
         `Failed to write ${group.canonicalName} to ${agents[agentType].displayName}: ${result.error}`,
       );
@@ -1210,6 +1248,24 @@ async function runSyncCommand(options: Options): Promise<void> {
 
   for (const addition of actionAdditions) {
     const { group, agentType } = addition;
+    if (agentType === "opencode") {
+      const opencode = readable.find((item) => item.agentType === "opencode");
+      if (opencode) {
+        const dest = listOpenCodeServers(opencode.configPath).find(
+          (entry) => entry.serverName === group.canonicalName,
+        );
+        if (dest) {
+          if (extractServerIdentity(dest.config) === group.identity) {
+            continue;
+          }
+          mutationFailed = true;
+          p.log.error(
+            `Failed to add ${group.canonicalName} to ${agents.opencode.displayName}: already has a different server named "${group.canonicalName}"`,
+          );
+          continue;
+        }
+      }
+    }
     const result = installServerForAgent(
       group.canonicalName,
       buildServerConfigFromStored(group.canonicalConfig),
@@ -1219,6 +1275,7 @@ async function runSyncCommand(options: Options): Promise<void> {
     if (result.success) {
       changeCount++;
     } else {
+      mutationFailed = true;
       p.log.error(
         `Failed to add ${group.canonicalName} to ${agents[agentType].displayName}: ${result.error}`,
       );
@@ -1227,12 +1284,20 @@ async function runSyncCommand(options: Options): Promise<void> {
 
   // Delete-second: remove old aliases
   for (const rename of actionRenames) {
+    if (!renamed.has(rename)) {
+      continue;
+    }
     const { group, agentType, oldName } = rename;
     const agentConfig = agents[agentType];
     const entry = group.entries.find((e) => e.agentType === agentType);
     if (!entry) continue;
 
     try {
+      if (agentType === "opencode") {
+        // relocateOpenCodeServer already removed oldName. A later add
+        // can reuse that name; deleting it here would drop the new server.
+        continue;
+      }
       // Re-read the key after writes. Sharing .mcp.json can fold a Copilot
       // bare map under mcpServers, so the listed key is stale.
       removeServerFromConfig(
@@ -1243,14 +1308,17 @@ async function runSyncCommand(options: Options): Promise<void> {
       );
       rewriteCopilotCliConfig(agentType, entry.configPath);
     } catch (error) {
+      mutationFailed = true;
       p.log.error(
         `Failed to remove old alias ${oldName} from ${agentConfig.displayName}: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   }
 
-  if (layoutError) {
-    p.log.error(layoutError);
+  if (layoutError || mutationFailed) {
+    if (layoutError) {
+      p.log.error(layoutError);
+    }
     process.exitCode = 1;
   }
 

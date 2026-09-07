@@ -7,6 +7,7 @@ import type { AgentConfig, AgentType, McpServerConfig } from "./types.js";
 import { getLastSelectedAgents, saveSelectedAgents } from "./config.js";
 import { resolvedBearerTokenEnv } from "./schema.js";
 import { isBareServerMap } from "./formats/utils.js";
+import { OPENCODE_NATIVE_CONFIG_KEY } from "./opencode-config.js";
 
 const home = homedir();
 const defaultGrokHome = join(home, ".grok");
@@ -222,22 +223,33 @@ function transformZedConfig(
 function transformOpenCodeConfig(
   _serverName: string,
   config: McpServerConfig,
+  context?: { local?: boolean; configKey?: string },
 ): Record<string, unknown> {
+  // V2 enables a server when `disabled` is omitted. Native writes must not
+  // add V1 `enabled`, or a later list/sync round-trip grows V1-only fields.
+  const native = context?.configKey === OPENCODE_NATIVE_CONFIG_KEY;
+
   if (config.url) {
-    return {
+    const remote: Record<string, unknown> = {
       type: "remote",
       url: config.url,
-      enabled: true,
       headers: config.headers,
     };
+    if (!native) {
+      remote.enabled = true;
+    }
+    return remote;
   }
 
-  return {
+  const local: Record<string, unknown> = {
     type: "local",
     command: [config.command, ...(config.args || [])],
-    enabled: true,
     environment: config.env || {},
   };
+  if (!native) {
+    local.enabled = true;
+  }
+  return local;
 }
 
 /**
