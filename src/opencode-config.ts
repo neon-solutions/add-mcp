@@ -358,6 +358,28 @@ function translateOpenCodeEntry(
   return next;
 }
 
+function resolveOpenCodeRelocateKey(
+  configPath: string,
+  newName: string,
+  sourceKey: OpenCodeUpsertKey,
+): OpenCodeUpsertKey {
+  const document = parseOpenCodeJsonc(configPath);
+  const layout = classifyOpenCodeDocument(document, configPath);
+  const mcp = isJsonObject(document.mcp) ? document.mcp : undefined;
+  const collidingMetadata =
+    (newName === "servers" || newName === "timeout") &&
+    slotHoldsNonServer(mcp, newName);
+  if (!collidingMetadata) {
+    return sourceKey;
+  }
+  if (layout.nativeMap) {
+    return OPENCODE_NATIVE_CONFIG_KEY;
+  }
+  throw new Error(
+    `${configPath} already uses mcp.${newName} for OpenCode settings. Rename the server or move that setting before using "${newName}".`,
+  );
+}
+
 export function relocateOpenCodeServer(
   configPath: string,
   oldName: string,
@@ -367,14 +389,26 @@ export function relocateOpenCodeServer(
     return;
   }
 
-  const existing = listOpenCodeServers(configPath).find(
-    (entry) => entry.serverName === oldName,
-  );
+  const listed = listOpenCodeServers(configPath);
+  const existing = listed.find((entry) => entry.serverName === oldName);
   if (!existing) {
     throw new Error(`${configPath} has no OpenCode server named "${oldName}"`);
   }
 
-  const destKey = resolveOpenCodeUpsertKey(configPath, newName);
+  // The dest name is already a server. Overwriting it would replace a
+  // valid native entry with a translated copy of the alias.
+  if (listed.some((entry) => entry.serverName === newName)) {
+    removeOpenCodeServer(configPath, oldName);
+    return;
+  }
+
+  // Mixed-file installs still add new names as V1. A rename is not an
+  // install: moving a native server into V1 drops timeout.startup.
+  const destKey = resolveOpenCodeRelocateKey(
+    configPath,
+    newName,
+    existing.configKey,
+  );
   const written = translateOpenCodeEntry(
     existing.config,
     existing.configKey,

@@ -3151,7 +3151,7 @@ test("E2E CLI: sync renames a native OpenCode alias inside mcp.servers", () => {
   assert.strictEqual(servers.pg.disabled, true);
 });
 
-test("E2E CLI: sync rename maps V1 timeout and OAuth into native OpenCode", () => {
+test("E2E CLI: sync rename keeps native OpenCode dest when a V1 alias exists", () => {
   const homeDir = createTempDir();
   const projectDir = createTempDir();
   mkdirSync(join(projectDir, ".cursor"), { recursive: true });
@@ -3179,8 +3179,9 @@ test("E2E CLI: sync rename maps V1 timeout and OAuth into native OpenCode", () =
             type: "remote",
             url: "https://mcp.postgres.example.com/mcp",
             disabled: true,
-            timeout: { request: 15000 },
+            timeout: { request: 15000, startup: 45_000 },
             oauth: { client_id: "configured-client" },
+            cwd: "./tools",
           },
         },
       },
@@ -3198,12 +3199,13 @@ test("E2E CLI: sync rename maps V1 timeout and OAuth into native OpenCode", () =
     type: "remote",
     url: "https://mcp.postgres.example.com/mcp",
     disabled: true,
-    timeout: { request: 15000 },
+    timeout: { request: 15000, startup: 45_000 },
     oauth: { client_id: "configured-client" },
+    cwd: "./tools",
   });
 });
 
-test("E2E CLI: sync mixed-file rename writes a new ordinary name as legacy", () => {
+test("E2E CLI: sync mixed-file rename keeps a native OpenCode server native", () => {
   const homeDir = createTempDir();
   const projectDir = createTempDir();
   mkdirSync(join(projectDir, ".cursor"), { recursive: true });
@@ -3221,7 +3223,11 @@ test("E2E CLI: sync mixed-file rename writes a new ordinary name as legacy", () 
       mcp: {
         keep: { type: "remote", url: "https://keep.example.com/mcp" },
         servers: {
-          alpha: { type: "remote", url: "https://mcp.example.com/mcp" },
+          alpha: {
+            type: "remote",
+            url: "https://mcp.example.com/mcp",
+            timeout: { startup: 45_000, request: 15000 },
+          },
         },
       },
     }),
@@ -3236,9 +3242,14 @@ test("E2E CLI: sync mixed-file rename writes a new ordinary name as legacy", () 
     string,
     Record<string, unknown>
   >;
-  assert.ok(mcp.a);
-  assert.strictEqual(mcp.a.url, "https://mcp.example.com/mcp");
-  assert.strictEqual(mcp.a.enabled, true);
+  assert.strictEqual(mcp.a, undefined);
+  assert.ok(servers.a);
+  assert.strictEqual(servers.a.url, "https://mcp.example.com/mcp");
+  assert.strictEqual("enabled" in servers.a, false);
+  assert.deepStrictEqual(servers.a.timeout, {
+    startup: 45_000,
+    request: 15000,
+  });
   assert.strictEqual(servers.alpha, undefined);
   assert.ok(mcp.keep);
 });

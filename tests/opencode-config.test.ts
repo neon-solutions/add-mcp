@@ -477,7 +477,11 @@ test("relocate carries enabled:false into native disabled:true", () => {
           type: "remote",
           url: "https://example.com/mcp",
           enabled: false,
-          oauth: { client_id: "configured-client" },
+          timeout: 15000,
+          oauth: {
+            clientId: "configured-client",
+            clientSecret: "configured-secret",
+          },
         },
       },
     }),
@@ -490,12 +494,14 @@ test("relocate carries enabled:false into native disabled:true", () => {
   assert.ok(listed[0]);
   assert.strictEqual(listed[0].config.disabled, true);
   assert.strictEqual("enabled" in listed[0].config, false);
+  assert.deepStrictEqual(listed[0].config.timeout, { request: 15000 });
   assert.deepStrictEqual(listed[0].config.oauth, {
     client_id: "configured-client",
+    client_secret: "configured-secret",
   });
 });
 
-test("relocate maps V1 timeout and OAuth into native V2 fields", () => {
+test("relocate deletes a V1 alias without overwriting the native dest", () => {
   const path = write(
     createTempDir(),
     JSON.stringify({
@@ -517,8 +523,9 @@ test("relocate maps V1 timeout and OAuth into native V2 fields", () => {
             type: "remote",
             url: "https://mcp.postgres.example.com/mcp",
             disabled: true,
-            timeout: { request: 15000 },
+            timeout: { request: 15000, startup: 45_000 },
             oauth: { client_id: "configured-client" },
+            cwd: "./tools",
           },
         },
       },
@@ -533,17 +540,13 @@ test("relocate maps V1 timeout and OAuth into native V2 fields", () => {
     type: "remote",
     url: "https://mcp.postgres.example.com/mcp",
     disabled: true,
-    timeout: { request: 15000 },
-    oauth: {
-      client_id: "configured-client",
-      client_secret: "configured-secret",
-      callback_port: 19876,
-      redirect_uri: "http://127.0.0.1:19876/callback",
-    },
+    timeout: { request: 15000, startup: 45_000 },
+    oauth: { client_id: "configured-client" },
+    cwd: "./tools",
   });
 });
 
-test("relocate carries native disabled:true into legacy enabled:false", () => {
+test("relocate keeps a mixed-file native server in mcp.servers", () => {
   const path = write(
     createTempDir(),
     JSON.stringify({
@@ -570,41 +573,20 @@ test("relocate carries native disabled:true into legacy enabled:false", () => {
   const listed = listOpenCodeServers(path);
   const moved = listed.find((entry) => entry.serverName === "short");
   assert.ok(moved);
-  assert.strictEqual(moved.configKey, "mcp");
-  assert.strictEqual(moved.config.enabled, false);
-  assert.strictEqual("disabled" in moved.config, false);
-  assert.strictEqual(moved.config.timeout, 15000);
-  assert.deepStrictEqual(moved.config.oauth, {
-    clientId: "configured-client",
-    clientSecret: "configured-secret",
-    callbackPort: 19876,
-    redirectUri: "http://127.0.0.1:19876/callback",
+  assert.strictEqual(moved.configKey, "mcp.servers");
+  assert.strictEqual(moved.config.disabled, true);
+  assert.strictEqual("enabled" in moved.config, false);
+  assert.deepStrictEqual(moved.config.timeout, {
+    request: 15000,
+    startup: 45_000,
   });
-});
-
-test("relocate drops a native startup-only timeout on the legacy map", () => {
-  const path = write(
-    createTempDir(),
-    JSON.stringify({
-      mcp: {
-        keep: { type: "remote", url: "https://keep.example.com/mcp" },
-        servers: {
-          "long-name": {
-            type: "local",
-            command: ["node", "server.js"],
-            timeout: { startup: 45_000 },
-          },
-        },
-      },
-    }),
-  );
-  relocateOpenCodeServer(path, "long-name", "short");
-  const moved = listOpenCodeServers(path).find(
-    (entry) => entry.serverName === "short",
-  );
-  assert.ok(moved);
-  assert.strictEqual(moved.configKey, "mcp");
-  assert.strictEqual("timeout" in moved.config, false);
+  assert.deepStrictEqual(moved.config.oauth, {
+    client_id: "configured-client",
+    client_secret: "configured-secret",
+    callback_port: 19876,
+    redirect_uri: "http://127.0.0.1:19876/callback",
+  });
+  assert.ok(listed.find((entry) => entry.serverName === "keep"));
 });
 
 cleanup();
