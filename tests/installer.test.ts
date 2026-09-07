@@ -19,6 +19,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   buildServerConfig,
+  getConfigPathSafe,
   installServer,
   installServerForAgent,
   updateGitignoreWithPaths,
@@ -1374,6 +1375,74 @@ test("updateGitignoreWithPaths - appends only new local paths", () => {
     readFileSync(gitignorePath, "utf-8"),
     ".cursor/mcp.json\n.vscode/mcp.json\n",
   );
+});
+
+test("getConfigPathSafe - thrown resolver is error with empty path", () => {
+  const original = agents["claude-desktop"].resolveConfigPath;
+  agents["claude-desktop"].resolveConfigPath = () => {
+    throw new Error(
+      "Claude Desktop has more than one MSIX config file:\n  a\n  b",
+    );
+  };
+  try {
+    const result = getConfigPathSafe(agents["claude-desktop"]);
+    assert.strictEqual(result.ok, false);
+    assert.strictEqual(result.path, "");
+    assert.match(result.error, /more than one MSIX config file/);
+  } finally {
+    agents["claude-desktop"].resolveConfigPath = original;
+  }
+});
+
+test("installServerForAgent - thrown resolver does not write", () => {
+  const original = agents["claude-desktop"].resolveConfigPath;
+  agents["claude-desktop"].resolveConfigPath = () => {
+    throw new Error("Claude Desktop has more than one MSIX package:\n  a\n  b");
+  };
+  try {
+    const parsed = parseSource("@modelcontextprotocol/server-filesystem");
+    const config = buildServerConfig(parsed);
+    const result = installServerForAgent(
+      "filesystem",
+      config,
+      "claude-desktop",
+    );
+    assert.strictEqual(result.success, false);
+    assert.strictEqual(result.path, "");
+    assert.match(result.error ?? "", /more than one MSIX package/);
+  } finally {
+    agents["claude-desktop"].resolveConfigPath = original;
+  }
+});
+
+test("installServer - thrown Claude Desktop resolver does not block cursor", () => {
+  const tempDir = createTempDir();
+  const original = agents["claude-desktop"].resolveConfigPath;
+  agents["claude-desktop"].resolveConfigPath = () => {
+    throw new Error("Claude Desktop has more than one MSIX package:\n  a\n  b");
+  };
+  try {
+    const parsed = parseSource("@modelcontextprotocol/server-filesystem");
+    const config = buildServerConfig(parsed);
+    const results = installServer(
+      "filesystem",
+      config,
+      ["cursor", "claude-desktop"],
+      {
+        routing: new Map<AgentType, "local" | "global">([
+          ["cursor", "local"],
+          ["claude-desktop", "global"],
+        ]),
+        cwd: tempDir,
+      },
+    );
+    assert.strictEqual(results.get("cursor")?.success, true);
+    assert.strictEqual(existsSync(join(tempDir, ".cursor", "mcp.json")), true);
+    assert.strictEqual(results.get("claude-desktop")?.success, false);
+    assert.strictEqual(results.get("claude-desktop")?.path, "");
+  } finally {
+    agents["claude-desktop"].resolveConfigPath = original;
+  }
 });
 
 // Cleanup and summary

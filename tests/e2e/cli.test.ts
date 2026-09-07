@@ -68,6 +68,9 @@ function runCli(
     env: {
       ...process.env,
       HOME: homeDir,
+      USERPROFILE: homeDir,
+      APPDATA: join(homeDir, "AppData", "Roaming"),
+      LOCALAPPDATA: join(homeDir, "AppData", "Local"),
       XDG_CONFIG_HOME: join(homeDir, ".config"),
       CODEX_HOME: join(homeDir, ".codex"),
       NO_COLOR: "1",
@@ -87,8 +90,13 @@ function claudeDesktopConfigPath(homeDir: string): string {
     );
   }
   if (process.platform === "win32") {
-    const appData = process.env.APPDATA || join(homeDir, "AppData", "Roaming");
-    return join(appData, "Claude", "claude_desktop_config.json");
+    return join(
+      homeDir,
+      "AppData",
+      "Roaming",
+      "Claude",
+      "claude_desktop_config.json",
+    );
   }
   return join(homeDir, ".config", "Claude", "claude_desktop_config.json");
 }

@@ -2,7 +2,7 @@ import { existsSync } from "fs";
 import type { AgentType, McpServerConfig } from "./types.js";
 import { agents } from "./agents.js";
 import {
-  getConfigPath,
+  getConfigPathSafe,
   getConfigKey,
   installServerForAgent,
   rewriteCopilotCliConfig,
@@ -91,7 +91,16 @@ function doRemove(
   options: InstallOptions,
 ): RemoveServerResult {
   const agent = agents[agentType];
-  const configPath = getConfigPath(agent, options);
+  const resolved = getConfigPathSafe(agent, options);
+  if (!resolved.ok) {
+    return {
+      success: false,
+      path: resolved.path,
+      removed: false,
+      error: resolved.error,
+    };
+  }
+  const configPath = resolved.path;
 
   if (!existsSync(configPath)) {
     return { success: true, path: configPath, removed: false };
@@ -124,9 +133,10 @@ export function removeServer(
   try {
     return doRemove(known, serverName, options);
   } catch (e) {
+    const resolved = getConfigPathSafe(agents[known], options);
     return {
       success: false,
-      path: getConfigPath(agents[known], options),
+      path: resolved.path,
       removed: false,
       error: e instanceof Error ? e.message : "Unknown error",
     };

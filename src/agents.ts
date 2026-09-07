@@ -1,7 +1,7 @@
 import * as p from "@clack/prompts";
 import { homedir } from "os";
 import { dirname, join } from "path";
-import { existsSync, readFileSync } from "fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "fs";
 import * as jsonc from "jsonc-parser";
 import type { AgentConfig, AgentType, McpServerConfig } from "./types.js";
 import { getLastSelectedAgents, saveSelectedAgents } from "./config.js";
@@ -805,6 +805,176 @@ function resolveKiloCodeConfigPath(
   return join(baseDir, "kilo.json");
 }
 
+const CLAUDE_MSIX_PACKAGE_NAME = /^Claude_[A-Za-z0-9]+$/;
+
+function fsErrorCode(error: unknown): string | undefined {
+  if (typeof error !== "object" || error === null || !("code" in error)) {
+    return undefined;
+  }
+  const code = error.code;
+  return typeof code === "string" ? code : undefined;
+}
+
+function getWindowsRoamingDir(): string {
+  return process.env.APPDATA || join(homedir(), "AppData", "Roaming");
+}
+
+function getWindowsLocalAppDataDir(): string {
+  return process.env.LOCALAPPDATA || join(homedir(), "AppData", "Local");
+}
+
+function claudeDesktopMsixConfigPath(packageRoot: string): string {
+  return join(
+    packageRoot,
+    "LocalCache",
+    "Roaming",
+    "Claude",
+    "claude_desktop_config.json",
+  );
+}
+
+type PathPresence = "missing" | "present" | "inaccessible";
+
+function pathPresence(targetPath: string): PathPresence {
+  try {
+    statSync(targetPath);
+    return "present";
+  } catch (error) {
+    const code = fsErrorCode(error);
+    if (code === "ENOENT") return "missing";
+    if (code === "EACCES" || code === "EPERM") return "inaccessible";
+    throw error;
+  }
+}
+
+function listClaudeMsixPackageRoots(packagesDir: string): string[] {
+  try {
+    return readdirSync(packagesDir, { withFileTypes: true })
+      .filter(
+        (entry) =>
+          entry.isDirectory() && CLAUDE_MSIX_PACKAGE_NAME.test(entry.name),
+      )
+      .map((entry) => join(packagesDir, entry.name));
+  } catch (error) {
+    const code = fsErrorCode(error);
+    if (code === "ENOENT") return [];
+    throw error;
+  }
+}
+
+/**
+ * MSIX virtualizes %APPDATA%. The packaged process opens LocalCache first and
+ * only falls through to the real file when that copy is absent, so an existing
+ * classic config must keep winning when no packaged file exists.
+ */
+export function resolveClaudeDesktopWindowsConfigPath(input: {
+  roamingConfigPath: string;
+  packagesDir: string;
+}): string {
+  const roamingPresence = pathPresence(input.roamingConfigPath);
+  if (roamingPresence === "inaccessible") {
+    throw new Error(
+      `Claude Desktop config path is not readable: ${input.roamingConfigPath}`,
+    );
+  }
+  const classicFileExists = roamingPresence === "present";
+
+  let packageRoots: string[];
+  try {
+    packageRoots = listClaudeMsixPackageRoots(input.packagesDir);
+  } catch (error) {
+    const code = fsErrorCode(error);
+    if (code === "EACCES" || code === "EPERM") {
+      throw new Error(
+        `Claude Desktop MSIX package directory is not readable: ${input.packagesDir}`,
+      );
+    }
+    throw error;
+  }
+
+  const msixConfigs: string[] = [];
+  for (const packageRoot of packageRoots) {
+    const msixPath = claudeDesktopMsixConfigPath(packageRoot);
+    const presence = pathPresence(msixPath);
+    if (presence === "inaccessible") {
+      throw new Error(
+        `Claude Desktop config path is not readable: ${msixPath}`,
+      );
+    }
+    if (presence === "present") {
+      msixConfigs.push(msixPath);
+    }
+  }
+
+  if (msixConfigs.length > 1) {
+    throw new Error(
+      `Claude Desktop has more than one MSIX config file:\n${msixConfigs
+        .map((candidate) => `  ${candidate}`)
+        .join("\n")}`,
+    );
+  }
+  const [uniqueMsixConfig] = msixConfigs;
+  if (uniqueMsixConfig !== undefined) {
+    return uniqueMsixConfig;
+  }
+  if (classicFileExists) {
+    return input.roamingConfigPath;
+  }
+  if (packageRoots.length > 1) {
+    throw new Error(
+      `Claude Desktop has more than one MSIX package:\n${packageRoots
+        .map((candidate) => `  ${candidate}`)
+        .join("\n")}`,
+    );
+  }
+  const [uniquePackageRoot] = packageRoots;
+  if (uniquePackageRoot !== undefined) {
+    return claudeDesktopMsixConfigPath(uniquePackageRoot);
+  }
+  return input.roamingConfigPath;
+}
+
+export function detectClaudeDesktopWindowsInstall(input: {
+  roamingClaudeDir: string;
+  packagesDir: string;
+}): boolean {
+  const classic = pathPresence(input.roamingClaudeDir);
+  if (classic === "present" || classic === "inaccessible") {
+    return true;
+  }
+
+  try {
+    return listClaudeMsixPackageRoots(input.packagesDir).length > 0;
+  } catch {
+    const packages = pathPresence(input.packagesDir);
+    return packages === "present" || packages === "inaccessible";
+  }
+}
+
+function resolveClaudeDesktopConfigPath(agent: AgentConfig): string {
+  if (process.platform !== "win32") {
+    return agent.configPath;
+  }
+  return resolveClaudeDesktopWindowsConfigPath({
+    roamingConfigPath: join(
+      getWindowsRoamingDir(),
+      "Claude",
+      "claude_desktop_config.json",
+    ),
+    packagesDir: join(getWindowsLocalAppDataDir(), "Packages"),
+  });
+}
+
+async function detectClaudeDesktopInstall(): Promise<boolean> {
+  if (process.platform !== "win32") {
+    return existsSync(join(appSupport, "Claude"));
+  }
+  return detectClaudeDesktopWindowsInstall({
+    roamingClaudeDir: join(getWindowsRoamingDir(), "Claude"),
+    packagesDir: join(getWindowsLocalAppDataDir(), "Packages"),
+  });
+}
+
 export const agents: Record<AgentType, AgentConfig> = {
   antigravity: {
     name: "antigravity",
@@ -878,9 +1048,8 @@ export const agents: Record<AgentType, AgentConfig> = {
     supportedFields: [],
     unsupportedTransportMessage:
       "Claude Desktop only supports local (stdio) servers via its config file. Add remote servers through Settings → Connectors in the app instead.",
-    detectGlobalInstall: async () => {
-      return existsSync(join(appSupport, "Claude"));
-    },
+    resolveConfigPath: resolveClaudeDesktopConfigPath,
+    detectGlobalInstall: detectClaudeDesktopInstall,
     transformConfig: transformStandardConfig,
   },
 
