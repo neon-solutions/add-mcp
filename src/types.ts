@@ -16,6 +16,7 @@ export type AgentType =
   | "kilo-code"
   | "kimi-code"
   | "kiro-cli"
+  | "mastracode"
   | "mcporter"
   | "opencode"
   | "pi"
@@ -34,6 +35,7 @@ export const agentAliases: Record<string, AgentType> = {
   kilocode: "kilo-code",
   kimi: "kimi-code",
   kiro: "kiro-cli",
+  mastra: "mastracode",
   "pi-agent": "pi",
 };
 

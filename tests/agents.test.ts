@@ -60,9 +60,9 @@ function cleanup() {
 // Agent Configuration Tests
 // ============================================
 
-test("getAgentTypes returns all 21 agents", () => {
+test("getAgentTypes returns all 22 agents", () => {
   const types = getAgentTypes();
-  assert.strictEqual(types.length, 21);
+  assert.strictEqual(types.length, 22);
   assert.ok(types.includes("antigravity"));
   assert.ok(types.includes("cline"));
   assert.ok(types.includes("cline-cli"));
@@ -78,6 +78,7 @@ test("getAgentTypes returns all 21 agents", () => {
   assert.ok(types.includes("kilo-code"));
   assert.ok(types.includes("kimi-code"));
   assert.ok(types.includes("kiro-cli"));
+  assert.ok(types.includes("mastracode"));
   assert.ok(types.includes("mcporter"));
   assert.ok(types.includes("opencode"));
   assert.ok(types.includes("pi"));
@@ -143,6 +144,7 @@ test("supportedFields reflects per-client capabilities", () => {
   assert.deepStrictEqual(agents["kilo-code"].supportedFields, ["timeout"]);
   assert.deepStrictEqual(agents["kimi-code"].supportedFields, ["timeout"]);
   assert.deepStrictEqual(agents["kiro-cli"].supportedFields, ["timeout"]);
+  assert.deepStrictEqual(agents.mastracode.supportedFields, ["scopes"]);
   assert.deepStrictEqual(agents.pi.supportedFields, ["timeout"]);
   // Clients with no extra field support declare an empty list.
   assert.deepStrictEqual(agents.vscode.supportedFields, []);
@@ -165,6 +167,7 @@ test("supportsProjectConfig - returns true for project-capable agents", () => {
   assert.strictEqual(supportsProjectConfig("kilo-code"), true);
   assert.strictEqual(supportsProjectConfig("kimi-code"), true);
   assert.strictEqual(supportsProjectConfig("kiro-cli"), true);
+  assert.strictEqual(supportsProjectConfig("mastracode"), true);
   assert.strictEqual(supportsProjectConfig("mcporter"), true);
   assert.strictEqual(supportsProjectConfig("pi"), true);
   assert.strictEqual(supportsProjectConfig("codex"), true);
@@ -181,9 +184,9 @@ test("supportsProjectConfig - returns false for global-only agents", () => {
   assert.strictEqual(supportsProjectConfig("fx"), false);
 });
 
-test("getProjectCapableAgents returns 14 agents", () => {
+test("getProjectCapableAgents returns 15 agents", () => {
   const projectAgents = getProjectCapableAgents();
-  assert.strictEqual(projectAgents.length, 14);
+  assert.strictEqual(projectAgents.length, 15);
   assert.ok(projectAgents.includes("claude-code"));
   assert.ok(projectAgents.includes("cursor"));
   assert.ok(projectAgents.includes("vscode"));
@@ -194,6 +197,7 @@ test("getProjectCapableAgents returns 14 agents", () => {
   assert.ok(projectAgents.includes("kilo-code"));
   assert.ok(projectAgents.includes("kimi-code"));
   assert.ok(projectAgents.includes("kiro-cli"));
+  assert.ok(projectAgents.includes("mastracode"));
   assert.ok(projectAgents.includes("mcporter"));
   assert.ok(projectAgents.includes("pi"));
   assert.ok(projectAgents.includes("codex"));
@@ -466,6 +470,23 @@ test("detectProjectAgents - detects .kiro directory", () => {
   assert.ok(detected.includes("kiro-cli"));
 });
 
+test("detectProjectAgents - detects .mastracode directory", () => {
+  const tempDir = createTempDir();
+  mkdirSync(join(tempDir, ".mastracode"));
+
+  const detected = detectProjectAgents(tempDir);
+  assert.ok(detected.includes("mastracode"));
+});
+
+test("detectProjectAgents - does not treat .mcp.json as Mastra Code", () => {
+  const tempDir = createTempDir();
+  writeFileSync(join(tempDir, ".mcp.json"), "{}");
+
+  const detected = detectProjectAgents(tempDir);
+  assert.ok(detected.includes("claude-code"));
+  assert.ok(!detected.includes("mastracode"));
+});
+
 test("detectProjectAgents - detects .pi directory", () => {
   const tempDir = createTempDir();
   mkdirSync(join(tempDir, ".pi"));
@@ -552,6 +573,7 @@ test("isTransportSupported - most agents support http", () => {
     "kilo-code",
     "kimi-code",
     "kiro-cli",
+    "mastracode",
     "mcporter",
     "opencode",
     "pi",
@@ -585,6 +607,7 @@ test("isTransportSupported - most agents support sse", () => {
     "kilo-code",
     "kimi-code",
     "kiro-cli",
+    "mastracode",
     "mcporter",
     "opencode",
     "pi",

@@ -551,6 +551,53 @@ test("installServerForAgent - Pi maps stdio config and timeout", () => {
   assert.ok(!("timeout" in server));
 });
 
+test("installServerForAgent - Mastra Code maps scopes to oauth.scopes", () => {
+  const tempDir = createTempDir();
+  const result = installRemoteWith("mastracode", tempDir, {
+    oauthScopes: ["read", "write"],
+    timeout: 12000,
+  });
+  assert.ok(result.success);
+  assert.deepStrictEqual(result.droppedFields, ["timeout"]);
+
+  const saved = readJsonConfig(join(tempDir, ".mastracode", "mcp.json"));
+  const server = (saved.mcpServers as Record<string, Record<string, unknown>>)
+    .example;
+  assert.ok(server);
+  assert.strictEqual(server.url, "https://mcp.example.com/mcp");
+  assert.deepStrictEqual(server.oauth, { scopes: ["read", "write"] });
+  assert.ok(!("type" in server));
+  assert.ok(!("timeout" in server));
+  assert.ok(!("oauthScopes" in server));
+});
+
+test("installServerForAgent - Mastra Code stdio omits type", () => {
+  const tempDir = createTempDir();
+  const result = installServerForAgent(
+    "postgres",
+    {
+      command: "npx",
+      args: ["-y", "mcp-server-postgres"],
+      env: { DATABASE_URL: "postgres://localhost/test" },
+    },
+    "mastracode",
+    { local: true, cwd: tempDir },
+  );
+  assert.ok(result.success);
+
+  const saved = readJsonConfig(join(tempDir, ".mastracode", "mcp.json"));
+  const server = (saved.mcpServers as Record<string, Record<string, unknown>>)
+    .postgres;
+  assert.ok(server);
+  assert.strictEqual(server.command, "npx");
+  assert.deepStrictEqual(server.args, ["-y", "mcp-server-postgres"]);
+  assert.deepStrictEqual(server.env, {
+    DATABASE_URL: "postgres://localhost/test",
+  });
+  assert.ok(!("type" in server));
+  assert.ok(!("url" in server));
+});
+
 test("installServerForAgent - VS Code drops both timeout and scopes", () => {
   const tempDir = createTempDir();
   const result = installRemoteWith("vscode", tempDir, {
