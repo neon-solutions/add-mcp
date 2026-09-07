@@ -9,6 +9,7 @@
 - keep `list` going when one agent's config is unreadable, print that agent's error, and exit nonzero. `remove` and `sync` report the same read errors, skip that file for every agent that uses it, and exit nonzero instead of treating it as empty.
 - exit nonzero when any selected agent fails to install, and print `Failed` or `Installed with errors` instead of `Done!`.
 - skip confirming a `sync` plan that cannot run, and exit nonzero when Copilot/Claude writes are blocked.
+- add `pi` support through the [`pi-mcp-adapter`](https://github.com/nicobailon/pi-mcp-adapter) extension, with project installs to `.pi/mcp.json` and global installs to `$PI_CODING_AGENT_DIR/mcp.json` (default `~/.pi/agent/mcp.json`), including native `requestTimeoutMs` mapping; alias: `pi-agent`. Pi itself has no built-in MCP.
 
 ## [2.3.0] - 2026-08-23
 
