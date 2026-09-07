@@ -1275,18 +1275,19 @@ async function runSyncCommand(options: Options): Promise<void> {
 
     try {
       if (agentType === "opencode") {
-        removeOpenCodeServer(entry.configPath, oldName);
-      } else {
-        // Re-read the key after writes. Sharing .mcp.json can fold a Copilot
-        // bare map under mcpServers, so the listed key is stale.
-        removeServerFromConfig(
-          entry.configPath,
-          agentConfig.format,
-          getConfigKey(agentConfig, { local: scope === "local" }),
-          oldName,
-        );
-        rewriteCopilotCliConfig(agentType, entry.configPath);
+        // relocateOpenCodeServer already removed oldName. A later add
+        // can reuse that name; deleting it here would drop the new server.
+        continue;
       }
+      // Re-read the key after writes. Sharing .mcp.json can fold a Copilot
+      // bare map under mcpServers, so the listed key is stale.
+      removeServerFromConfig(
+        entry.configPath,
+        agentConfig.format,
+        getConfigKey(agentConfig, { local: scope === "local" }),
+        oldName,
+      );
+      rewriteCopilotCliConfig(agentType, entry.configPath);
     } catch (error) {
       mutationFailed = true;
       p.log.error(
