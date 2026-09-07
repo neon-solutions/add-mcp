@@ -888,6 +888,32 @@ await test("opencode upsert and list refuse truncated JSONC and leave the file",
   assert.strictEqual(readFileSync(path, "utf-8"), truncated);
 });
 
+await test("removeServer keeps the captured path when a later resolve would fail", () => {
+  const dir = createTempDir();
+  const selected = join(dir, "claude_desktop_config.json");
+  mkdirSync(selected);
+  const original = agents["claude-desktop"].resolveConfigPath;
+  let calls = 0;
+  agents["claude-desktop"].resolveConfigPath = () => {
+    calls += 1;
+    if (calls > 1) {
+      throw new Error("second resolve must not run");
+    }
+    return selected;
+  };
+  try {
+    const removed = removeServer("claude-desktop", "filesystem");
+    assert.strictEqual(removed.success, false);
+    assert.strictEqual(removed.path, selected);
+    assert.strictEqual(removed.removed, false);
+    assert.ok(removed.error);
+    assert.ok(!removed.error.includes("second resolve must not run"));
+    assert.strictEqual(calls, 1);
+  } finally {
+    agents["claude-desktop"].resolveConfigPath = original;
+  }
+});
+
 await test("claude-desktop resolver throw is an SDK error with empty path", async () => {
   const original = agents["claude-desktop"].resolveConfigPath;
   agents["claude-desktop"].resolveConfigPath = () => {

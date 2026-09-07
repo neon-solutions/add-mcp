@@ -871,14 +871,6 @@ export function resolveClaudeDesktopWindowsConfigPath(input: {
   roamingConfigPath: string;
   packagesDir: string;
 }): string {
-  const roamingPresence = pathPresence(input.roamingConfigPath);
-  if (roamingPresence === "inaccessible") {
-    throw new Error(
-      `Claude Desktop config path is not readable: ${input.roamingConfigPath}`,
-    );
-  }
-  const classicFileExists = roamingPresence === "present";
-
   let packageRoots: string[];
   try {
     packageRoots = listClaudeMsixPackageRoots(input.packagesDir);
@@ -910,21 +902,32 @@ export function resolveClaudeDesktopWindowsConfigPath(input: {
     throw new Error(
       `Claude Desktop has more than one MSIX config file:\n${msixConfigs
         .map((candidate) => `  ${candidate}`)
-        .join("\n")}`,
+        .join(
+          "\n",
+        )}\nKeep claude_desktop_config.json in only one Claude_* package.`,
     );
   }
   const [uniqueMsixConfig] = msixConfigs;
   if (uniqueMsixConfig !== undefined) {
     return uniqueMsixConfig;
   }
-  if (classicFileExists) {
+
+  const roamingPresence = pathPresence(input.roamingConfigPath);
+  if (roamingPresence === "inaccessible") {
+    throw new Error(
+      `Claude Desktop config path is not readable: ${input.roamingConfigPath}`,
+    );
+  }
+  if (roamingPresence === "present") {
     return input.roamingConfigPath;
   }
   if (packageRoots.length > 1) {
     throw new Error(
       `Claude Desktop has more than one MSIX package:\n${packageRoots
         .map((candidate) => `  ${candidate}`)
-        .join("\n")}`,
+        .join(
+          "\n",
+        )}\nKeep one Claude_* package, or put claude_desktop_config.json in exactly one of them.`,
     );
   }
   const [uniquePackageRoot] = packageRoots;

@@ -864,7 +864,10 @@ test("resolveClaudeDesktopWindowsConfigPath - two MSIX files throws", () => {
       error instanceof Error &&
       error.message.includes("more than one MSIX config file") &&
       error.message.includes(msixConfigPath(root, "Claude_aaa")) &&
-      error.message.includes(msixConfigPath(root, "Claude_bbb")),
+      error.message.includes(msixConfigPath(root, "Claude_bbb")) &&
+      error.message.includes(
+        "Keep claude_desktop_config.json in only one Claude_* package.",
+      ),
   );
 });
 
@@ -880,7 +883,10 @@ test("resolveClaudeDesktopWindowsConfigPath - two empty packages throws", () => 
       error instanceof Error &&
       error.message.includes("more than one MSIX package") &&
       error.message.includes(join(root, "Packages", "Claude_aaa")) &&
-      error.message.includes(join(root, "Packages", "Claude_bbb")),
+      error.message.includes(join(root, "Packages", "Claude_bbb")) &&
+      error.message.includes(
+        "Keep one Claude_* package, or put claude_desktop_config.json in exactly one of them.",
+      ),
   );
 });
 
@@ -936,6 +942,50 @@ test("detectClaudeDesktopWindowsInstall - no evidence", () => {
 });
 
 if (process.platform !== "win32") {
+  test("resolveClaudeDesktopWindowsConfigPath - inaccessible C with M uses M", () => {
+    const root = createTempDir();
+    seedClassicConfig(root);
+    seedMsixConfig(root, "Claude_abc123");
+    const classicDir = dirname(claudeWin(root).roamingConfigPath);
+    chmodSync(classicDir, 0);
+    try {
+      const { roamingConfigPath, packagesDir } = claudeWin(root);
+      assert.strictEqual(
+        resolveClaudeDesktopWindowsConfigPath({
+          roamingConfigPath,
+          packagesDir,
+        }),
+        msixConfigPath(root, "Claude_abc123"),
+      );
+    } finally {
+      chmodSync(classicDir, 0o755);
+    }
+  });
+
+  test("resolveClaudeDesktopWindowsConfigPath - inaccessible C with empty package does not select M", () => {
+    const root = createTempDir();
+    seedClassicConfig(root);
+    mkdirSync(join(root, "Packages", "Claude_abc123"), { recursive: true });
+    const classicDir = dirname(claudeWin(root).roamingConfigPath);
+    chmodSync(classicDir, 0);
+    try {
+      const { roamingConfigPath, packagesDir } = claudeWin(root);
+      assert.throws(
+        () =>
+          resolveClaudeDesktopWindowsConfigPath({
+            roamingConfigPath,
+            packagesDir,
+          }),
+        (error: unknown) =>
+          error instanceof Error &&
+          error.message.includes("not readable") &&
+          error.message.includes(roamingConfigPath),
+      );
+    } finally {
+      chmodSync(classicDir, 0o755);
+    }
+  });
+
   test("resolveClaudeDesktopWindowsConfigPath - inaccessible M does not select C", () => {
     const root = createTempDir();
     seedClassicConfig(root);

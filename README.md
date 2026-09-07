@@ -75,7 +75,7 @@ MCP servers can be installed to any of these agents:
 
 **Aliases:** `codeium`, `cascade` → `windsurf`, `cline-vscode` → `cline`, `gemini` → `gemini-cli`, `github-copilot` → `vscode`, `grok` → `grok-build`, `kilo`, `kilocode` → `kilo-code`, `kimi` → `kimi-code`, `kiro` → `kiro-cli`
 
-Claude Desktop on Windows keeps `%APPDATA%\Claude\claude_desktop_config.json` when that file exists and there is no MSIX LocalCache copy. If the LocalCache file exists, add-mcp uses it, including when both files exist. A unique `Claude_*` package with no config file yet gets the LocalCache path. Two equally plausible `Claude_*` packages is an error. Linux stays `$XDG_CONFIG_HOME/Claude/claude_desktop_config.json`.
+Claude Desktop on Windows keeps `%APPDATA%\Claude\claude_desktop_config.json` when that file exists and there is no MSIX LocalCache copy. If the LocalCache file exists, add-mcp uses it, including when both files exist. A unique `Claude_*` package with no config file yet gets the LocalCache path. Two `Claude_*` folders under `%LOCALAPPDATA%\Packages` with no `claude_desktop_config.json` in either, or two of those files, prints the paths and exits 1. Linux stays `$XDG_CONFIG_HOME/Claude/claude_desktop_config.json`.
 
 Kimi Code only loads a project-level `.kimi-code/mcp.json` after you trust the folder in the CLI, so a project install may not take effect until then.
 

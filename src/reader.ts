@@ -109,7 +109,23 @@ export function readServersForAgent(
     local: options.scope === "local",
     cwd: options.cwd,
   };
-  const configPath = getConfigPath(agent, installOptions);
+  return readServersAtPath(
+    agentType,
+    options,
+    getConfigPath(agent, installOptions),
+  );
+}
+
+function readServersAtPath(
+  agentType: AgentType,
+  options: { scope: "local" | "global"; cwd?: string },
+  configPath: string,
+): AgentServers {
+  const agent = agents[agentType];
+  const installOptions: InstallOptions = {
+    local: options.scope === "local",
+    cwd: options.cwd,
+  };
 
   if (agentType === "opencode") {
     const servers: InstalledServer[] = listOpenCodeServers(configPath).map(
@@ -192,7 +208,7 @@ function readServersForAgentSafe(
     };
   }
   try {
-    return readServersForAgent(agentType, options);
+    return readServersAtPath(agentType, options, resolved.path);
   } catch (error) {
     return {
       agentType,

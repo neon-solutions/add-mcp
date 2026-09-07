@@ -102,24 +102,33 @@ function doRemove(
   }
   const configPath = resolved.path;
 
-  if (!existsSync(configPath)) {
-    return { success: true, path: configPath, removed: false };
-  }
+  try {
+    if (!existsSync(configPath)) {
+      return { success: true, path: configPath, removed: false };
+    }
 
-  if (agentType === "opencode") {
-    const removed = removeOpenCodeServer(configPath, serverName);
-    return { success: true, path: configPath, removed };
-  }
+    if (agentType === "opencode") {
+      const removed = removeOpenCodeServer(configPath, serverName);
+      return { success: true, path: configPath, removed };
+    }
 
-  const configKey = getConfigKey(agent, options);
-  const fullConfig = readConfig(configPath, agent.format);
-  if (!hasServer(getNestedValue(fullConfig, configKey), serverName)) {
-    return { success: true, path: configPath, removed: false };
-  }
+    const configKey = getConfigKey(agent, options);
+    const fullConfig = readConfig(configPath, agent.format);
+    if (!hasServer(getNestedValue(fullConfig, configKey), serverName)) {
+      return { success: true, path: configPath, removed: false };
+    }
 
-  removeServerFromConfig(configPath, agent.format, configKey, serverName);
-  rewriteCopilotCliConfig(agentType, configPath);
-  return { success: true, path: configPath, removed: true };
+    removeServerFromConfig(configPath, agent.format, configKey, serverName);
+    rewriteCopilotCliConfig(agentType, configPath);
+    return { success: true, path: configPath, removed: true };
+  } catch (e) {
+    return {
+      success: false,
+      path: configPath,
+      removed: false,
+      error: e instanceof Error ? e.message : "Unknown error",
+    };
+  }
 }
 
 export function removeServer(
@@ -129,16 +138,5 @@ export function removeServer(
 ): RemoveServerResult {
   const error = validate(agentType, options.local);
   if (error) return { success: false, path: "", removed: false, error };
-  const known = agentType as AgentType;
-  try {
-    return doRemove(known, serverName, options);
-  } catch (e) {
-    const resolved = getConfigPathSafe(agents[known], options);
-    return {
-      success: false,
-      path: resolved.path,
-      removed: false,
-      error: e instanceof Error ? e.message : "Unknown error",
-    };
-  }
+  return doRemove(agentType as AgentType, serverName, options);
 }
