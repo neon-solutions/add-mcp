@@ -20,6 +20,10 @@ function getKimiCodeHome(): string {
   return process.env.KIMI_CODE_HOME || join(home, ".kimi-code");
 }
 
+function getPiAgentDir(): string {
+  return process.env.PI_CODING_AGENT_DIR || join(home, ".pi", "agent");
+}
+
 /**
  * Kilo Code resolves its global config through xdg-basedir on every platform,
  * so Windows uses `~/.config/kilo` rather than `%APPDATA%`.
@@ -436,6 +440,32 @@ function transformKiroCliConfig(
   return remoteConfig;
 }
 
+/**
+ * Pi has no native MCP. pi-mcp-adapter infers transport from `command` vs
+ * `url` and names a per-request timeout `requestTimeoutMs`.
+ */
+function transformPiConfig(
+  _serverName: string,
+  config: McpServerConfig,
+): unknown {
+  if (config.url) {
+    const remote: Record<string, unknown> = { url: config.url };
+    if (config.headers && Object.keys(config.headers).length > 0) {
+      remote.headers = config.headers;
+    }
+    if (typeof config.timeout === "number") {
+      remote.requestTimeoutMs = config.timeout;
+    }
+    return remote;
+  }
+
+  const local = buildStandardLocal(config);
+  if (typeof config.timeout === "number") {
+    local.requestTimeoutMs = config.timeout;
+  }
+  return local;
+}
+
 function headersWithoutAuthorization(
   headers: Record<string, string>,
 ): Record<string, string> {
@@ -774,6 +804,17 @@ function resolveKimiCodeConfigPath(
   return join(getKimiCodeHome(), "mcp.json");
 }
 
+function resolvePiConfigPath(
+  agent: AgentConfig,
+  options: { local: boolean; cwd: string },
+): string {
+  if (options.local && agent.localConfigPath) {
+    return join(options.cwd, agent.localConfigPath);
+  }
+
+  return join(getPiAgentDir(), "mcp.json");
+}
+
 /**
  * Kilo Code reads its config from several candidate filenames, preferring
  * `.kilo/` over the legacy `.kilocode/` and the project root last. Write to the
@@ -1086,6 +1127,23 @@ export const agents: Record<AgentType, AgentConfig> = {
     },
     resolveConfigPath: resolveOpenCodeConfigPath,
     transformConfig: transformOpenCodeConfig,
+  },
+
+  pi: {
+    name: "pi",
+    displayName: "Pi",
+    configPath: join(getPiAgentDir(), "mcp.json"),
+    localConfigPath: ".pi/mcp.json",
+    projectDetectPaths: [".pi"],
+    configKey: "mcpServers",
+    format: "json",
+    supportedTransports: ["stdio", "http", "sse"],
+    supportedFields: ["timeout"],
+    detectGlobalInstall: async () => {
+      return existsSync(getPiAgentDir());
+    },
+    resolveConfigPath: resolvePiConfigPath,
+    transformConfig: transformPiConfig,
   },
 
   vscode: {

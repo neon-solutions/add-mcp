@@ -1232,6 +1232,85 @@ test("E2E: Kiro CLI sse install does not write a type field", () => {
 });
 
 // ============================================
+// E2E Tests: Pi (pi-mcp-adapter owned files)
+// ============================================
+
+test("E2E: Install to Pi (local) - stdio", () => {
+  const tempDir = createTempDir();
+  const parsed = parseSource("mcp-server-github");
+  const config = buildServerConfig(parsed, {
+    env: { GITHUB_TOKEN: "secret" },
+  });
+
+  const result = installServerForAgent("github", config, "pi", {
+    local: true,
+    cwd: tempDir,
+  });
+
+  assert.strictEqual(result.success, true);
+
+  const configPath = join(tempDir, ".pi", "mcp.json");
+  assert.strictEqual(existsSync(configPath), true);
+
+  const savedConfig = readJsonConfig(configPath);
+  const mcpServers = savedConfig.mcpServers as Record<
+    string,
+    Record<string, unknown>
+  >;
+  const serverConfig = mcpServers.github;
+  assert.ok(serverConfig);
+  assert.strictEqual(serverConfig.command, "npx");
+  assert.deepStrictEqual(serverConfig.args, ["-y", "mcp-server-github"]);
+  assert.deepStrictEqual(serverConfig.env, { GITHUB_TOKEN: "secret" });
+  assert.strictEqual("type" in serverConfig, false);
+});
+
+test("E2E: Install to Pi (local) - remote omits type and maps timeout", () => {
+  const tempDir = createTempDir();
+  const parsed = parseSource("https://mcp.example.com/api");
+  const config = buildServerConfig(parsed, {
+    headers: { Authorization: "Bearer token" },
+    timeout: 60000,
+  });
+
+  const result = installServerForAgent("example", config, "pi", {
+    local: true,
+    cwd: tempDir,
+  });
+
+  assert.strictEqual(result.success, true);
+
+  const savedConfig = readJsonConfig(join(tempDir, ".pi", "mcp.json"));
+  const mcpServers = savedConfig.mcpServers as Record<
+    string,
+    Record<string, unknown>
+  >;
+  const serverConfig = mcpServers.example;
+  assert.ok(serverConfig);
+  assert.strictEqual(serverConfig.url, "https://mcp.example.com/api");
+  assert.deepStrictEqual(serverConfig.headers, {
+    Authorization: "Bearer token",
+  });
+  assert.strictEqual("type" in serverConfig, false);
+  assert.strictEqual(serverConfig.requestTimeoutMs, 60000);
+  assert.strictEqual("timeout" in serverConfig, false);
+});
+
+test("E2E: Pi sse install does not write a type field", () => {
+  const parsed = parseSource("https://mcp.example.com/sse");
+  const config = buildServerConfig(parsed, { transport: "sse" });
+
+  const transformed = agents.pi.transformConfig("example", config) as Record<
+    string,
+    unknown
+  >;
+
+  assert.strictEqual(transformed.url, "https://mcp.example.com/sse");
+  assert.strictEqual("type" in transformed, false);
+  assert.strictEqual("transport" in transformed, false);
+});
+
+// ============================================
 // E2E Tests: Kilo Code (OpenCode-style JSON)
 // ============================================
 
