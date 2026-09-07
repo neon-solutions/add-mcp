@@ -26,6 +26,7 @@ import {
 import { agents } from "../src/agents.js";
 import { parseSource } from "../src/source-parser.js";
 import { applyFieldSupport } from "../src/schema.js";
+import * as jsonc from "jsonc-parser";
 import * as TOML from "@iarna/toml";
 import type { AgentType } from "../src/types.js";
 
@@ -519,6 +520,36 @@ test("installServerForAgent - VS Code drops both timeout and scopes", () => {
   assert.ok(!("oauthScopes" in server));
 });
 
+test("installServerForAgent - VS Code installs into an empty mcp.json", () => {
+  const tempDir = createTempDir();
+  mkdirSync(join(tempDir, ".vscode"), { recursive: true });
+  writeFileSync(join(tempDir, ".vscode", "mcp.json"), "");
+  const result = installRemoteWith("vscode", tempDir, {});
+  assert.ok(result.success, result.error);
+
+  const saved = readJsonConfig(join(tempDir, ".vscode", "mcp.json"));
+  const server = (saved.servers as Record<string, Record<string, unknown>>)
+    .example;
+  assert.ok(server);
+  assert.strictEqual(server.url, "https://mcp.example.com/mcp");
+});
+
+test("installServerForAgent - VS Code installs into a comment-only mcp.json", () => {
+  const tempDir = createTempDir();
+  mkdirSync(join(tempDir, ".vscode"), { recursive: true });
+  writeFileSync(join(tempDir, ".vscode", "mcp.json"), "// MCP configuration\n");
+  const result = installRemoteWith("vscode", tempDir, {});
+  assert.ok(result.success, result.error);
+
+  const saved = jsonc.parse(
+    readFileSync(join(tempDir, ".vscode", "mcp.json"), "utf-8"),
+  ) as Record<string, unknown>;
+  const server = (saved.servers as Record<string, Record<string, unknown>>)
+    .example;
+  assert.ok(server);
+  assert.strictEqual(server.url, "https://mcp.example.com/mcp");
+});
+
 // ============================================
 // Auto-approval (Codex + Claude Code)
 // ============================================
@@ -897,7 +928,7 @@ test("installServer - routing with multiple agents to different scopes", () => {
   assert.ok(!vscodeResult?.path.includes(tempDir));
 });
 
-test("installServer - github-copilot-cli local uses VS Code servers key", () => {
+test("installServer - github-copilot-cli local uses mcpServers key", () => {
   const tempDir = createTempDir();
   const parsed = parseSource("mcp-server-postgres");
   const config = buildServerConfig(parsed);
@@ -911,9 +942,202 @@ test("installServer - github-copilot-cli local uses VS Code servers key", () => 
 
   const result = results.get("github-copilot-cli");
   assert.ok(result?.success);
-  const saved = readJsonConfig(join(tempDir, ".vscode", "mcp.json"));
-  const servers = saved.servers as Record<string, unknown>;
-  assert.ok(servers.postgres);
+  const saved = readJsonConfig(join(tempDir, ".mcp.json"));
+  const mcpServers = saved.mcpServers as Record<
+    string,
+    Record<string, unknown>
+  >;
+  assert.ok(mcpServers.postgres);
+  assert.strictEqual(mcpServers.postgres.type, "stdio");
+  assert.strictEqual("tools" in mcpServers.postgres, false);
+});
+
+test("installServer - mixed claude-code and github-copilot-cli refuse to shadow .github/mcp.json", () => {
+  const tempDir = createTempDir();
+  mkdirSync(join(tempDir, ".github"), { recursive: true });
+  const githubPath = join(tempDir, ".github", "mcp.json");
+  writeFileSync(
+    githubPath,
+    JSON.stringify({
+      mcpServers: { keep: { type: "http", url: "https://keep.example.com" } },
+    }),
+  );
+
+  const parsed = parseSource("https://mcp.example.com/mcp");
+  const config = buildServerConfig(parsed);
+  const results = installServer(
+    "example",
+    config,
+    ["cursor", "claude-code", "github-copilot-cli"],
+    {
+      routing: new Map<AgentType, "local" | "global">([
+        ["cursor", "local"],
+        ["claude-code", "local"],
+        ["github-copilot-cli", "local"],
+      ]),
+      cwd: tempDir,
+    },
+  );
+
+  assert.ok(results.get("cursor")?.success);
+  assert.strictEqual(results.get("claude-code")?.success, false);
+  assert.strictEqual(results.get("github-copilot-cli")?.success, false);
+  assert.ok(results.get("claude-code")?.error?.includes(".github/mcp.json"));
+  assert.ok(results.get("claude-code")?.error?.includes("Merge the servers"));
+  assert.strictEqual(existsSync(join(tempDir, ".mcp.json")), false);
+  assert.ok(
+    (readJsonConfig(githubPath).mcpServers as Record<string, unknown>).keep,
+  );
+});
+
+test("installServerForAgent - claude-code refuses to create .mcp.json that hides .github/mcp.json", () => {
+  const tempDir = createTempDir();
+  mkdirSync(join(tempDir, ".github"), { recursive: true });
+  writeFileSync(
+    join(tempDir, ".github", "mcp.json"),
+    JSON.stringify({
+      mcpServers: { keep: { type: "http", url: "https://keep.example.com" } },
+    }),
+  );
+
+  const parsed = parseSource("https://mcp.example.com/mcp");
+  const config = buildServerConfig(parsed);
+  const result = installServerForAgent("example", config, "claude-code", {
+    local: true,
+    cwd: tempDir,
+  });
+
+  assert.strictEqual(result.success, false);
+  assert.ok(result.error?.includes(".github/mcp.json"));
+  assert.ok(result.error?.includes("Merge the servers"));
+  assert.strictEqual(existsSync(join(tempDir, ".mcp.json")), false);
+});
+
+test("installServer - claude-code then github-copilot-cli share .mcp.json", () => {
+  const tempDir = createTempDir();
+  const parsed = parseSource("https://mcp.example.com/mcp");
+  const config = buildServerConfig(parsed);
+
+  const results = installServer(
+    "example",
+    config,
+    ["claude-code", "github-copilot-cli"],
+    {
+      routing: new Map<AgentType, "local" | "global">([
+        ["claude-code", "local"],
+        ["github-copilot-cli", "local"],
+      ]),
+      cwd: tempDir,
+    },
+  );
+
+  assert.ok(results.get("claude-code")?.success);
+  assert.ok(results.get("github-copilot-cli")?.success);
+  const saved = readJsonConfig(join(tempDir, ".mcp.json"));
+  const server = (saved.mcpServers as Record<string, Record<string, unknown>>)
+    .example;
+  assert.ok(server);
+  assert.strictEqual(server.url, "https://mcp.example.com/mcp");
+});
+
+test("installServerForAgent - last writer wins timeout on shared .mcp.json (claude then copilot)", () => {
+  const tempDir = createTempDir();
+  const parsed = parseSource("https://mcp.example.com/mcp");
+  const config = buildServerConfig(parsed, { timeout: 30000 });
+
+  const claude = installServerForAgent("example", config, "claude-code", {
+    local: true,
+    cwd: tempDir,
+  });
+  assert.ok(claude.success);
+  const afterClaude = readJsonConfig(join(tempDir, ".mcp.json"));
+  const afterClaudeServer = (
+    afterClaude.mcpServers as Record<string, Record<string, unknown>>
+  ).example;
+  assert.ok(afterClaudeServer);
+  assert.strictEqual(afterClaudeServer.timeout, 30000);
+
+  const copilot = installServerForAgent(
+    "example",
+    config,
+    "github-copilot-cli",
+    { local: true, cwd: tempDir },
+  );
+  assert.ok(copilot.success);
+  const afterCopilot = readJsonConfig(join(tempDir, ".mcp.json"));
+  const server = (
+    afterCopilot.mcpServers as Record<string, Record<string, unknown>>
+  ).example;
+  assert.ok(server);
+  assert.ok(!("timeout" in server));
+});
+
+test("installServerForAgent - last writer wins timeout on shared .mcp.json (copilot then claude)", () => {
+  const tempDir = createTempDir();
+  const parsed = parseSource("https://mcp.example.com/mcp");
+  const config = buildServerConfig(parsed, { timeout: 30000 });
+
+  const copilot = installServerForAgent(
+    "example",
+    config,
+    "github-copilot-cli",
+    { local: true, cwd: tempDir },
+  );
+  assert.ok(copilot.success);
+  const afterCopilot = readJsonConfig(join(tempDir, ".mcp.json"));
+  const afterCopilotServer = (
+    afterCopilot.mcpServers as Record<string, Record<string, unknown>>
+  ).example;
+  assert.ok(afterCopilotServer);
+  assert.ok(!("timeout" in afterCopilotServer));
+
+  const claude = installServerForAgent("example", config, "claude-code", {
+    local: true,
+    cwd: tempDir,
+  });
+  assert.ok(claude.success);
+  const afterClaude = readJsonConfig(join(tempDir, ".mcp.json"));
+  const afterClaudeServer = (
+    afterClaude.mcpServers as Record<string, Record<string, unknown>>
+  ).example;
+  assert.ok(afterClaudeServer);
+  assert.strictEqual(afterClaudeServer.timeout, 30000);
+});
+
+test("installServer - mixed claude-code and github-copilot-cli lift a bare .mcp.json", () => {
+  const tempDir = createTempDir();
+  writeFileSync(
+    join(tempDir, ".mcp.json"),
+    JSON.stringify({
+      keep: { type: "http", url: "https://keep.example.com/mcp" },
+    }),
+  );
+
+  const parsed = parseSource("https://mcp.example.com/mcp");
+  const config = buildServerConfig(parsed);
+  const results = installServer(
+    "example",
+    config,
+    ["claude-code", "github-copilot-cli"],
+    {
+      routing: new Map<AgentType, "local" | "global">([
+        ["claude-code", "local"],
+        ["github-copilot-cli", "local"],
+      ]),
+      cwd: tempDir,
+    },
+  );
+
+  assert.ok(results.get("claude-code")?.success);
+  assert.ok(results.get("github-copilot-cli")?.success);
+  const saved = readJsonConfig(join(tempDir, ".mcp.json"));
+  assert.strictEqual(saved.keep, undefined);
+  const servers = saved.mcpServers as Record<string, Record<string, unknown>>;
+  const keep = servers.keep;
+  const example = servers.example;
+  assert.ok(keep);
+  assert.ok(example);
+  assert.strictEqual(keep.url, "https://keep.example.com/mcp");
 });
 
 test("installServer - github-copilot-cli global uses mcpServers key and CLI schema", () => {

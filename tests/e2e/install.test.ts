@@ -206,7 +206,7 @@ test("E2E: Install to VS Code (local)", () => {
   assert.ok(servers.company);
 });
 
-test("E2E: Install to GitHub Copilot CLI (local) writes VS Code schema", () => {
+test("E2E: Install to GitHub Copilot CLI (local) writes CLI schema", () => {
   const tempDir = createTempDir();
   const parsed = parseSource("https://api.company.com/mcp");
   const config = buildServerConfig(parsed);
@@ -223,12 +223,18 @@ test("E2E: Install to GitHub Copilot CLI (local) writes VS Code schema", () => {
 
   assert.strictEqual(result.success, true);
 
-  const configPath = join(tempDir, ".vscode", "mcp.json");
+  const configPath = join(tempDir, ".mcp.json");
   assert.strictEqual(existsSync(configPath), true);
 
   const savedConfig = readJsonConfig(configPath);
-  const servers = savedConfig.servers as Record<string, unknown>;
-  assert.ok(servers.company);
+  const mcpServers = savedConfig.mcpServers as Record<
+    string,
+    Record<string, unknown>
+  >;
+  assert.ok(mcpServers.company);
+  assert.strictEqual(mcpServers.company.type, "http");
+  assert.strictEqual(mcpServers.company.url, "https://api.company.com/mcp");
+  assert.strictEqual("tools" in mcpServers.company, false);
 });
 
 test("E2E: Install to OpenCode (local) - transformed format (jsonc default)", () => {
@@ -1569,10 +1575,13 @@ test("E2E: Install to multiple agents", () => {
   assert.strictEqual(existsSync(join(tempDir, ".mcp.json")), true);
   assert.strictEqual(existsSync(join(tempDir, ".vscode", "mcp.json")), true);
 
-  // VS Code and GitHub Copilot CLI both write to the same local file/key.
-  const savedConfig = readJsonConfig(join(tempDir, ".vscode", "mcp.json"));
-  const servers = savedConfig.servers as Record<string, unknown>;
-  assert.ok(servers.example);
+  const vscodeConfig = readJsonConfig(join(tempDir, ".vscode", "mcp.json"));
+  const vscodeServers = vscodeConfig.servers as Record<string, unknown>;
+  assert.ok(vscodeServers.example);
+
+  const copilotConfig = readJsonConfig(join(tempDir, ".mcp.json"));
+  const copilotServers = copilotConfig.mcpServers as Record<string, unknown>;
+  assert.ok(copilotServers.example);
 });
 
 // Cleanup and summary

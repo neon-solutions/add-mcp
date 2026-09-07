@@ -262,15 +262,16 @@ test("detectProjectAgents - detects .vscode directory", () => {
 
   const detected = detectProjectAgents(tempDir);
   assert.ok(detected.includes("vscode"));
-  assert.ok(detected.includes("github-copilot-cli"));
+  assert.ok(!detected.includes("github-copilot-cli"));
 });
 
-test("detectProjectAgents - detects .mcp.json file (claude-code)", () => {
+test("detectProjectAgents - detects .mcp.json file (claude-code and github-copilot-cli)", () => {
   const tempDir = createTempDir();
   writeFileSync(join(tempDir, ".mcp.json"), "{}");
 
   const detected = detectProjectAgents(tempDir);
   assert.ok(detected.includes("claude-code"));
+  assert.ok(detected.includes("github-copilot-cli"));
 });
 
 test("detectProjectAgents - detects .claude directory (claude-code)", () => {
@@ -341,6 +342,56 @@ test("resolveConfigPath local - defaults to opencode.jsonc when nothing exists",
   const resolver = agents.opencode.resolveConfigPath!;
   const result = resolver(agents.opencode, { local: true, cwd: tempDir });
   assert.equal(result, join(tempDir, "opencode.jsonc"));
+});
+
+test("resolveConfigPath local - github-copilot-cli prefers .mcp.json", () => {
+  const tempDir = createTempDir();
+  writeFileSync(join(tempDir, ".mcp.json"), "{}");
+  mkdirSync(join(tempDir, ".github"), { recursive: true });
+  writeFileSync(join(tempDir, ".github", "mcp.json"), "{}");
+
+  const resolver = agents["github-copilot-cli"].resolveConfigPath!;
+  const result = resolver(agents["github-copilot-cli"], {
+    local: true,
+    cwd: tempDir,
+  });
+  assert.equal(result, join(tempDir, ".mcp.json"));
+});
+
+test("resolveConfigPath local - github-copilot-cli reuses .github/mcp.json", () => {
+  const tempDir = createTempDir();
+  mkdirSync(join(tempDir, ".github"), { recursive: true });
+  writeFileSync(join(tempDir, ".github", "mcp.json"), "{}");
+
+  const resolver = agents["github-copilot-cli"].resolveConfigPath!;
+  const result = resolver(agents["github-copilot-cli"], {
+    local: true,
+    cwd: tempDir,
+  });
+  assert.equal(result, join(tempDir, ".github", "mcp.json"));
+});
+
+test("resolveConfigPath local - github-copilot-cli defaults to .mcp.json", () => {
+  const tempDir = createTempDir();
+  mkdirSync(join(tempDir, ".vscode"));
+  writeFileSync(join(tempDir, ".vscode", "mcp.json"), "{}");
+
+  const resolver = agents["github-copilot-cli"].resolveConfigPath!;
+  const result = resolver(agents["github-copilot-cli"], {
+    local: true,
+    cwd: tempDir,
+  });
+  assert.equal(result, join(tempDir, ".mcp.json"));
+});
+
+test("detectProjectAgents - detects .github/mcp.json for github-copilot-cli", () => {
+  const tempDir = createTempDir();
+  mkdirSync(join(tempDir, ".github"), { recursive: true });
+  writeFileSync(join(tempDir, ".github", "mcp.json"), "{}");
+
+  const detected = detectProjectAgents(tempDir);
+  assert.ok(detected.includes("github-copilot-cli"));
+  assert.ok(!detected.includes("vscode"));
 });
 
 test("detectProjectAgents - detects .gemini directory", () => {
