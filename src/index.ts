@@ -50,6 +50,7 @@ import {
 } from "./reader.js";
 import { removeServerFromConfig } from "./formats/index.js";
 import {
+  listOpenCodeServers,
   removeOpenCodeServer,
   relocateOpenCodeServer,
 } from "./opencode-config.js";
@@ -1247,6 +1248,24 @@ async function runSyncCommand(options: Options): Promise<void> {
 
   for (const addition of actionAdditions) {
     const { group, agentType } = addition;
+    if (agentType === "opencode") {
+      const opencode = readable.find((item) => item.agentType === "opencode");
+      if (opencode) {
+        const dest = listOpenCodeServers(opencode.configPath).find(
+          (entry) => entry.serverName === group.canonicalName,
+        );
+        if (dest) {
+          if (extractServerIdentity(dest.config) === group.identity) {
+            continue;
+          }
+          mutationFailed = true;
+          p.log.error(
+            `Failed to add ${group.canonicalName} to ${agents.opencode.displayName}: already has a different server named "${group.canonicalName}"`,
+          );
+          continue;
+        }
+      }
+    }
     const result = installServerForAgent(
       group.canonicalName,
       buildServerConfigFromStored(group.canonicalConfig),
