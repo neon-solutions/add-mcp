@@ -265,8 +265,12 @@ function translateOpenCodeEntry(
     return next;
   }
   if (toKey === OPENCODE_NATIVE_CONFIG_KEY) {
+    const disabled = next.disabled === true || next.enabled === false;
     delete next.enabled;
     delete next.disabled;
+    if (disabled) {
+      next.disabled = true;
+    }
     return next;
   }
   if (next.disabled === true) {

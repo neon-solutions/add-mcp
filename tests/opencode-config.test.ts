@@ -466,6 +466,64 @@ test("relocate keeps native settings when the name stays in mcp.servers", () => 
   });
 });
 
+test("relocate carries enabled:false into native disabled:true", () => {
+  const path = write(
+    createTempDir(),
+    JSON.stringify({
+      mcp: {
+        timeout: { startup: 4000 },
+        servers: {},
+        "long-timeout": {
+          type: "remote",
+          url: "https://example.com/mcp",
+          enabled: false,
+          oauth: { client_id: "configured-client" },
+        },
+      },
+    }),
+  );
+  relocateOpenCodeServer(path, "long-timeout", "timeout");
+  const listed = listOpenCodeServers(path);
+  assert.strictEqual(listed.length, 1);
+  assert.strictEqual(listed[0]?.serverName, "timeout");
+  assert.strictEqual(listed[0]?.configKey, "mcp.servers");
+  assert.ok(listed[0]);
+  assert.strictEqual(listed[0].config.disabled, true);
+  assert.strictEqual("enabled" in listed[0].config, false);
+  assert.deepStrictEqual(listed[0].config.oauth, {
+    client_id: "configured-client",
+  });
+});
+
+test("relocate carries native disabled:true into legacy enabled:false", () => {
+  const path = write(
+    createTempDir(),
+    JSON.stringify({
+      mcp: {
+        keep: { type: "remote", url: "https://keep.example.com/mcp" },
+        servers: {
+          "long-name": {
+            type: "remote",
+            url: "https://example.com/mcp",
+            disabled: true,
+            oauth: { client_id: "configured-client" },
+          },
+        },
+      },
+    }),
+  );
+  relocateOpenCodeServer(path, "long-name", "short");
+  const listed = listOpenCodeServers(path);
+  const moved = listed.find((entry) => entry.serverName === "short");
+  assert.ok(moved);
+  assert.strictEqual(moved.configKey, "mcp");
+  assert.strictEqual(moved.config.enabled, false);
+  assert.strictEqual("disabled" in moved.config, false);
+  assert.deepStrictEqual(moved.config.oauth, {
+    client_id: "configured-client",
+  });
+});
+
 cleanup();
 
 console.log(`\n${passed} passed, ${failed} failed`);
