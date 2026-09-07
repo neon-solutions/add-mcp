@@ -3254,6 +3254,62 @@ test("E2E CLI: sync mixed-file rename keeps a native OpenCode server native", ()
   assert.ok(mcp.keep);
 });
 
+test("E2E CLI: sync does not delete a different OpenCode server on a dest-name collision", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+  mkdirSync(join(projectDir, ".cursor"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".cursor", "mcp.json"),
+    JSON.stringify({
+      mcpServers: {
+        pg: { url: "https://a.example.com/mcp" },
+        b: { url: "https://b.example.com/mcp" },
+      },
+    }),
+  );
+  writeFileSync(
+    join(projectDir, "opencode.jsonc"),
+    JSON.stringify({
+      mcp: {
+        servers: {
+          postgres: {
+            type: "remote",
+            url: "https://a.example.com/mcp",
+            timeout: { startup: 45_000 },
+          },
+          pg: {
+            type: "remote",
+            url: "https://b.example.com/mcp",
+          },
+        },
+      },
+    }),
+  );
+
+  const result = runCli(["sync", "-y"], projectDir, homeDir);
+  assert.ok(
+    result.status === 0 || result.status === 1,
+    `${result.stdout}\n${result.stderr}`,
+  );
+  const mcp = JSON.parse(
+    readFileSync(join(projectDir, "opencode.jsonc"), "utf-8"),
+  ).mcp as { servers: Record<string, Record<string, unknown>> };
+  const byUrl = new Map(
+    Object.values(mcp.servers).map((server) => [server.url, server]),
+  );
+  assert.deepStrictEqual(byUrl.get("https://a.example.com/mcp")?.timeout, {
+    startup: 45_000,
+  });
+  assert.strictEqual(
+    byUrl.get("https://b.example.com/mcp")?.url,
+    "https://b.example.com/mcp",
+  );
+  assert.ok(
+    result.status === 0 || result.status === 1,
+    `${result.stdout}\n${result.stderr}`,
+  );
+});
+
 test("E2E CLI: sync remove of an OpenCode alias deletes both native and legacy copies", () => {
   const homeDir = createTempDir();
   const projectDir = createTempDir();

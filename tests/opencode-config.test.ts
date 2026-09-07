@@ -546,6 +546,42 @@ test("relocate deletes a V1 alias without overwriting the native dest", () => {
   });
 });
 
+test("relocate refuses a dest name that is a different server", () => {
+  const path = write(
+    createTempDir(),
+    JSON.stringify({
+      mcp: {
+        servers: {
+          postgres: {
+            type: "remote",
+            url: "https://a.example.com/mcp",
+            timeout: { startup: 45_000 },
+          },
+          pg: {
+            type: "remote",
+            url: "https://b.example.com/mcp",
+          },
+        },
+      },
+    }),
+  );
+  assert.throws(
+    () => relocateOpenCodeServer(path, "postgres", "pg"),
+    (error: unknown) =>
+      error instanceof Error && error.message.includes('named "pg"'),
+  );
+  const listed = listOpenCodeServers(path);
+  const byName = new Map(listed.map((entry) => [entry.serverName, entry]));
+  assert.strictEqual(
+    byName.get("postgres")?.config.url,
+    "https://a.example.com/mcp",
+  );
+  assert.deepStrictEqual(byName.get("postgres")?.config.timeout, {
+    startup: 45_000,
+  });
+  assert.strictEqual(byName.get("pg")?.config.url, "https://b.example.com/mcp");
+});
+
 test("relocate keeps a mixed-file native server in mcp.servers", () => {
   const path = write(
     createTempDir(),

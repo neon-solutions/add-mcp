@@ -380,6 +380,24 @@ function resolveOpenCodeRelocateKey(
   );
 }
 
+function openCodeServerIdentity(config: JsonObject): string {
+  if (typeof config.url === "string" && config.url.length > 0) {
+    return config.url;
+  }
+  if (typeof config.command === "string" && config.command.length > 0) {
+    return config.command;
+  }
+  if (Array.isArray(config.command)) {
+    const parts = config.command.filter(
+      (part): part is string => typeof part === "string",
+    );
+    if (parts.length > 0) {
+      return parts.join(" ");
+    }
+  }
+  return "";
+}
+
 export function relocateOpenCodeServer(
   configPath: string,
   oldName: string,
@@ -395,11 +413,17 @@ export function relocateOpenCodeServer(
     throw new Error(`${configPath} has no OpenCode server named "${oldName}"`);
   }
 
-  // The dest name is already a server. Overwriting it would replace a
-  // valid native entry with a translated copy of the alias.
-  if (listed.some((entry) => entry.serverName === newName)) {
-    removeOpenCodeServer(configPath, oldName);
-    return;
+  const dest = listed.find((entry) => entry.serverName === newName);
+  if (dest) {
+    const sourceId = openCodeServerIdentity(existing.config);
+    const destId = openCodeServerIdentity(dest.config);
+    if (sourceId && destId && sourceId === destId) {
+      removeOpenCodeServer(configPath, oldName);
+      return;
+    }
+    throw new Error(
+      `${configPath} already has an OpenCode server named "${newName}". Rename that server first.`,
+    );
   }
 
   // Mixed-file installs still add new names as V1. A rename is not an
