@@ -753,6 +753,7 @@ test("E2E CLI: fx rejects a literal Authorization header", () => {
   const output = `${result.stdout}\n${result.stderr}`;
   assert.match(output, /literal Authorization header/);
   assert.match(output, /--bearer-token-env/);
+  assert.notStrictEqual(result.status, 0);
   assert.strictEqual(existsSync(join(homeDir, ".fx")), false);
 });
 
@@ -1437,6 +1438,136 @@ test("list: shows 'no servers configured' when agent detected but empty", () => 
   assert.match(output, /no servers configured/);
 });
 
+test("list: empty .mcp.json does not abort listing VS Code servers", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+  writeFileSync(join(projectDir, ".mcp.json"), "");
+  mkdirSync(join(projectDir, ".vscode"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".vscode", "mcp.json"),
+    JSON.stringify({
+      servers: { keep: { url: "https://keep.example.com/mcp" } },
+    }),
+  );
+
+  const result = runCli(["list"], projectDir, homeDir);
+  assert.strictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /VS Code/);
+  assert.match(output, /keep/);
+});
+
+test("list: comment-only .mcp.json does not abort listing VS Code servers", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+  writeFileSync(join(projectDir, ".mcp.json"), "// MCP configuration\n");
+  mkdirSync(join(projectDir, ".vscode"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".vscode", "mcp.json"),
+    JSON.stringify({
+      servers: { keep: { url: "https://keep.example.com/mcp" } },
+    }),
+  );
+
+  const result = runCli(["list"], projectDir, homeDir);
+  assert.strictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /VS Code/);
+  assert.match(output, /keep/);
+});
+
+test("list: a malformed Copilot .mcp.json does not abort listing VS Code servers", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+  writeFileSync(
+    join(projectDir, ".mcp.json"),
+    `{
+  "mcpServers": {
+    "keep": { "url": "https://copilot.example.com/mcp" },
+  }
+}
+`,
+  );
+  mkdirSync(join(projectDir, ".vscode"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".vscode", "mcp.json"),
+    JSON.stringify({
+      servers: { vscode: { url: "https://vscode.example.com/mcp" } },
+    }),
+  );
+
+  const result = runCli(["list"], projectDir, homeDir);
+  assert.notStrictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /VS Code/);
+  assert.match(output, /vscode/);
+  assert.match(output, /GitHub Copilot CLI/);
+  assert.match(output, /Invalid JSON/);
+});
+
+test("remove: unreadable Copilot config is an error, not a missing server", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+  mkdirSync(join(projectDir, ".github"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".github", "mcp.json"),
+    `{
+  "mcpServers": {
+    "keep": { "url": "https://keep.example.com/mcp" },
+  }
+}
+`,
+  );
+
+  const result = runCli(
+    ["remove", "keep", "-a", "github-copilot-cli", "-y"],
+    projectDir,
+    homeDir,
+  );
+  assert.notStrictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /Invalid JSON/);
+  assert.doesNotMatch(output, /No matching servers found/);
+  assert.match(
+    readFileSync(join(projectDir, ".github", "mcp.json"), "utf-8"),
+    /keep/,
+  );
+});
+
+test("remove: does not mutate a shared .mcp.json that Copilot could not read", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+  const malformed = `{
+  "mcpServers": {
+    "keep": { "url": "https://keep.example.com/mcp" },
+  }
+}
+`;
+  writeFileSync(join(projectDir, ".mcp.json"), malformed);
+  mkdirSync(join(projectDir, ".cursor"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".cursor", "mcp.json"),
+    JSON.stringify({
+      mcpServers: {
+        keep: { url: "https://keep.example.com/mcp" },
+        added: { url: "https://added.example.com/mcp" },
+      },
+    }),
+  );
+
+  const result = runCli(["remove", "keep", "-y"], projectDir, homeDir);
+  assert.notStrictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  assert.strictEqual(
+    readFileSync(join(projectDir, ".mcp.json"), "utf-8"),
+    malformed,
+  );
+  const cursor = JSON.parse(
+    readFileSync(join(projectDir, ".cursor", "mcp.json"), "utf-8"),
+  );
+  assert.strictEqual(cursor.mcpServers.keep, undefined);
+  assert.ok(cursor.mcpServers.added);
+});
+
 test("list: shows 'not detected' when -a targets absent agent", () => {
   const homeDir = createTempDir();
   const projectDir = createTempDir();
@@ -1690,6 +1821,185 @@ test("sync: renames servers to canonical name across agents with -y", () => {
     undefined,
     "Claude Code should no longer have 'neon-mcp'",
   );
+});
+
+test("sync: wrapping a Copilot bare map removes the old alias", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+
+  writeFileSync(
+    join(projectDir, ".mcp.json"),
+    JSON.stringify({
+      z: { url: "https://example.invalid/mcp" },
+    }),
+  );
+  mkdirSync(join(projectDir, ".cursor"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".cursor", "mcp.json"),
+    JSON.stringify({
+      mcpServers: {
+        a: { url: "https://example.invalid/mcp" },
+      },
+    }),
+  );
+
+  const result = runCli(["sync", "-y"], projectDir, homeDir);
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const written = JSON.parse(
+    readFileSync(join(projectDir, ".mcp.json"), "utf-8"),
+  ) as Record<string, unknown>;
+  assert.strictEqual(written.z, undefined);
+  const servers = written.mcpServers as Record<string, unknown>;
+  assert.ok(servers.a);
+  assert.strictEqual(servers.z, undefined);
+});
+
+test("sync: does not create .mcp.json that hides .github/mcp.json", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+
+  mkdirSync(join(projectDir, ".github"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".github", "mcp.json"),
+    JSON.stringify({
+      mcpServers: {
+        keep: {
+          type: "http",
+          url: "https://keep.example.invalid/mcp",
+          headers: { "X-Tenant": "copilot" },
+        },
+      },
+    }),
+  );
+  mkdirSync(join(projectDir, ".claude"), { recursive: true });
+  mkdirSync(join(projectDir, ".cursor"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".cursor", "mcp.json"),
+    JSON.stringify({
+      mcpServers: {
+        keep: {
+          type: "http",
+          url: "https://keep.example.invalid/mcp",
+          headers: { "X-Tenant": "cursor" },
+        },
+        added: { type: "http", url: "https://new.example.invalid/mcp" },
+      },
+    }),
+  );
+
+  const result = runCli(["sync", "-y"], projectDir, homeDir);
+  assert.notStrictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /Blocked/);
+  assert.match(output, /Merge the servers/);
+
+  assert.strictEqual(existsSync(join(projectDir, ".mcp.json")), false);
+  const github = JSON.parse(
+    readFileSync(join(projectDir, ".github", "mcp.json"), "utf-8"),
+  );
+  assert.ok(github.mcpServers.keep);
+
+  const listed = runCli(
+    ["list", "-a", "github-copilot-cli"],
+    projectDir,
+    homeDir,
+  );
+  assert.strictEqual(listed.status, 0, `${listed.stdout}\n${listed.stderr}`);
+  const listedOutput = `${listed.stdout}\n${listed.stderr}`;
+  assert.match(listedOutput, /keep/);
+  assert.doesNotMatch(listedOutput, /added/);
+});
+
+test("sync: unreadable Copilot config is not treated as empty", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+
+  mkdirSync(join(projectDir, ".github"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".github", "mcp.json"),
+    `{
+  "mcpServers": {
+    "keep": { "url": "https://keep.example.invalid/mcp" },
+  }
+}
+`,
+  );
+  mkdirSync(join(projectDir, ".cursor"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".cursor", "mcp.json"),
+    JSON.stringify({ mcpServers: {} }),
+  );
+
+  const empty = runCli(["sync", "-y"], projectDir, homeDir);
+  assert.notStrictEqual(empty.status, 0, `${empty.stdout}\n${empty.stderr}`);
+  const emptyOutput = `${empty.stdout}\n${empty.stderr}`;
+  assert.match(emptyOutput, /Invalid JSON/);
+  assert.doesNotMatch(emptyOutput, /already in sync/);
+
+  writeFileSync(
+    join(projectDir, ".cursor", "mcp.json"),
+    JSON.stringify({
+      mcpServers: {
+        added: { type: "http", url: "https://new.example.invalid/mcp" },
+      },
+    }),
+  );
+
+  const result = runCli(["sync", "-y"], projectDir, homeDir);
+  assert.notStrictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /Invalid JSON/);
+  assert.doesNotMatch(output, /Failed to add/);
+  assert.match(
+    readFileSync(join(projectDir, ".github", "mcp.json"), "utf-8"),
+    /keep/,
+  );
+  assert.doesNotMatch(
+    readFileSync(join(projectDir, ".github", "mcp.json"), "utf-8"),
+    /added/,
+  );
+});
+
+test("sync: does not mutate a shared .mcp.json that Copilot could not read", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+  const malformed = `{
+  "mcpServers": {
+    "keep": { "url": "https://keep.example.invalid/mcp" },
+  }
+}
+`;
+  writeFileSync(join(projectDir, ".mcp.json"), malformed);
+  mkdirSync(join(projectDir, ".cursor"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".cursor", "mcp.json"),
+    JSON.stringify({
+      mcpServers: {
+        keep: { type: "http", url: "https://keep.example.invalid/mcp" },
+      },
+    }),
+  );
+  mkdirSync(join(projectDir, ".vscode"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".vscode", "mcp.json"),
+    JSON.stringify({ servers: {} }),
+  );
+
+  const result = runCli(["sync", "-y"], projectDir, homeDir);
+  assert.notStrictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  assert.strictEqual(
+    readFileSync(join(projectDir, ".mcp.json"), "utf-8"),
+    malformed,
+  );
+  const vscode = JSON.parse(
+    readFileSync(join(projectDir, ".vscode", "mcp.json"), "utf-8"),
+  );
+  assert.ok(vscode.servers.keep);
 });
 
 test("sync: reconstructs required fields when syncing Cursor -> Claude Code", () => {
@@ -2248,6 +2558,110 @@ test("E2E CLI: OpenCode global install reuses existing opencode.json", () => {
   const server = saved.mcp.postgres as Record<string, unknown>;
   assert.ok(server);
   assert.strictEqual(server.type, "local");
+});
+
+test("E2E CLI: github-copilot-cli project install writes .mcp.json, not .vscode/mcp.json", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "github-copilot-cli",
+      "-y",
+      "--name",
+      "ghc",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  assert.strictEqual(existsSync(join(projectDir, ".mcp.json")), true);
+  assert.strictEqual(
+    existsSync(join(projectDir, ".vscode", "mcp.json")),
+    false,
+  );
+
+  const saved = JSON.parse(
+    readFileSync(join(projectDir, ".mcp.json"), "utf-8"),
+  );
+  const server = saved.mcpServers.ghc as Record<string, unknown>;
+  assert.ok(server);
+  assert.strictEqual(server.type, "http");
+  assert.strictEqual(server.url, "https://mcp.example.com/mcp");
+  assert.ok(!("tools" in server));
+});
+
+test("E2E CLI: github-copilot-cli writes strict JSON into a comment-only .mcp.json", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+  writeFileSync(join(projectDir, ".mcp.json"), "// MCP configuration\n");
+
+  const result = runCli(
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "github-copilot-cli",
+      "-y",
+      "--name",
+      "ghc",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const text = readFileSync(join(projectDir, ".mcp.json"), "utf-8");
+  assert.doesNotMatch(text, /^\s*\/\//m);
+  const saved = JSON.parse(text);
+  assert.ok(saved.mcpServers.ghc);
+});
+
+test("E2E CLI: claude-code does not create .mcp.json that hides .github/mcp.json", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+  mkdirSync(join(projectDir, ".github"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".github", "mcp.json"),
+    JSON.stringify({
+      mcpServers: {
+        keep: { type: "http", url: "https://keep.example.com/mcp" },
+      },
+    }),
+  );
+
+  const result = runCli(
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "claude-code",
+      "-y",
+      "--name",
+      "added",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  assert.strictEqual(existsSync(join(projectDir, ".mcp.json")), false);
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.notStrictEqual(result.status, 0, output);
+  assert.match(output, /\.github\/mcp\.json/);
+  assert.match(output, /Merge the servers/);
+  assert.match(output, /Failed/);
+  assert.doesNotMatch(output, /Done!/);
 });
 
 test("E2E CLI: --timeout and --scopes map per agent and warn on drop", () => {

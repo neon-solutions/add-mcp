@@ -14,6 +14,8 @@ export interface InstalledServer {
   agentType: AgentType;
   scope: "local" | "global";
   configPath: string;
+  /** Key in the config file where this server was read from */
+  configKey: string;
 }
 
 export interface AgentServers {
@@ -23,6 +25,8 @@ export interface AgentServers {
   scope: "local" | "global";
   configPath: string;
   servers: InstalledServer[];
+  /** Present when this agent's config could not be read */
+  error?: string;
 }
 
 /**
@@ -126,6 +130,7 @@ export function readServersForAgent(
           agentType,
           scope: options.scope,
           configPath,
+          configKey,
         });
       }
     }
@@ -139,6 +144,30 @@ export function readServersForAgent(
     configPath,
     servers,
   };
+}
+
+function readServersForAgentSafe(
+  agentType: AgentType,
+  options: { scope: "local" | "global"; cwd?: string },
+): AgentServers {
+  try {
+    return readServersForAgent(agentType, options);
+  } catch (error) {
+    const agent = agents[agentType];
+    const installOptions: InstallOptions = {
+      local: options.scope === "local",
+      cwd: options.cwd,
+    };
+    return {
+      agentType,
+      displayName: agent.displayName,
+      detected: true,
+      scope: options.scope,
+      configPath: getConfigPath(agent, installOptions),
+      servers: [],
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
 }
 
 /**
@@ -166,7 +195,7 @@ export async function listInstalledServers(options: {
       const detected = detectedSet.has(agentType);
       if (detected) {
         results.push(
-          readServersForAgent(agentType, { scope, cwd: options.cwd }),
+          readServersForAgentSafe(agentType, { scope, cwd: options.cwd }),
         );
       } else {
         const agent = agents[agentType];
@@ -191,7 +220,9 @@ export async function listInstalledServers(options: {
       : detectProjectAgents(options.cwd);
 
     for (const agentType of detected) {
-      results.push(readServersForAgent(agentType, { scope, cwd: options.cwd }));
+      results.push(
+        readServersForAgentSafe(agentType, { scope, cwd: options.cwd }),
+      );
     }
   }
 

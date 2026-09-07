@@ -5,6 +5,7 @@ import {
   getConfigPath,
   getConfigKey,
   installServerForAgent,
+  rewriteCopilotCliConfig,
   type InstallOptions,
   type InstallResult,
 } from "./installer.js";
@@ -102,6 +103,7 @@ function doRemove(
   }
 
   removeServerFromConfig(configPath, agent.format, configKey, serverName);
+  rewriteCopilotCliConfig(agentType, configPath);
   return { success: true, path: configPath, removed: true };
 }
 

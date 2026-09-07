@@ -33,8 +33,11 @@ import {
 } from "./find.js";
 import {
   buildServerConfig,
+  claudeCopilotGithubShadowError,
+  getConfigKey,
   installServer,
   installServerForAgent,
+  rewriteCopilotCliConfig,
   updateGitignoreWithPaths,
 } from "./installer.js";
 import {
@@ -703,11 +706,19 @@ async function runListCommand(options: Options): Promise<void> {
     return;
   }
 
+  let hadError = false;
+
   for (const agentServers of agentServersList) {
     if (!agentServers.detected) {
       console.log(
         `${TEXT}${agentServers.displayName}:${RESET} ${DIM}not detected${RESET}`,
       );
+      continue;
+    }
+
+    if (agentServers.error) {
+      p.log.error(`${agentServers.displayName}: ${agentServers.error}`);
+      hadError = true;
       continue;
     }
 
@@ -730,6 +741,9 @@ async function runListCommand(options: Options): Promise<void> {
   }
 
   console.log();
+  if (hadError) {
+    process.exitCode = 1;
+  }
 }
 
 // ── remove implementation ────────────────────────────────────────────────
@@ -748,12 +762,34 @@ async function runRemoveCommand(
     agents: explicitAgents.length > 0 ? explicitAgents : undefined,
   });
 
-  const matches = findMatchingServers(agentServersList, query);
+  const hadReadError = reportAgentReadErrors(agentServersList);
+  const matches = findMatchingServers(
+    agentsWithReadableConfigs(agentServersList),
+    query,
+  );
 
   if (matches.length === 0) {
-    p.log.info(`No matching servers found for '${query}'`);
+    if (!hadReadError) {
+      p.log.info(`No matching servers found for '${query}'`);
+    }
+    if (hadReadError) {
+      process.exitCode = 1;
+    }
     console.log();
     return;
+  }
+
+  if (
+    matches.some(
+      (server) =>
+        (server.agentType === "claude-code" ||
+          server.agentType === "github-copilot-cli") &&
+        server.configPath.endsWith(".mcp.json"),
+    )
+  ) {
+    p.log.warn(
+      "`.mcp.json` is shared by Claude Code and GitHub Copilot CLI. Removing a server from either removes it for both.",
+    );
   }
 
   // Build selection options
@@ -806,6 +842,7 @@ async function runRemoveCommand(
         getConfigKeyForServer(server),
         server.serverName,
       );
+      rewriteCopilotCliConfig(server.agentType, server.configPath);
       removedCount++;
       affectedAgents.add(agent.displayName);
     } catch (error) {
@@ -821,15 +858,44 @@ async function runRemoveCommand(
     );
   }
 
+  if (hadReadError) {
+    process.exitCode = 1;
+  }
+
   console.log();
 }
 
-function getConfigKeyForServer(server: InstalledServer): string {
-  const agent = agents[server.agentType];
-  if (server.scope === "local" && agent.localConfigKey) {
-    return agent.localConfigKey;
+function failedConfigPaths(agentServersList: AgentServers[]): Set<string> {
+  return new Set(
+    agentServersList
+      .filter((agentServers) => agentServers.error)
+      .map((agentServers) => agentServers.configPath),
+  );
+}
+
+function agentsWithReadableConfigs(
+  agentServersList: AgentServers[],
+): AgentServers[] {
+  const failedPaths = failedConfigPaths(agentServersList);
+  return agentServersList.filter(
+    (agentServers) =>
+      !agentServers.error && !failedPaths.has(agentServers.configPath),
+  );
+}
+
+function reportAgentReadErrors(agentServersList: AgentServers[]): boolean {
+  let hadError = false;
+  for (const agentServers of agentServersList) {
+    if (agentServers.error) {
+      p.log.error(`${agentServers.displayName}: ${agentServers.error}`);
+      hadError = true;
+    }
   }
-  return agent.configKey;
+  return hadError;
+}
+
+function getConfigKeyForServer(server: InstalledServer): string {
+  return server.configKey;
 }
 
 // ── sync implementation ──────────────────────────────────────────────────
@@ -959,18 +1025,26 @@ async function runSyncCommand(options: Options): Promise<void> {
     global: options.global,
   });
 
-  const agentsWithServers = agentServersList.filter(
-    (a) => a.servers.length > 0,
-  );
+  const hadReadError = reportAgentReadErrors(agentServersList);
+  if (hadReadError) {
+    process.exitCode = 1;
+  }
 
-  if (agentServersList.length < 2) {
+  const readable = agentsWithReadableConfigs(agentServersList);
+
+  if (hadReadError && readable.length < 2) {
+    console.log();
+    return;
+  }
+
+  if (readable.length < 2) {
     p.log.info("Need at least 2 detected agents to sync");
     console.log();
     return;
   }
 
-  const groups = buildSyncGroups(agentServersList);
-  const detectedAgentTypes = new Set(agentServersList.map((a) => a.agentType));
+  const groups = buildSyncGroups(readable);
+  const detectedAgentTypes = new Set(readable.map((a) => a.agentType));
 
   // Determine what needs to change
   const renames: Array<{
@@ -1011,8 +1085,32 @@ async function runSyncCommand(options: Options): Promise<void> {
     }
   }
 
-  if (renames.length === 0 && additions.length === 0 && skipped.length === 0) {
-    p.log.info("All servers are already in sync");
+  const scope: "local" | "global" = options.global ? "global" : "local";
+  const layoutError =
+    scope === "local" &&
+    detectedAgentTypes.has("github-copilot-cli") &&
+    detectedAgentTypes.has("claude-code")
+      ? claudeCopilotGithubShadowError(process.cwd())
+      : null;
+  const isBlocked = (agentType: AgentType): boolean =>
+    Boolean(layoutError) &&
+    (agentType === "github-copilot-cli" || agentType === "claude-code");
+
+  const actionRenames = renames.filter((r) => !isBlocked(r.agentType));
+  const actionAdditions = additions.filter((a) => !isBlocked(a.agentType));
+  const blockedRenames = renames.filter((r) => isBlocked(r.agentType));
+  const blockedAdditions = additions.filter((a) => isBlocked(a.agentType));
+
+  if (
+    actionRenames.length === 0 &&
+    actionAdditions.length === 0 &&
+    blockedRenames.length === 0 &&
+    blockedAdditions.length === 0 &&
+    skipped.length === 0
+  ) {
+    if (!hadReadError) {
+      p.log.info("All servers are already in sync");
+    }
     console.log();
     return;
   }
@@ -1020,21 +1118,38 @@ async function runSyncCommand(options: Options): Promise<void> {
   // Show sync plan
   const planLines: string[] = [];
 
-  if (renames.length > 0) {
+  if (actionRenames.length > 0) {
     planLines.push(chalk.cyan("Renames:"));
-    for (const r of renames) {
+    for (const r of actionRenames) {
       planLines.push(
         `  ${agents[r.agentType].displayName}: ${r.oldName} → ${r.group.canonicalName}`,
       );
     }
   }
 
-  if (additions.length > 0) {
+  if (actionAdditions.length > 0) {
     planLines.push(chalk.cyan("Additions:"));
-    for (const a of additions) {
+    for (const a of actionAdditions) {
       planLines.push(
         `  ${agents[a.agentType].displayName}: + ${a.group.canonicalName} (${a.group.identity})`,
       );
+    }
+  }
+
+  if (blockedRenames.length > 0 || blockedAdditions.length > 0) {
+    planLines.push(chalk.yellow("Blocked:"));
+    for (const r of blockedRenames) {
+      planLines.push(
+        `  ${agents[r.agentType].displayName}: ${r.oldName} → ${r.group.canonicalName}`,
+      );
+    }
+    for (const a of blockedAdditions) {
+      planLines.push(
+        `  ${agents[a.agentType].displayName}: + ${a.group.canonicalName} (${a.group.identity})`,
+      );
+    }
+    if (layoutError) {
+      planLines.push(`  ${layoutError}`);
     }
   }
 
@@ -1045,12 +1160,16 @@ async function runSyncCommand(options: Options): Promise<void> {
     }
   }
 
-  if (renames.length === 0 && additions.length === 0) {
-    // Only skipped items, nothing actionable
+  if (actionRenames.length === 0 && actionAdditions.length === 0) {
     p.note(planLines.join("\n"), "Sync Plan");
-    p.log.info(
-      "All servers are already in sync (some skipped due to conflicts)",
-    );
+    if (layoutError) {
+      p.log.error(layoutError);
+      process.exitCode = 1;
+    } else if (!hadReadError) {
+      p.log.info(
+        "All servers are already in sync (some skipped due to conflicts)",
+      );
+    }
     console.log();
     return;
   }
@@ -1069,11 +1188,10 @@ async function runSyncCommand(options: Options): Promise<void> {
     }
   }
 
-  const scope: "local" | "global" = options.global ? "global" : "local";
   let changeCount = 0;
 
   // Write-first: install canonical names
-  for (const rename of renames) {
+  for (const rename of actionRenames) {
     const { group, agentType } = rename;
     const result = installServerForAgent(
       group.canonicalName,
@@ -1090,7 +1208,7 @@ async function runSyncCommand(options: Options): Promise<void> {
     }
   }
 
-  for (const addition of additions) {
+  for (const addition of actionAdditions) {
     const { group, agentType } = addition;
     const result = installServerForAgent(
       group.canonicalName,
@@ -1108,24 +1226,32 @@ async function runSyncCommand(options: Options): Promise<void> {
   }
 
   // Delete-second: remove old aliases
-  for (const rename of renames) {
+  for (const rename of actionRenames) {
     const { group, agentType, oldName } = rename;
     const agentConfig = agents[agentType];
     const entry = group.entries.find((e) => e.agentType === agentType);
     if (!entry) continue;
 
     try {
+      // Re-read the key after writes. Sharing .mcp.json can fold a Copilot
+      // bare map under mcpServers, so the listed key is stale.
       removeServerFromConfig(
         entry.configPath,
         agentConfig.format,
-        getConfigKeyForServer(entry),
+        getConfigKey(agentConfig, { local: scope === "local" }),
         oldName,
       );
+      rewriteCopilotCliConfig(agentType, entry.configPath);
     } catch (error) {
       p.log.error(
         `Failed to remove old alias ${oldName} from ${agentConfig.displayName}: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
+  }
+
+  if (layoutError) {
+    p.log.error(layoutError);
+    process.exitCode = 1;
   }
 
   p.log.success(
@@ -1945,5 +2071,14 @@ async function main(target: string | undefined, options: Options) {
   }
 
   console.log();
-  p.outro(chalk.green("Done!"));
+  if (failed.length === 0) {
+    p.outro(chalk.green("Done!"));
+    return;
+  }
+  process.exitCode = 1;
+  if (successful.length === 0) {
+    p.outro(chalk.red("Failed"));
+    return;
+  }
+  p.outro(chalk.yellow("Installed with errors"));
 }

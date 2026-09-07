@@ -279,6 +279,7 @@ function makeAgentServers(
       agentType: agentType as any,
       scope: "local" as const,
       configPath: "/fake/path",
+      configKey: "mcpServers",
     })),
   };
 }

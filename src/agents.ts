@@ -1,10 +1,12 @@
 import * as p from "@clack/prompts";
 import { homedir } from "os";
 import { dirname, join } from "path";
-import { existsSync } from "fs";
+import { existsSync, readFileSync } from "fs";
+import * as jsonc from "jsonc-parser";
 import type { AgentConfig, AgentType, McpServerConfig } from "./types.js";
 import { getLastSelectedAgents, saveSelectedAgents } from "./config.js";
 import { resolvedBearerTokenEnv } from "./schema.js";
+import { isBareServerMap } from "./formats/utils.js";
 
 const home = homedir();
 const defaultGrokHome = join(home, ".grok");
@@ -569,42 +571,126 @@ function transformAntigravityConfig(
   return localConfig;
 }
 
+function looksLikeServerEntry(value: unknown): boolean {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+  const entry = value as Record<string, unknown>;
+  return (
+    typeof entry.command === "string" ||
+    typeof entry.url === "string" ||
+    typeof entry.type === "string"
+  );
+}
+
+function isVscodeServersWrapper(obj: Record<string, unknown>): boolean {
+  if (obj.mcpServers !== undefined) return false;
+  if (
+    !obj.servers ||
+    typeof obj.servers !== "object" ||
+    Array.isArray(obj.servers)
+  ) {
+    return false;
+  }
+  // A bare Copilot server named "servers" has command/url on that object.
+  if (looksLikeServerEntry(obj.servers)) return false;
+  return Object.values(obj.servers as Record<string, unknown>).some(
+    looksLikeServerEntry,
+  );
+}
+
+function parseCopilotProjectFile(configPath: string): Record<string, unknown> {
+  const errors: jsonc.ParseError[] = [];
+  const parsed: unknown = jsonc.parse(
+    readFileSync(configPath, "utf-8"),
+    errors,
+  );
+  // Empty and comment-only files parse as undefined with only ValueExpected.
+  if (
+    parsed === undefined &&
+    errors.every((error) => error.error === jsonc.ParseErrorCode.ValueExpected)
+  ) {
+    return {};
+  }
+  if (errors.length > 0) {
+    throw new Error(`Invalid JSON in ${configPath}`);
+  }
+  if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error(`${configPath} must be a JSON object`);
+  }
+  return parsed as Record<string, unknown>;
+}
+
+/**
+ * Copilot CLI project files are either `{ mcpServers: { ... } }` or a bare
+ * map of server names at the root. VS Code's `{ servers: { ... } }` is the
+ * wrong file for this agent.
+ */
+export function githubCopilotCliProjectConfigKey(configPath: string): string {
+  if (!existsSync(configPath)) {
+    return "mcpServers";
+  }
+
+  const obj = parseCopilotProjectFile(configPath);
+  if (isVscodeServersWrapper(obj)) {
+    throw new Error(
+      `${configPath} uses VS Code's "servers" key. Copilot CLI reads mcpServers in .mcp.json or .github/mcp.json; use --agent vscode for .vscode/mcp.json.`,
+    );
+  }
+  if (isBareServerMap(obj)) {
+    return "";
+  }
+  return "mcpServers";
+}
+
 function transformGitHubCopilotCliConfig(
   _serverName: string,
   config: McpServerConfig,
   context?: { local: boolean },
 ): unknown {
-  // Project-level config shares VS Code mcp.json schema.
-  if (context?.local) {
-    return config;
-  }
+  const includeTools = !context?.local;
 
   if (config.url) {
     const remoteConfig: Record<string, unknown> = {
       type: config.type || "http",
       url: config.url,
-      tools: ["*"],
     };
-
+    if (includeTools) {
+      remoteConfig.tools = ["*"];
+    }
     if (config.headers && Object.keys(config.headers).length > 0) {
       remoteConfig.headers = config.headers;
     }
-
     return remoteConfig;
   }
 
-  const localConfig: Record<string, unknown> = {
+  const stdioConfig: Record<string, unknown> = {
     type: "stdio",
     command: config.command,
     args: config.args || [],
-    tools: ["*"],
   };
-
+  if (includeTools) {
+    stdioConfig.tools = ["*"];
+  }
   if (config.env && Object.keys(config.env).length > 0) {
-    localConfig.env = config.env;
+    stdioConfig.env = config.env;
+  }
+  return stdioConfig;
+}
+
+function resolveGitHubCopilotCliConfigPath(
+  agent: AgentConfig,
+  options: { local: boolean; cwd: string },
+): string {
+  if (!options.local) {
+    return agent.configPath;
   }
 
-  return localConfig;
+  const mcpJson = join(options.cwd, ".mcp.json");
+  const githubMcpJson = join(options.cwd, ".github", "mcp.json");
+  if (existsSync(mcpJson)) return mcpJson;
+  if (existsSync(githubMcpJson)) return githubMcpJson;
+  return mcpJson;
 }
 
 function resolveMcporterConfigPath(
@@ -873,16 +959,16 @@ export const agents: Record<AgentType, AgentConfig> = {
     name: "github-copilot-cli",
     displayName: "GitHub Copilot CLI",
     configPath: copilotConfigPath,
-    localConfigPath: ".vscode/mcp.json",
-    projectDetectPaths: [".vscode"],
+    localConfigPath: ".mcp.json",
+    projectDetectPaths: [".mcp.json", ".github/mcp.json"],
     configKey: "mcpServers",
-    localConfigKey: "servers",
     format: "json",
     supportedTransports: ["stdio", "http", "sse"],
     supportedFields: [],
     detectGlobalInstall: async () => {
       return existsSync(dirname(copilotConfigPath));
     },
+    resolveConfigPath: resolveGitHubCopilotCliConfigPath,
     transformConfig: transformGitHubCopilotCliConfig,
   },
 
