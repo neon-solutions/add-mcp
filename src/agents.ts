@@ -20,6 +20,10 @@ function getKimiCodeHome(): string {
   return process.env.KIMI_CODE_HOME || join(home, ".kimi-code");
 }
 
+function getMastraCodeDir(): string {
+  return join(home, ".mastracode");
+}
+
 function getPiAgentDir(): string {
   return process.env.PI_CODING_AGENT_DIR || join(home, ".pi", "agent");
 }
@@ -464,6 +468,28 @@ function transformPiConfig(
     local.requestTimeoutMs = config.timeout;
   }
   return local;
+}
+
+/**
+ * Mastra Code infers transport from `command` vs `url` and skips an entry
+ * that sets both. OAuth scopes live under `oauth.scopes`.
+ */
+function transformMastraCodeConfig(
+  _serverName: string,
+  config: McpServerConfig,
+): unknown {
+  if (!config.url) {
+    return buildStandardLocal(config);
+  }
+
+  const remote: Record<string, unknown> = { url: config.url };
+  if (config.headers && Object.keys(config.headers).length > 0) {
+    remote.headers = config.headers;
+  }
+  if (config.oauthScopes && config.oauthScopes.length > 0) {
+    remote.oauth = { scopes: config.oauthScopes };
+  }
+  return remote;
 }
 
 function headersWithoutAuthorization(
@@ -1093,6 +1119,22 @@ export const agents: Record<AgentType, AgentConfig> = {
       return existsSync(join(home, ".kiro"));
     },
     transformConfig: transformKiroCliConfig,
+  },
+
+  mastracode: {
+    name: "mastracode",
+    displayName: "Mastra Code",
+    configPath: join(getMastraCodeDir(), "mcp.json"),
+    localConfigPath: ".mastracode/mcp.json",
+    projectDetectPaths: [".mastracode"],
+    configKey: "mcpServers",
+    format: "json",
+    supportedTransports: ["stdio", "http", "sse"],
+    supportedFields: ["scopes"],
+    detectGlobalInstall: async () => {
+      return existsSync(getMastraCodeDir());
+    },
+    transformConfig: transformMastraCodeConfig,
   },
 
   mcporter: {

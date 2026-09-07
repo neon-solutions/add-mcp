@@ -22,6 +22,7 @@ MCP servers can be installed to any of these agents. Project paths are relative 
 | Kilo Code              | `kilo-code`          | `kilo.json` (or existing `.kilo/`, `.kilocode/`, or root `kilo.jsonc` config) | `~/.config/kilo/kilo.json` (or existing `~/.config/kilo/kilo.jsonc`)                                            |
 | Kimi Code              | `kimi-code`          | `.kimi-code/mcp.json`                                                         | `$KIMI_CODE_HOME/mcp.json` (defaults to `~/.kimi-code/mcp.json`)                                                |
 | Kiro CLI               | `kiro-cli`           | `.kiro/settings/mcp.json`                                                     | `~/.kiro/settings/mcp.json` (shared with the Kiro IDE)                                                          |
+| Mastra Code            | `mastracode`         | `.mastracode/mcp.json`                                                        | `~/.mastracode/mcp.json`                                                                                        |
 | MCPorter               | `mcporter`           | `config/mcporter.json`                                                        | `~/.mcporter/mcporter.json` (or existing `~/.mcporter/mcporter.jsonc`)                                          |
 | OpenCode               | `opencode`           | `opencode.jsonc` (or existing `opencode.json` / `.opencode/` config)          | `~/.config/opencode/opencode.jsonc` (or existing `opencode.json`)                                               |
 | Pi                     | `pi`                 | `.pi/mcp.json`                                                                | `$PI_CODING_AGENT_DIR/mcp.json` (defaults to `~/.pi/agent/mcp.json`)                                            |
@@ -41,6 +42,7 @@ MCP servers can be installed to any of these agents. Project paths are relative 
 | `kilo`, `kilocode`   | `kilo-code`  |
 | `kimi`               | `kimi-code`  |
 | `kiro`               | `kiro-cli`   |
+| `mastra`             | `mastracode` |
 | `pi-agent`           | `pi`         |
 
 ## Troubleshooting
@@ -48,6 +50,8 @@ MCP servers can be installed to any of these agents. Project paths are relative 
 Some agents and editors, like Claude Code, require a restart to load a new MCP server. Others, like Cursor, require you to navigate to the MCP settings page and toggle the new server as enabled.
 
 Kimi Code only loads a project-level `.kimi-code/mcp.json` after you trust the folder in the CLI, so a project install may not take effect until then. Its MCP config is also validated as a whole: if another entry in the file is invalid, Kimi Code disables every MCP server, including a newly added one.
+
+Mastra Code also reads project `.mcp.json`. add-mcp writes `.mastracode/mcp.json` (and `~/.mastracode/mcp.json` globally) so a mixed Claude + Mastra install does not share that file.
 
 Pi has no built-in MCP. add-mcp writes the Pi-owned files [`pi-mcp-adapter`](https://github.com/nicobailon/pi-mcp-adapter) reads. Install that extension with `pi install npm:pi-mcp-adapter`. A running Pi session picks the change up after `/reload`.
 

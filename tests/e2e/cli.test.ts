@@ -2416,6 +2416,78 @@ test("E2E CLI: Pi global install falls back to ~/.pi/agent", () => {
   assert.strictEqual("type" in server, false);
 });
 
+test("E2E CLI: Mastra alias installs into .mastracode/mcp.json", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "mastra",
+      "-y",
+      "--name",
+      "mastra-remote",
+      "--scopes",
+      "read,write",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const configPath = join(projectDir, ".mastracode", "mcp.json");
+  assert.strictEqual(existsSync(configPath), true);
+  assert.strictEqual(existsSync(join(projectDir, ".mcp.json")), false);
+
+  const saved = JSON.parse(readFileSync(configPath, "utf-8"));
+  const server = saved.mcpServers["mastra-remote"] as Record<string, unknown>;
+  assert.ok(server);
+  assert.strictEqual(server.url, "https://mcp.example.com/mcp");
+  assert.deepStrictEqual(server.oauth, { scopes: ["read", "write"] });
+  assert.strictEqual("type" in server, false);
+});
+
+test("E2E CLI: Mastra Code global install writes ~/.mastracode/mcp.json", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "mcp-server-postgres",
+      "-a",
+      "mastracode",
+      "-g",
+      "-y",
+      "--name",
+      "mastra-local",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const configPath = join(homeDir, ".mastracode", "mcp.json");
+  assert.strictEqual(existsSync(configPath), true);
+
+  const saved = JSON.parse(readFileSync(configPath, "utf-8"));
+  const server = saved.mcpServers["mastra-local"] as Record<string, unknown>;
+  assert.ok(server);
+  assert.strictEqual(server.command, "npx");
+  assert.deepStrictEqual(server.args, ["-y", "mcp-server-postgres"]);
+  assert.strictEqual("type" in server, false);
+});
+
 test("E2E CLI: Kimi alias honors KIMI_CODE_HOME for global installs", () => {
   const projectDir = createTempDir();
   const homeDir = createTempDir();
