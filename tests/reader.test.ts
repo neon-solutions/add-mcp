@@ -351,6 +351,73 @@ test("findMatchingServers: finds matches across multiple agents", () => {
   assert.strictEqual(matches.length, 2);
 });
 
+test("readServersForAgent: OpenCode mixed file lists native duplicate and both maps", () => {
+  const tempDir = createTempDir();
+  writeFileSync(
+    join(tempDir, "opencode.jsonc"),
+    JSON.stringify({
+      theme: "dark",
+      mcp: {
+        timeout: { startup: 4000 },
+        "legacy-remote": {
+          type: "remote",
+          url: "https://legacy.example.com/mcp",
+        },
+        dup: {
+          type: "remote",
+          url: "https://legacy-dup.example.com/mcp",
+          headers: { Authorization: "legacy" },
+        },
+        servers: {
+          "native-local": {
+            type: "local",
+            command: ["npx", "-y", "mcp-server-postgres"],
+          },
+          dup: {
+            type: "remote",
+            url: "https://native-dup.example.com/mcp",
+            headers: { Authorization: "native" },
+          },
+          quiet: {
+            type: "remote",
+            url: "https://quiet.example.com/mcp",
+            disabled: true,
+          },
+        },
+      },
+    }),
+  );
+
+  const result = readServersForAgent("opencode", {
+    scope: "local",
+    cwd: tempDir,
+  });
+  const byName = new Map(result.servers.map((s) => [s.serverName, s]));
+  assert.strictEqual(byName.size, 4);
+  assert.ok(!byName.has("timeout"));
+  assert.ok(!byName.has("servers"));
+
+  const legacy = byName.get("legacy-remote");
+  assert.ok(legacy);
+  assert.strictEqual(legacy.configKey, "mcp");
+  assert.strictEqual(legacy.identity, "https://legacy.example.com/mcp");
+
+  const nativeLocal = byName.get("native-local");
+  assert.ok(nativeLocal);
+  assert.strictEqual(nativeLocal.configKey, "mcp.servers");
+  assert.strictEqual(nativeLocal.identity, "mcp-server-postgres");
+
+  const dup = byName.get("dup");
+  assert.ok(dup);
+  assert.strictEqual(dup.configKey, "mcp.servers");
+  assert.strictEqual(dup.identity, "https://native-dup.example.com/mcp");
+  assert.deepStrictEqual(dup.config.headers, { Authorization: "native" });
+
+  const quiet = byName.get("quiet");
+  assert.ok(quiet);
+  assert.strictEqual(quiet.configKey, "mcp.servers");
+});
+
 // ── cleanup ──────────────────────────────────────────────────────────────
 
 cleanup();

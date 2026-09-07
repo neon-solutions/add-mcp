@@ -21,6 +21,7 @@ import {
   rewriteJsoncAsJson,
 } from "./formats/index.js";
 import { looksLikePath } from "./source-parser.js";
+import { resolveOpenCodeUpsertKey } from "./opencode-config.js";
 import {
   applyFieldSupport,
   invalidBearerTokenEnvMessage,
@@ -441,8 +442,16 @@ export function installServerForAgent(
       agent.supportedFields,
     );
 
+    // OpenCode V1 and V2 share one agent. Resolve the write key from the
+    // file first so the transform can omit V1 `enabled` on native writes.
+    const configKey =
+      agentType === "opencode"
+        ? resolveOpenCodeUpsertKey(configPath, serverName)
+        : getConfigKey(agent, options);
+
     const transformedConfig = agent.transformConfig(serverName, gatedConfig, {
       local: Boolean(options.local),
+      configKey,
     });
 
     if (options.local && agentType === "claude-code") {
@@ -463,7 +472,6 @@ export function installServerForAgent(
       mkdirSync(dir, { recursive: true });
     }
 
-    const configKey = getConfigKey(agent, options);
     const config = buildConfigWithKey(configKey, serverName, transformedConfig);
 
     writeConfig(configPath, config, agent.format, configKey);

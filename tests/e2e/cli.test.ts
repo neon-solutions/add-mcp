@@ -9,6 +9,7 @@ import {
   mkdirSync,
   writeFileSync,
   statSync,
+  chmodSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
@@ -2935,6 +2936,444 @@ test("E2E CLI: auto-approve on an unsupported agent warns and writes no approval
 
   const output = `${result.stdout}\n${result.stderr}`;
   assert.match(output, /tool auto-approval is not supported by Cursor/i);
+});
+
+test("E2E CLI: OpenCode list shows native and legacy servers, not timeout", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+  writeFileSync(
+    join(projectDir, "opencode.jsonc"),
+    JSON.stringify({
+      mcp: {
+        timeout: { startup: 4000 },
+        legacy: { type: "remote", url: "https://legacy.example.com/mcp" },
+        dup: { type: "remote", url: "https://legacy-dup.example.com/mcp" },
+        servers: {
+          native: { type: "remote", url: "https://native.example.com/mcp" },
+          dup: { type: "remote", url: "https://native-dup.example.com/mcp" },
+        },
+      },
+    }),
+  );
+
+  const result = runCli(["list", "-a", "opencode"], projectDir, homeDir);
+  assert.strictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /legacy/);
+  assert.match(output, /native/);
+  assert.match(output, /dup/);
+  assert.match(output, /https:\/\/native-dup\.example\.com\/mcp/);
+  assert.doesNotMatch(output, /legacy-dup/);
+  assert.doesNotMatch(output, /timeout/);
+});
+
+test("E2E CLI: OpenCode remove of a duplicate name deletes both copies", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+  const path = join(projectDir, "opencode.jsonc");
+  writeFileSync(
+    path,
+    JSON.stringify({
+      mcp: {
+        timeout: { startup: 4000 },
+        dup: { type: "remote", url: "https://legacy.example.com/mcp" },
+        servers: {
+          dup: { type: "remote", url: "https://native.example.com/mcp" },
+        },
+      },
+    }),
+  );
+
+  const result = runCli(
+    ["remove", "dup", "-a", "opencode", "-y"],
+    projectDir,
+    homeDir,
+  );
+  assert.strictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  const mcp = JSON.parse(readFileSync(path, "utf-8")).mcp as Record<
+    string,
+    unknown
+  >;
+  assert.deepStrictEqual(mcp.timeout, { startup: 4000 });
+  assert.deepStrictEqual(mcp.servers, {});
+  assert.strictEqual(mcp.dup, undefined);
+
+  const listed = runCli(["list", "-a", "opencode"], projectDir, homeDir);
+  assert.doesNotMatch(`${listed.stdout}\n${listed.stderr}`, /\bdup\b/);
+});
+
+test("E2E CLI: sync copies a native OpenCode server to Cursor", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+  mkdirSync(join(projectDir, ".cursor"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".cursor", "mcp.json"),
+    JSON.stringify({ mcpServers: {} }),
+  );
+  writeFileSync(
+    join(projectDir, "opencode.jsonc"),
+    JSON.stringify({
+      mcp: {
+        servers: {
+          neon: {
+            type: "remote",
+            url: "https://mcp.neon.tech/mcp",
+            headers: { Authorization: "Bearer neon" },
+          },
+        },
+      },
+    }),
+  );
+
+  const result = runCli(["sync", "-y"], projectDir, homeDir);
+  assert.strictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  const cursor = JSON.parse(
+    readFileSync(join(projectDir, ".cursor", "mcp.json"), "utf-8"),
+  );
+  assert.strictEqual(cursor.mcpServers.neon.url, "https://mcp.neon.tech/mcp");
+  assert.deepStrictEqual(cursor.mcpServers.neon.headers, {
+    Authorization: "Bearer neon",
+  });
+
+  const again = runCli(["sync", "-y"], projectDir, homeDir);
+  assert.strictEqual(again.status, 0, `${again.stdout}\n${again.stderr}`);
+  assert.match(`${again.stdout}\n${again.stderr}`, /already in sync/i);
+});
+
+test("E2E CLI: sync adds a Cursor server into an empty OpenCode native map", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+  mkdirSync(join(projectDir, ".cursor"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".cursor", "mcp.json"),
+    JSON.stringify({
+      mcpServers: {
+        neon: { url: "https://mcp.neon.tech/mcp" },
+      },
+    }),
+  );
+  writeFileSync(
+    join(projectDir, "opencode.jsonc"),
+    JSON.stringify({ mcp: { servers: {} } }),
+  );
+
+  const result = runCli(["sync", "-y"], projectDir, homeDir);
+  assert.strictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  const mcp = JSON.parse(
+    readFileSync(join(projectDir, "opencode.jsonc"), "utf-8"),
+  ).mcp as Record<string, Record<string, unknown>>;
+  const servers = mcp.servers as unknown as Record<
+    string,
+    Record<string, unknown>
+  >;
+  assert.ok(servers.neon);
+  assert.strictEqual(servers.neon.url, "https://mcp.neon.tech/mcp");
+  assert.strictEqual("enabled" in servers.neon, false);
+  assert.strictEqual(mcp.neon, undefined);
+});
+
+test("E2E CLI: sync matches OpenCode command arrays to Cursor command/args", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+  mkdirSync(join(projectDir, ".cursor"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".cursor", "mcp.json"),
+    JSON.stringify({
+      mcpServers: {
+        pg: {
+          command: "npx",
+          args: ["-y", "mcp-server-postgres"],
+        },
+      },
+    }),
+  );
+  writeFileSync(
+    join(projectDir, "opencode.jsonc"),
+    JSON.stringify({
+      mcp: {
+        servers: {
+          postgres: {
+            type: "local",
+            command: ["npx", "-y", "mcp-server-postgres"],
+          },
+        },
+      },
+    }),
+  );
+
+  const result = runCli(["sync", "-y"], projectDir, homeDir);
+  assert.strictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.doesNotMatch(output, /conflict/i);
+});
+
+test("E2E CLI: sync renames a native OpenCode alias inside mcp.servers", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+  mkdirSync(join(projectDir, ".cursor"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".cursor", "mcp.json"),
+    JSON.stringify({
+      mcpServers: {
+        pg: { url: "https://mcp.postgres.example.com/mcp" },
+      },
+    }),
+  );
+  writeFileSync(
+    join(projectDir, "opencode.jsonc"),
+    JSON.stringify({
+      mcp: {
+        servers: {
+          postgres: {
+            type: "remote",
+            url: "https://mcp.postgres.example.com/mcp",
+          },
+        },
+      },
+    }),
+  );
+
+  const result = runCli(["sync", "-y"], projectDir, homeDir);
+  assert.strictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  const mcp = JSON.parse(
+    readFileSync(join(projectDir, "opencode.jsonc"), "utf-8"),
+  ).mcp as Record<string, Record<string, unknown>>;
+  const servers = mcp.servers as unknown as Record<
+    string,
+    Record<string, unknown>
+  >;
+  assert.ok(servers.pg);
+  assert.strictEqual(servers.postgres, undefined);
+  assert.strictEqual(mcp.pg, undefined);
+});
+
+test("E2E CLI: sync mixed-file rename writes a new ordinary name as legacy", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+  mkdirSync(join(projectDir, ".cursor"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".cursor", "mcp.json"),
+    JSON.stringify({
+      mcpServers: {
+        a: { url: "https://mcp.example.com/mcp" },
+      },
+    }),
+  );
+  writeFileSync(
+    join(projectDir, "opencode.jsonc"),
+    JSON.stringify({
+      mcp: {
+        keep: { type: "remote", url: "https://keep.example.com/mcp" },
+        servers: {
+          alpha: { type: "remote", url: "https://mcp.example.com/mcp" },
+        },
+      },
+    }),
+  );
+
+  const result = runCli(["sync", "-y"], projectDir, homeDir);
+  assert.strictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  const mcp = JSON.parse(
+    readFileSync(join(projectDir, "opencode.jsonc"), "utf-8"),
+  ).mcp as Record<string, Record<string, unknown>>;
+  const servers = mcp.servers as unknown as Record<
+    string,
+    Record<string, unknown>
+  >;
+  assert.ok(mcp.a);
+  assert.strictEqual(mcp.a.url, "https://mcp.example.com/mcp");
+  assert.strictEqual(mcp.a.enabled, true);
+  assert.strictEqual(servers.alpha, undefined);
+  assert.ok(mcp.keep);
+});
+
+test("E2E CLI: sync remove of an OpenCode alias deletes both native and legacy copies", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+  mkdirSync(join(projectDir, ".cursor"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".cursor", "mcp.json"),
+    JSON.stringify({
+      mcpServers: {
+        pg: { url: "https://mcp.postgres.example.com/mcp" },
+      },
+    }),
+  );
+  writeFileSync(
+    join(projectDir, "opencode.jsonc"),
+    JSON.stringify({
+      mcp: {
+        postgres: {
+          type: "remote",
+          url: "https://mcp.postgres.example.com/mcp",
+        },
+        servers: {
+          postgres: {
+            type: "remote",
+            url: "https://mcp.postgres.example.com/mcp",
+          },
+        },
+      },
+    }),
+  );
+
+  const result = runCli(["sync", "-y"], projectDir, homeDir);
+  assert.strictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  const mcp = JSON.parse(
+    readFileSync(join(projectDir, "opencode.jsonc"), "utf-8"),
+  ).mcp as Record<string, unknown>;
+  assert.ok(
+    (mcp.servers as Record<string, unknown>).pg || mcp.pg,
+    "canonical name should exist",
+  );
+  assert.strictEqual(mcp.postgres, undefined);
+  assert.strictEqual(
+    (mcp.servers as Record<string, unknown>).postgres,
+    undefined,
+  );
+});
+
+test("E2E CLI: sync does not copy a hidden OpenCode legacy duplicate", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+  mkdirSync(join(projectDir, ".cursor"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".cursor", "mcp.json"),
+    JSON.stringify({ mcpServers: {} }),
+  );
+  writeFileSync(
+    join(projectDir, "opencode.jsonc"),
+    JSON.stringify({
+      mcp: {
+        hidden: {
+          type: "remote",
+          url: "https://legacy-hidden.example.com/mcp",
+        },
+        servers: {
+          hidden: {
+            type: "remote",
+            url: "https://native-hidden.example.com/mcp",
+          },
+        },
+      },
+    }),
+  );
+
+  const result = runCli(["sync", "-y"], projectDir, homeDir);
+  assert.strictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  const cursor = JSON.parse(
+    readFileSync(join(projectDir, ".cursor", "mcp.json"), "utf-8"),
+  );
+  assert.strictEqual(
+    cursor.mcpServers.hidden.url,
+    "https://native-hidden.example.com/mcp",
+  );
+  assert.strictEqual(cursor.mcpServers["legacy-hidden"], undefined);
+});
+
+test("E2E CLI: failed OpenCode destination write leaves the source alias", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+  mkdirSync(join(projectDir, ".cursor"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".cursor", "mcp.json"),
+    JSON.stringify({
+      mcpServers: {
+        pg: { url: "https://mcp.postgres.example.com/mcp" },
+      },
+    }),
+  );
+  const openPath = join(projectDir, "opencode.jsonc");
+  writeFileSync(
+    openPath,
+    JSON.stringify({
+      mcp: {
+        servers: {
+          postgres: {
+            type: "remote",
+            url: "https://mcp.postgres.example.com/mcp",
+          },
+        },
+      },
+    }),
+  );
+  chmodSync(openPath, 0o444);
+
+  const result = runCli(["sync", "-y"], projectDir, homeDir);
+  assert.notStrictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  chmodSync(openPath, 0o644);
+  const mcp = JSON.parse(readFileSync(openPath, "utf-8")).mcp as Record<
+    string,
+    Record<string, unknown>
+  >;
+  const servers = mcp.servers as unknown as Record<
+    string,
+    Record<string, unknown>
+  >;
+  assert.ok(servers.postgres);
+  assert.strictEqual(servers.pg, undefined);
+});
+
+test("E2E CLI: OpenCode malformed config does not abort listing Cursor and exits nonzero", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+  const truncated = `{
+  "mcp": {
+    "servers": {
+      "keep": { "type": "remote", "url": "https://keep.example.com/mcp"
+`;
+  writeFileSync(join(projectDir, "opencode.jsonc"), truncated);
+  mkdirSync(join(projectDir, ".cursor"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".cursor", "mcp.json"),
+    JSON.stringify({
+      mcpServers: { keep: { url: "https://cursor.example.com/mcp" } },
+    }),
+  );
+
+  const list = runCli(["list"], projectDir, homeDir);
+  assert.notStrictEqual(list.status, 0, `${list.stdout}\n${list.stderr}`);
+  const listOut = `${list.stdout}\n${list.stderr}`;
+  assert.match(listOut, /Cursor/);
+  assert.match(listOut, /keep/);
+  assert.match(listOut, /OpenCode/);
+  assert.match(listOut, /Invalid JSON/);
+
+  const remove = runCli(
+    ["remove", "keep", "-a", "opencode", "-y"],
+    projectDir,
+    homeDir,
+  );
+  assert.notStrictEqual(remove.status, 0, `${remove.stdout}\n${remove.stderr}`);
+  assert.strictEqual(
+    readFileSync(join(projectDir, "opencode.jsonc"), "utf-8"),
+    truncated,
+  );
+
+  const sync = runCli(["sync", "-y"], projectDir, homeDir);
+  assert.notStrictEqual(sync.status, 0, `${sync.stdout}\n${sync.stderr}`);
+  assert.strictEqual(
+    readFileSync(join(projectDir, "opencode.jsonc"), "utf-8"),
+    truncated,
+  );
+
+  const add = runCli(
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "opencode",
+      "-y",
+      "--name",
+      "example",
+    ],
+    projectDir,
+    homeDir,
+  );
+  assert.notStrictEqual(add.status, 0, `${add.stdout}\n${add.stderr}`);
+  assert.strictEqual(
+    readFileSync(join(projectDir, "opencode.jsonc"), "utf-8"),
+    truncated,
+  );
 });
 
 cleanup();

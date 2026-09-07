@@ -49,6 +49,7 @@ import {
   type InstalledServer,
 } from "./reader.js";
 import { removeServerFromConfig } from "./formats/index.js";
+import { removeOpenCodeServer } from "./opencode-config.js";
 import {
   hasTemplateVars,
   resolveArrayTemplates,
@@ -831,21 +832,27 @@ async function runRemoveCommand(
 
   let removedCount = 0;
   const affectedAgents = new Set<string>();
+  let mutationFailed = false;
 
   for (const idx of selectedIndices) {
     const server = matches[idx]!;
     const agent = agents[server.agentType];
     try {
-      removeServerFromConfig(
-        server.configPath,
-        agent.format,
-        getConfigKeyForServer(server),
-        server.serverName,
-      );
-      rewriteCopilotCliConfig(server.agentType, server.configPath);
+      if (server.agentType === "opencode") {
+        removeOpenCodeServer(server.configPath, server.serverName);
+      } else {
+        removeServerFromConfig(
+          server.configPath,
+          agent.format,
+          getConfigKeyForServer(server),
+          server.serverName,
+        );
+        rewriteCopilotCliConfig(server.agentType, server.configPath);
+      }
       removedCount++;
       affectedAgents.add(agent.displayName);
     } catch (error) {
+      mutationFailed = true;
       p.log.error(
         `Failed to remove ${server.serverName} from ${agent.displayName}: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
@@ -858,7 +865,7 @@ async function runRemoveCommand(
     );
   }
 
-  if (hadReadError) {
+  if (hadReadError || mutationFailed) {
     process.exitCode = 1;
   }
 
@@ -1189,6 +1196,8 @@ async function runSyncCommand(options: Options): Promise<void> {
   }
 
   let changeCount = 0;
+  let mutationFailed = false;
+  const renamed = new Set<(typeof actionRenames)[number]>();
 
   // Write-first: install canonical names
   for (const rename of actionRenames) {
@@ -1201,7 +1210,9 @@ async function runSyncCommand(options: Options): Promise<void> {
     );
     if (result.success) {
       changeCount++;
+      renamed.add(rename);
     } else {
+      mutationFailed = true;
       p.log.error(
         `Failed to write ${group.canonicalName} to ${agents[agentType].displayName}: ${result.error}`,
       );
@@ -1219,6 +1230,7 @@ async function runSyncCommand(options: Options): Promise<void> {
     if (result.success) {
       changeCount++;
     } else {
+      mutationFailed = true;
       p.log.error(
         `Failed to add ${group.canonicalName} to ${agents[agentType].displayName}: ${result.error}`,
       );
@@ -1227,30 +1239,40 @@ async function runSyncCommand(options: Options): Promise<void> {
 
   // Delete-second: remove old aliases
   for (const rename of actionRenames) {
+    if (!renamed.has(rename)) {
+      continue;
+    }
     const { group, agentType, oldName } = rename;
     const agentConfig = agents[agentType];
     const entry = group.entries.find((e) => e.agentType === agentType);
     if (!entry) continue;
 
     try {
-      // Re-read the key after writes. Sharing .mcp.json can fold a Copilot
-      // bare map under mcpServers, so the listed key is stale.
-      removeServerFromConfig(
-        entry.configPath,
-        agentConfig.format,
-        getConfigKey(agentConfig, { local: scope === "local" }),
-        oldName,
-      );
-      rewriteCopilotCliConfig(agentType, entry.configPath);
+      if (agentType === "opencode") {
+        removeOpenCodeServer(entry.configPath, oldName);
+      } else {
+        // Re-read the key after writes. Sharing .mcp.json can fold a Copilot
+        // bare map under mcpServers, so the listed key is stale.
+        removeServerFromConfig(
+          entry.configPath,
+          agentConfig.format,
+          getConfigKey(agentConfig, { local: scope === "local" }),
+          oldName,
+        );
+        rewriteCopilotCliConfig(agentType, entry.configPath);
+      }
     } catch (error) {
+      mutationFailed = true;
       p.log.error(
         `Failed to remove old alias ${oldName} from ${agentConfig.displayName}: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   }
 
-  if (layoutError) {
-    p.log.error(layoutError);
+  if (layoutError || mutationFailed) {
+    if (layoutError) {
+      p.log.error(layoutError);
+    }
     process.exitCode = 1;
   }
 

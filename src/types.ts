@@ -82,7 +82,7 @@ export interface AgentConfig {
   transformConfig: (
     serverName: string,
     config: McpServerConfig,
-    context?: { local: boolean },
+    context?: { local: boolean; configKey?: string },
   ) => unknown;
 }
 

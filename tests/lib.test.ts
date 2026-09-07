@@ -780,6 +780,112 @@ await test("listInstalledServers reports a Copilot read error without dropping V
   assert.deepStrictEqual(copilot.servers, []);
 });
 
+await test("opencode lists mixed files and reports native configKey", async () => {
+  const dir = createTempDir();
+  writeFileSync(
+    join(dir, "opencode.jsonc"),
+    JSON.stringify({
+      mcp: {
+        timeout: { startup: 4000 },
+        legacy: { type: "remote", url: "https://legacy.example.com/mcp" },
+        dup: { type: "remote", url: "https://legacy-dup.example.com/mcp" },
+        servers: {
+          native: {
+            type: "local",
+            command: ["npx", "-y", "mcp-server-postgres"],
+          },
+          dup: { type: "remote", url: "https://native-dup.example.com/mcp" },
+        },
+      },
+    }),
+  );
+
+  const list = await listInstalledServers({
+    agents: ["opencode"],
+    cwd: dir,
+  });
+  const opencode = list.find((a) => a.agentType === "opencode");
+  assert.ok(opencode);
+  assert.strictEqual(opencode.error, undefined);
+  const byName = new Map(opencode.servers.map((s) => [s.serverName, s]));
+  assert.strictEqual(byName.get("legacy")?.configKey, "mcp");
+  assert.strictEqual(byName.get("native")?.configKey, "mcp.servers");
+  assert.strictEqual(byName.get("dup")?.configKey, "mcp.servers");
+  assert.strictEqual(
+    byName.get("dup")?.identity,
+    "https://native-dup.example.com/mcp",
+  );
+  assert.strictEqual(byName.get("native")?.identity, "mcp-server-postgres");
+});
+
+await test("opencode remove deletes both maps for a duplicate name", async () => {
+  const dir = createTempDir();
+  writeFileSync(
+    join(dir, "opencode.jsonc"),
+    JSON.stringify({
+      theme: "dark",
+      mcp: {
+        timeout: { startup: 4000 },
+        dup: { type: "remote", url: "https://legacy.example.com/mcp" },
+        servers: {
+          dup: { type: "remote", url: "https://native.example.com/mcp" },
+        },
+      },
+    }),
+  );
+
+  const removed = removeServer("opencode", "dup", { local: true, cwd: dir });
+  assert.ok(removed.success);
+  assert.strictEqual(removed.removed, true);
+
+  const listed = await listInstalledServers({ agents: ["opencode"], cwd: dir });
+  assert.deepStrictEqual(listed[0]?.servers, []);
+
+  const parsed = readJson(join(dir, "opencode.jsonc"));
+  const mcp = parsed.mcp as Record<string, unknown>;
+  assert.strictEqual(parsed.theme, "dark");
+  assert.deepStrictEqual(mcp.timeout, { startup: 4000 });
+  assert.deepStrictEqual(mcp.servers, {});
+  assert.strictEqual(mcp.dup, undefined);
+
+  const again = removeServer("opencode", "dup", { local: true, cwd: dir });
+  assert.ok(again.success);
+  assert.strictEqual(again.removed, false);
+});
+
+await test("opencode upsert and list refuse truncated JSONC and leave the file", async () => {
+  const dir = createTempDir();
+  const truncated = `{
+  "mcp": {
+    "keep": { "type": "remote", "url": "https://keep.example.com/mcp"
+`;
+  const path = join(dir, "opencode.jsonc");
+  writeFileSync(path, truncated);
+
+  const upsert = upsertServer(
+    "opencode",
+    "example",
+    remote("https://mcp.example.com/mcp"),
+    { local: true, cwd: dir },
+  );
+  assert.strictEqual(upsert.success, false);
+  assert.ok(upsert.error?.includes("Invalid JSON"));
+  assert.ok(upsert.error?.includes(path));
+
+  const removed = removeServer("opencode", "keep", { local: true, cwd: dir });
+  assert.strictEqual(removed.success, false);
+  assert.ok(removed.error?.includes("Invalid JSON"));
+  assert.ok(removed.error?.includes(path));
+
+  const list = await listInstalledServers({ agents: ["opencode"], cwd: dir });
+  const opencode = list.find((a) => a.agentType === "opencode");
+  assert.ok(opencode);
+  assert.ok(opencode.error?.includes("Invalid JSON"));
+  assert.ok(opencode.error?.includes(path));
+  assert.deepStrictEqual(opencode.servers, []);
+  assert.strictEqual(readFileSync(path, "utf-8"), truncated);
+});
+
 cleanup();
 
 console.log(`\n${passed} passed, ${failed} failed`);

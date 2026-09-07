@@ -6,6 +6,7 @@ import {
   type InstallOptions,
 } from "./installer.js";
 import { readConfig, getNestedValue } from "./formats/index.js";
+import { listOpenCodeServers } from "./opencode-config.js";
 
 export interface InstalledServer {
   serverName: string;
@@ -108,8 +109,30 @@ export function readServersForAgent(
     cwd: options.cwd,
   };
   const configPath = getConfigPath(agent, installOptions);
-  const configKey = getConfigKey(agent, installOptions);
 
+  if (agentType === "opencode") {
+    const servers: InstalledServer[] = listOpenCodeServers(configPath).map(
+      (entry) => ({
+        serverName: entry.serverName,
+        config: entry.config,
+        identity: extractServerIdentity(entry.config),
+        agentType,
+        scope: options.scope,
+        configPath,
+        configKey: entry.configKey,
+      }),
+    );
+    return {
+      agentType,
+      displayName: agent.displayName,
+      detected: true,
+      scope: options.scope,
+      configPath,
+      servers,
+    };
+  }
+
+  const configKey = getConfigKey(agent, installOptions);
   const fullConfig = readConfig(configPath, agent.format);
   const serversObj = getNestedValue(fullConfig, configKey);
 
