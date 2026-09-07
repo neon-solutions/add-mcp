@@ -764,7 +764,7 @@ async function runRemoveCommand(
 
   const hadReadError = reportAgentReadErrors(agentServersList);
   const matches = findMatchingServers(
-    agentServersList.filter((agentServers) => !agentServers.error),
+    agentsWithReadableConfigs(agentServersList),
     query,
   );
 
@@ -863,6 +863,24 @@ async function runRemoveCommand(
   }
 
   console.log();
+}
+
+function failedConfigPaths(agentServersList: AgentServers[]): Set<string> {
+  return new Set(
+    agentServersList
+      .filter((agentServers) => agentServers.error)
+      .map((agentServers) => agentServers.configPath),
+  );
+}
+
+function agentsWithReadableConfigs(
+  agentServersList: AgentServers[],
+): AgentServers[] {
+  const failedPaths = failedConfigPaths(agentServersList);
+  return agentServersList.filter(
+    (agentServers) =>
+      !agentServers.error && !failedPaths.has(agentServers.configPath),
+  );
 }
 
 function reportAgentReadErrors(agentServersList: AgentServers[]): boolean {
@@ -1012,7 +1030,7 @@ async function runSyncCommand(options: Options): Promise<void> {
     process.exitCode = 1;
   }
 
-  const readable = agentServersList.filter((a) => !a.error);
+  const readable = agentsWithReadableConfigs(agentServersList);
 
   if (hadReadError && readable.length < 2) {
     console.log();

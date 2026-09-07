@@ -1534,6 +1534,40 @@ test("remove: unreadable Copilot config is an error, not a missing server", () =
   );
 });
 
+test("remove: does not mutate a shared .mcp.json that Copilot could not read", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+  const malformed = `{
+  "mcpServers": {
+    "keep": { "url": "https://keep.example.com/mcp" },
+  }
+}
+`;
+  writeFileSync(join(projectDir, ".mcp.json"), malformed);
+  mkdirSync(join(projectDir, ".cursor"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".cursor", "mcp.json"),
+    JSON.stringify({
+      mcpServers: {
+        keep: { url: "https://keep.example.com/mcp" },
+        added: { url: "https://added.example.com/mcp" },
+      },
+    }),
+  );
+
+  const result = runCli(["remove", "keep", "-y"], projectDir, homeDir);
+  assert.notStrictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  assert.strictEqual(
+    readFileSync(join(projectDir, ".mcp.json"), "utf-8"),
+    malformed,
+  );
+  const cursor = JSON.parse(
+    readFileSync(join(projectDir, ".cursor", "mcp.json"), "utf-8"),
+  );
+  assert.strictEqual(cursor.mcpServers.keep, undefined);
+  assert.ok(cursor.mcpServers.added);
+});
+
 test("list: shows 'not detected' when -a targets absent agent", () => {
   const homeDir = createTempDir();
   const projectDir = createTempDir();
@@ -1929,6 +1963,43 @@ test("sync: unreadable Copilot config is not treated as empty", () => {
     readFileSync(join(projectDir, ".github", "mcp.json"), "utf-8"),
     /added/,
   );
+});
+
+test("sync: does not mutate a shared .mcp.json that Copilot could not read", () => {
+  const homeDir = createTempDir();
+  const projectDir = createTempDir();
+  const malformed = `{
+  "mcpServers": {
+    "keep": { "url": "https://keep.example.invalid/mcp" },
+  }
+}
+`;
+  writeFileSync(join(projectDir, ".mcp.json"), malformed);
+  mkdirSync(join(projectDir, ".cursor"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".cursor", "mcp.json"),
+    JSON.stringify({
+      mcpServers: {
+        keep: { type: "http", url: "https://keep.example.invalid/mcp" },
+      },
+    }),
+  );
+  mkdirSync(join(projectDir, ".vscode"), { recursive: true });
+  writeFileSync(
+    join(projectDir, ".vscode", "mcp.json"),
+    JSON.stringify({ servers: {} }),
+  );
+
+  const result = runCli(["sync", "-y"], projectDir, homeDir);
+  assert.notStrictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  assert.strictEqual(
+    readFileSync(join(projectDir, ".mcp.json"), "utf-8"),
+    malformed,
+  );
+  const vscode = JSON.parse(
+    readFileSync(join(projectDir, ".vscode", "mcp.json"), "utf-8"),
+  );
+  assert.ok(vscode.servers.keep);
 });
 
 test("sync: reconstructs required fields when syncing Cursor -> Claude Code", () => {

@@ -5,7 +5,7 @@
 - write GitHub Copilot CLI project installs to `.mcp.json` (or an existing `.github/mcp.json` when `.mcp.json` is absent) with `mcpServers`, matching Copilot CLI 1.0.22+. `.vscode/mcp.json` stays the VS Code agent path. A project `.mcp.json` is shared with Claude Code; removing a server from either agent removes it for both.
 - write Copilot CLI project files as strict JSON. Copilot CLI rejects comments and would otherwise skip the file after a successful install.
 - refuse local Claude Code and Copilot CLI writes that would create `.mcp.json` beside an existing `.github/mcp.json`.
-- keep `list` going when one agent's config is unreadable, print that agent's error, and exit nonzero. `remove` and `sync` report the same read errors, skip that agent's file, and exit nonzero instead of treating it as empty.
+- keep `list` going when one agent's config is unreadable, print that agent's error, and exit nonzero. `remove` and `sync` report the same read errors, skip that file for every agent that uses it, and exit nonzero instead of treating it as empty.
 - exit nonzero when any selected agent fails to install, and print `Failed` or `Installed with errors` instead of `Done!`.
 - skip confirming a `sync` plan that cannot run, and exit nonzero when Copilot/Claude writes are blocked.
 
