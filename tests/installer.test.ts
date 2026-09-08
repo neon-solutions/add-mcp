@@ -624,7 +624,7 @@ test("installServerForAgent - Junie omits type for an sse remote", () => {
     {
       type: "sse",
       url: "https://mcp.example.com/sse",
-      headers: { Authorization: "Bearer token" },
+      headers: { "X-Workspace": "demo" },
     },
     "junie",
     { local: true, cwd: tempDir },
@@ -636,9 +636,51 @@ test("installServerForAgent - Junie omits type for an sse remote", () => {
     .example;
   assert.ok(server);
   assert.strictEqual(server.url, "https://mcp.example.com/sse");
-  assert.deepStrictEqual(server.headers, { Authorization: "Bearer token" });
+  assert.deepStrictEqual(server.headers, { "X-Workspace": "demo" });
   assert.ok(!("type" in server));
   assert.ok(!("transport" in server));
+});
+
+test("installServerForAgent - Junie rejects a literal Authorization header", () => {
+  const tempDir = createTempDir();
+  const result = installServerForAgent(
+    "example",
+    {
+      type: "http",
+      url: "https://mcp.example.com/mcp",
+      headers: { Authorization: "Bearer token" },
+    },
+    "junie",
+    { local: true, cwd: tempDir },
+  );
+
+  assert.strictEqual(result.success, false);
+  assert.match(result.error ?? "", /Authorization header/);
+  assert.strictEqual(
+    existsSync(join(tempDir, ".junie", "mcp", "mcp.json")),
+    false,
+  );
+});
+
+test("installServerForAgent - Junie refuses headers over cleartext http", () => {
+  const tempDir = createTempDir();
+  const result = installServerForAgent(
+    "example",
+    {
+      type: "http",
+      url: "http://mcp.example.com/mcp",
+      headers: { "X-Workspace": "demo" },
+    },
+    "junie",
+    { local: true, cwd: tempDir },
+  );
+
+  assert.strictEqual(result.success, false);
+  assert.match(result.error ?? "", /cleartext http:\/\//);
+  assert.strictEqual(
+    existsSync(join(tempDir, ".junie", "mcp", "mcp.json")),
+    false,
+  );
 });
 
 test("installServerForAgent - Junie maps stdio config", () => {

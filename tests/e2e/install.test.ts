@@ -1629,7 +1629,7 @@ test("E2E: Install remote MCP to Junie (local)", () => {
   const tempDir = createTempDir();
   const parsed = parseSource("https://mcp.example.com/mcp");
   const config = buildServerConfig(parsed, {
-    headers: { Authorization: "Bearer token" },
+    headers: { "X-Workspace": "demo" },
   });
 
   const result = installServerForAgent("example", config, "junie", {
@@ -1651,8 +1651,48 @@ test("E2E: Install remote MCP to Junie (local)", () => {
   assert.ok(serverConfig);
   assert.strictEqual(serverConfig.url, "https://mcp.example.com/mcp");
   assert.deepStrictEqual(serverConfig.headers, {
-    Authorization: "Bearer token",
+    "X-Workspace": "demo",
   });
+});
+
+test("E2E: Junie rejects a literal Authorization header", () => {
+  const tempDir = createTempDir();
+  const parsed = parseSource("https://mcp.example.com/mcp");
+  const config = buildServerConfig(parsed, {
+    headers: { Authorization: "Bearer token" },
+  });
+
+  const result = installServerForAgent("example", config, "junie", {
+    local: true,
+    cwd: tempDir,
+  });
+
+  assert.strictEqual(result.success, false);
+  assert.match(result.error ?? "", /Authorization header/);
+  assert.strictEqual(
+    existsSync(join(tempDir, ".junie", "mcp", "mcp.json")),
+    false,
+  );
+});
+
+test("E2E: Junie rejects headers on a cleartext http:// server", () => {
+  const tempDir = createTempDir();
+  const parsed = parseSource("http://mcp.example.com/mcp");
+  const config = buildServerConfig(parsed, {
+    headers: { "X-Workspace": "demo" },
+  });
+
+  const result = installServerForAgent("example", config, "junie", {
+    local: true,
+    cwd: tempDir,
+  });
+
+  assert.strictEqual(result.success, false);
+  assert.match(result.error ?? "", /cleartext http:\/\//);
+  assert.strictEqual(
+    existsSync(join(tempDir, ".junie", "mcp", "mcp.json")),
+    false,
+  );
 });
 
 test("E2E: Install local server to Junie (stdio)", () => {

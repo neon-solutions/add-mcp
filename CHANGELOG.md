@@ -2,7 +2,7 @@
 
 ## [2.5.0] - 2026-09-08
 
-- add `junie` (JetBrains) support with project installs to `.junie/mcp/mcp.json` and global installs to `$JUNIE_HOME/mcp/mcp.json` (default `~/.junie/mcp/mcp.json`), using Junie's `mcpServers` key. Stdio uses `command`/`args`/`env` and remote servers use `url` + optional `headers` with no `type` field (Junie infers the transport), matching the shape both Junie CLI and the Junie JetBrains IDE plugin read.
+- add `junie` (JetBrains) support with project installs to `.junie/mcp/mcp.json` and global installs to `$JUNIE_HOME/mcp/mcp.json` (default `~/.junie/mcp/mcp.json`), using Junie's `mcpServers` key. Stdio uses `command`/`args`/`env` and remote servers use `url` + optional `headers` with no `type` field (Junie infers the transport), matching the shape both Junie CLI and the Junie JetBrains IDE plugin read. Remote headers are rejected on a cleartext `http://` URL so credentials are never sent in the clear, and a literal `Authorization` header is rejected rather than written because the JetBrains IDE plugin ignores inline MCP tokens.
 
 ## [2.4.0] - 2026-09-07
 
