@@ -458,11 +458,11 @@ function transformKiroCliConfig(
  * does not document a `type`/`transport` field, so none is emitted. Stdio uses
  * command / args / env.
  *
- * Remote credentials are guarded: Junie refuses to send headers to a cleartext
- * `http://` endpoint (CWE-319), and because the JetBrains IDE plugin does not
- * support an inline MCP token in `mcp.json`, a literal `Authorization` header is
- * rejected in favor of Junie's environment-based credential flow. Other headers
- * over an `https://` URL pass through unchanged.
+ * Remote headers are guarded against cleartext exposure: Junie refuses to send
+ * headers to a cleartext `http://` endpoint (CWE-319). Over an `https://` URL all
+ * headers pass through unchanged, including `Authorization` — the Junie CLI reads
+ * a bearer token from that header, while the JetBrains IDE plugin simply ignores
+ * an inline token, so the shared `mcp.json` stays valid for both.
  * See https://junie.jetbrains.com/docs/junie-cli-mcp-configuration.html.
  */
 function transformJunieConfig(
@@ -478,11 +478,6 @@ function transformJunieConfig(
     if (config.url.toLowerCase().startsWith("http://")) {
       throw new Error(
         "Junie refuses to send headers to a cleartext http:// server. Use an https:// URL so credentials are not transmitted in the clear.",
-      );
-    }
-    if (hasAuthorizationHeader(headers)) {
-      throw new Error(
-        "Junie does not support a literal Authorization header in mcp.json; the JetBrains IDE plugin ignores it. Use a non-Authorization header or Junie's environment-based credential flow.",
       );
     }
   }

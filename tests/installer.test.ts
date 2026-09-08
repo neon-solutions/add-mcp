@@ -641,7 +641,7 @@ test("installServerForAgent - Junie omits type for an sse remote", () => {
   assert.ok(!("transport" in server));
 });
 
-test("installServerForAgent - Junie rejects a literal Authorization header", () => {
+test("installServerForAgent - Junie keeps an Authorization header over https", () => {
   const tempDir = createTempDir();
   const result = installServerForAgent(
     "example",
@@ -653,13 +653,14 @@ test("installServerForAgent - Junie rejects a literal Authorization header", () 
     "junie",
     { local: true, cwd: tempDir },
   );
+  assert.ok(result.success);
 
-  assert.strictEqual(result.success, false);
-  assert.match(result.error ?? "", /Authorization header/);
-  assert.strictEqual(
-    existsSync(join(tempDir, ".junie", "mcp", "mcp.json")),
-    false,
-  );
+  const saved = readJsonConfig(join(tempDir, ".junie", "mcp", "mcp.json"));
+  const server = (saved.mcpServers as Record<string, Record<string, unknown>>)
+    .example;
+  assert.ok(server);
+  assert.strictEqual(server.url, "https://mcp.example.com/mcp");
+  assert.deepStrictEqual(server.headers, { Authorization: "Bearer token" });
 });
 
 test("installServerForAgent - Junie refuses headers over cleartext http", () => {

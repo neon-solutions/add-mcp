@@ -1655,7 +1655,7 @@ test("E2E: Install remote MCP to Junie (local)", () => {
   });
 });
 
-test("E2E: Junie rejects a literal Authorization header", () => {
+test("E2E: Junie keeps an Authorization header over https", () => {
   const tempDir = createTempDir();
   const parsed = parseSource("https://mcp.example.com/mcp");
   const config = buildServerConfig(parsed, {
@@ -1667,12 +1667,21 @@ test("E2E: Junie rejects a literal Authorization header", () => {
     cwd: tempDir,
   });
 
-  assert.strictEqual(result.success, false);
-  assert.match(result.error ?? "", /Authorization header/);
-  assert.strictEqual(
-    existsSync(join(tempDir, ".junie", "mcp", "mcp.json")),
-    false,
+  assert.strictEqual(result.success, true);
+
+  const savedConfig = readJsonConfig(
+    join(tempDir, ".junie", "mcp", "mcp.json"),
   );
+  const mcpServers = savedConfig.mcpServers as Record<
+    string,
+    Record<string, unknown>
+  >;
+  const serverConfig = mcpServers.example;
+  assert.ok(serverConfig);
+  assert.strictEqual(serverConfig.url, "https://mcp.example.com/mcp");
+  assert.deepStrictEqual(serverConfig.headers, {
+    Authorization: "Bearer token",
+  });
 });
 
 test("E2E: Junie rejects headers on a cleartext http:// server", () => {
