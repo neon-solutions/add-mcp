@@ -13,6 +13,7 @@ export type AgentType =
   | "goose"
   | "github-copilot-cli"
   | "grok-build"
+  | "junie"
   | "kilo-code"
   | "kimi-code"
   | "kiro-cli"

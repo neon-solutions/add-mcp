@@ -598,6 +598,76 @@ test("installServerForAgent - Mastra Code stdio omits type", () => {
   assert.ok(!("url" in server));
 });
 
+test("installServerForAgent - Junie drops both timeout and scopes", () => {
+  const tempDir = createTempDir();
+  const result = installRemoteWith("junie", tempDir, {
+    oauthScopes: ["read"],
+    timeout: 12000,
+  });
+  assert.ok(result.success);
+  assert.deepStrictEqual(result.droppedFields, ["timeout", "scopes"]);
+
+  const saved = readJsonConfig(join(tempDir, ".junie", "mcp", "mcp.json"));
+  const server = (saved.mcpServers as Record<string, Record<string, unknown>>)
+    .example;
+  assert.ok(server);
+  assert.strictEqual(server.url, "https://mcp.example.com/mcp");
+  assert.ok(!("type" in server));
+  assert.ok(!("timeout" in server));
+  assert.ok(!("oauthScopes" in server));
+});
+
+test("installServerForAgent - Junie omits type for an sse remote", () => {
+  const tempDir = createTempDir();
+  const result = installServerForAgent(
+    "example",
+    {
+      type: "sse",
+      url: "https://mcp.example.com/sse",
+      headers: { Authorization: "Bearer token" },
+    },
+    "junie",
+    { local: true, cwd: tempDir },
+  );
+  assert.ok(result.success);
+
+  const saved = readJsonConfig(join(tempDir, ".junie", "mcp", "mcp.json"));
+  const server = (saved.mcpServers as Record<string, Record<string, unknown>>)
+    .example;
+  assert.ok(server);
+  assert.strictEqual(server.url, "https://mcp.example.com/sse");
+  assert.deepStrictEqual(server.headers, { Authorization: "Bearer token" });
+  assert.ok(!("type" in server));
+  assert.ok(!("transport" in server));
+});
+
+test("installServerForAgent - Junie maps stdio config", () => {
+  const tempDir = createTempDir();
+  const result = installServerForAgent(
+    "postgres",
+    {
+      command: "npx",
+      args: ["-y", "mcp-server-postgres"],
+      env: { DATABASE_URL: "postgres://localhost/test" },
+    },
+    "junie",
+    { local: true, cwd: tempDir },
+  );
+  assert.ok(result.success);
+
+  const saved = readJsonConfig(join(tempDir, ".junie", "mcp", "mcp.json"));
+  const server = (saved.mcpServers as Record<string, Record<string, unknown>>)
+    .postgres;
+  assert.ok(server);
+  assert.strictEqual(server.command, "npx");
+  assert.deepStrictEqual(server.args, ["-y", "mcp-server-postgres"]);
+  assert.deepStrictEqual(server.env, {
+    DATABASE_URL: "postgres://localhost/test",
+  });
+  assert.ok(!("type" in server));
+  assert.ok(!("url" in server));
+});
+
 test("installServerForAgent - VS Code drops both timeout and scopes", () => {
   const tempDir = createTempDir();
   const result = installRemoteWith("vscode", tempDir, {

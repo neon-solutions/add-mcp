@@ -20,6 +20,10 @@ function getKimiCodeHome(): string {
   return process.env.KIMI_CODE_HOME || join(home, ".kimi-code");
 }
 
+function getJunieHome(): string {
+  return process.env.JUNIE_HOME || join(home, ".junie");
+}
+
 function getMastraCodeDir(): string {
   return join(home, ".mastracode");
 }
@@ -445,6 +449,28 @@ function transformKiroCliConfig(
 }
 
 /**
+ * Junie (Junie CLI and the JetBrains IDE plugin) infers a server's transport
+ * from which fields are present — `command` for stdio, `url` for remote — and
+ * does not document a `type`/`transport` field, so none is emitted. Stdio uses
+ * command / args / env.
+ * See https://junie.jetbrains.com/docs/junie-cli-mcp-configuration.html.
+ */
+function transformJunieConfig(
+  _serverName: string,
+  config: McpServerConfig,
+): unknown {
+  if (!config.url) {
+    return buildStandardLocal(config);
+  }
+
+  const remote: Record<string, unknown> = { url: config.url };
+  if (config.headers && Object.keys(config.headers).length > 0) {
+    remote.headers = config.headers;
+  }
+  return remote;
+}
+
+/**
  * Pi has no native MCP. pi-mcp-adapter infers transport from `command` vs
  * `url` and names a per-request timeout `requestTimeoutMs`.
  */
@@ -830,6 +856,17 @@ function resolveKimiCodeConfigPath(
   return join(getKimiCodeHome(), "mcp.json");
 }
 
+function resolveJunieConfigPath(
+  agent: AgentConfig,
+  options: { local: boolean; cwd: string },
+): string {
+  if (options.local && agent.localConfigPath) {
+    return join(options.cwd, agent.localConfigPath);
+  }
+
+  return join(getJunieHome(), "mcp", "mcp.json");
+}
+
 function resolvePiConfigPath(
   agent: AgentConfig,
   options: { local: boolean; cwd: string },
@@ -1066,6 +1103,25 @@ export const agents: Record<AgentType, AgentConfig> = {
     },
     resolveConfigPath: resolveGrokBuildConfigPath,
     transformConfig: transformGrokBuildConfig,
+  },
+
+  junie: {
+    name: "junie",
+    displayName: "Junie",
+    // Junie CLI and the JetBrains IDE plugin read the same mcp.json shape.
+    // See https://junie.jetbrains.com/docs/junie-cli-mcp-configuration.html.
+    configPath: join(getJunieHome(), "mcp", "mcp.json"),
+    localConfigPath: ".junie/mcp/mcp.json",
+    projectDetectPaths: [".junie"],
+    configKey: "mcpServers",
+    format: "json",
+    supportedTransports: ["stdio", "http", "sse"],
+    supportedFields: [],
+    detectGlobalInstall: async () => {
+      return existsSync(getJunieHome());
+    },
+    resolveConfigPath: resolveJunieConfigPath,
+    transformConfig: transformJunieConfig,
   },
 
   "kilo-code": {

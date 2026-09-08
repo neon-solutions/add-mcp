@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.5.0] - 2026-09-08
+
+- add `junie` (JetBrains) support with project installs to `.junie/mcp/mcp.json` and global installs to `$JUNIE_HOME/mcp/mcp.json` (default `~/.junie/mcp/mcp.json`), using Junie's `mcpServers` key. Stdio uses `command`/`args`/`env` and remote servers use `url` + optional `headers` with no `type` field (Junie infers the transport), matching the shape both Junie CLI and the Junie JetBrains IDE plugin read.
+
 ## [2.4.0] - 2026-09-07
 
 - read and write OpenCode V2 `mcp.servers` configs, including mixed V1/V2 files. Existing V1 `mcp.<name>` entries stay in that shape; a native entry wins when the same name exists in both maps. New files still use the V1 shape. A rename keeps the server in its existing map; if the destination name already exists for the same server, the alias is removed. If that name is a different server, the rename fails and both entries stay. Sync will not add an OpenCode server under a name that already holds a different server, and does not delete an OpenCode alias a second time after the rename. A rename onto `mcp.timeout` / `mcp.servers` settings translates `enabled`/`disabled`, V1 millisecond `timeout` to native `timeout.request`, and OAuth `clientId`/`client_id` field names. Kilo Code is unchanged.
