@@ -2404,7 +2404,7 @@
       "name": "io.github.helena-bioinformatics/ask-helena",
       "title": "Ask Helena",
       "description": "Official answers about Helena Bioinformatics and its products, with citations to public sources.",
-      "version": "1.0.4",
+      "version": "1.0.5",
       "websiteUrl": "https://www.helena.bio/ask",
       "icons": [
         {
