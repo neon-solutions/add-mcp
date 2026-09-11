@@ -9841,8 +9841,8 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "io.github.helena-bioinformatics/folklore",
       "title": "Folklore Clinical Variant Interpretation MCP",
-      "description": "Helena Bioinformatics MCP for clinical variant interpretation, ACMG/AMP evidence and literature.",
-      "version": "1.4.2",
+      "description": "Bioinformatics MCP for genomic variant interpretation, gene-disease evidence and literature.",
+      "version": "1.5.0",
       "websiteUrl": "https://folklore.helena.bio",
       "icons": [
         {
