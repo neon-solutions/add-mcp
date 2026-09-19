@@ -20,6 +20,14 @@ function getKimiCodeHome(): string {
   return process.env.KIMI_CODE_HOME || join(home, ".kimi-code");
 }
 
+/**
+ * Junie's home directory, honoring a `JUNIE_HOME` override lazily (at call
+ * time) and defaulting to `~/.junie`, which the JetBrains IDE plugin reads.
+ */
+function getJunieHome(): string {
+  return process.env.JUNIE_HOME || join(home, ".junie");
+}
+
 function getMastraCodeDir(): string {
   return join(home, ".mastracode");
 }
@@ -445,6 +453,43 @@ function transformKiroCliConfig(
 }
 
 /**
+ * Junie (Junie CLI and the JetBrains IDE plugin) infers a server's transport
+ * from which fields are present — `command` for stdio, `url` for remote — and
+ * does not document a `type`/`transport` field, so none is emitted. Stdio uses
+ * command / args / env.
+ *
+ * Remote headers are guarded against cleartext exposure: Junie refuses to send
+ * headers to a cleartext `http://` endpoint (CWE-319). Over an `https://` URL all
+ * headers pass through unchanged, including `Authorization` — the Junie CLI reads
+ * a bearer token from that header, while the JetBrains IDE plugin simply ignores
+ * an inline token, so the shared `mcp.json` stays valid for both.
+ * See https://junie.jetbrains.com/docs/junie-cli-mcp-configuration.html.
+ */
+function transformJunieConfig(
+  _serverName: string,
+  config: McpServerConfig,
+): unknown {
+  if (!config.url) {
+    return buildStandardLocal(config);
+  }
+
+  const headers = config.headers;
+  if (headers && Object.keys(headers).length > 0) {
+    if (config.url.toLowerCase().startsWith("http://")) {
+      throw new Error(
+        "Junie refuses to send headers to a cleartext http:// server. Use an https:// URL so credentials are not transmitted in the clear.",
+      );
+    }
+  }
+
+  const remote: Record<string, unknown> = { url: config.url };
+  if (headers && Object.keys(headers).length > 0) {
+    remote.headers = headers;
+  }
+  return remote;
+}
+
+/**
  * Pi has no native MCP. pi-mcp-adapter infers transport from `command` vs
  * `url` and names a per-request timeout `requestTimeoutMs`.
  */
@@ -830,6 +875,22 @@ function resolveKimiCodeConfigPath(
   return join(getKimiCodeHome(), "mcp.json");
 }
 
+/**
+ * Resolves Junie's config path: the project-local `.junie/mcp/mcp.json` for a
+ * local install, or `$JUNIE_HOME/mcp/mcp.json` for a global one so a
+ * `JUNIE_HOME` override is honored at call time.
+ */
+function resolveJunieConfigPath(
+  agent: AgentConfig,
+  options: { local: boolean; cwd: string },
+): string {
+  if (options.local && agent.localConfigPath) {
+    return join(options.cwd, agent.localConfigPath);
+  }
+
+  return join(getJunieHome(), "mcp", "mcp.json");
+}
+
 function resolvePiConfigPath(
   agent: AgentConfig,
   options: { local: boolean; cwd: string },
@@ -1066,6 +1127,25 @@ export const agents: Record<AgentType, AgentConfig> = {
     },
     resolveConfigPath: resolveGrokBuildConfigPath,
     transformConfig: transformGrokBuildConfig,
+  },
+
+  junie: {
+    name: "junie",
+    displayName: "Junie",
+    // Junie CLI and the JetBrains IDE plugin read the same mcp.json shape.
+    // See https://junie.jetbrains.com/docs/junie-cli-mcp-configuration.html.
+    configPath: join(getJunieHome(), "mcp", "mcp.json"),
+    localConfigPath: ".junie/mcp/mcp.json",
+    projectDetectPaths: [".junie"],
+    configKey: "mcpServers",
+    format: "json",
+    supportedTransports: ["stdio", "http", "sse"],
+    supportedFields: [],
+    detectGlobalInstall: async () => {
+      return existsSync(getJunieHome());
+    },
+    resolveConfigPath: resolveJunieConfigPath,
+    transformConfig: transformJunieConfig,
   },
 
   "kilo-code": {

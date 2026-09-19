@@ -1621,6 +1621,119 @@ test("E2E: Kimi Code drops a timeout its schema would reject", () => {
   assert.strictEqual(transformed.url, "https://mcp.example.com/mcp");
 });
 
+// ============================================
+// E2E Tests: Junie (standard mcpServers shape)
+// ============================================
+
+test("E2E: Install remote MCP to Junie (local)", () => {
+  const tempDir = createTempDir();
+  const parsed = parseSource("https://mcp.example.com/mcp");
+  const config = buildServerConfig(parsed, {
+    headers: { "X-Workspace": "demo" },
+  });
+
+  const result = installServerForAgent("example", config, "junie", {
+    local: true,
+    cwd: tempDir,
+  });
+
+  assert.strictEqual(result.success, true);
+
+  const configPath = join(tempDir, ".junie", "mcp", "mcp.json");
+  assert.strictEqual(existsSync(configPath), true);
+
+  const savedConfig = readJsonConfig(configPath);
+  const mcpServers = savedConfig.mcpServers as Record<
+    string,
+    Record<string, unknown>
+  >;
+  const serverConfig = mcpServers.example;
+  assert.ok(serverConfig);
+  assert.strictEqual(serverConfig.url, "https://mcp.example.com/mcp");
+  assert.deepStrictEqual(serverConfig.headers, {
+    "X-Workspace": "demo",
+  });
+});
+
+test("E2E: Junie keeps an Authorization header over https", () => {
+  const tempDir = createTempDir();
+  const parsed = parseSource("https://mcp.example.com/mcp");
+  const config = buildServerConfig(parsed, {
+    headers: { Authorization: "Bearer token" },
+  });
+
+  const result = installServerForAgent("example", config, "junie", {
+    local: true,
+    cwd: tempDir,
+  });
+
+  assert.strictEqual(result.success, true);
+
+  const savedConfig = readJsonConfig(
+    join(tempDir, ".junie", "mcp", "mcp.json"),
+  );
+  const mcpServers = savedConfig.mcpServers as Record<
+    string,
+    Record<string, unknown>
+  >;
+  const serverConfig = mcpServers.example;
+  assert.ok(serverConfig);
+  assert.strictEqual(serverConfig.url, "https://mcp.example.com/mcp");
+  assert.deepStrictEqual(serverConfig.headers, {
+    Authorization: "Bearer token",
+  });
+});
+
+test("E2E: Junie rejects headers on a cleartext http:// server", () => {
+  const tempDir = createTempDir();
+  const parsed = parseSource("http://mcp.example.com/mcp");
+  const config = buildServerConfig(parsed, {
+    headers: { "X-Workspace": "demo" },
+  });
+
+  const result = installServerForAgent("example", config, "junie", {
+    local: true,
+    cwd: tempDir,
+  });
+
+  assert.strictEqual(result.success, false);
+  assert.match(result.error ?? "", /cleartext http:\/\//);
+  assert.strictEqual(
+    existsSync(join(tempDir, ".junie", "mcp", "mcp.json")),
+    false,
+  );
+});
+
+test("E2E: Install local server to Junie (stdio)", () => {
+  const tempDir = createTempDir();
+  const parsed = parseSource("mcp-server-postgres");
+  const config = buildServerConfig(parsed, {
+    env: { DATABASE_URL: "postgres://localhost/test" },
+  });
+
+  const result = installServerForAgent("postgres", config, "junie", {
+    local: true,
+    cwd: tempDir,
+  });
+
+  assert.strictEqual(result.success, true);
+
+  const savedConfig = readJsonConfig(
+    join(tempDir, ".junie", "mcp", "mcp.json"),
+  );
+  const mcpServers = savedConfig.mcpServers as Record<
+    string,
+    Record<string, unknown>
+  >;
+  const serverConfig = mcpServers.postgres;
+  assert.ok(serverConfig);
+  assert.strictEqual(serverConfig.command, "npx");
+  assert.deepStrictEqual(serverConfig.args, ["-y", "mcp-server-postgres"]);
+  assert.deepStrictEqual(serverConfig.env, {
+    DATABASE_URL: "postgres://localhost/test",
+  });
+});
+
 test("E2E: fx stdio transform uses a command array and environment", () => {
   const parsed = parseSource("mcp-server-postgres");
   const config = buildServerConfig(parsed, {
