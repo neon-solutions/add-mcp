@@ -176,6 +176,55 @@ test("TOML write: creates a new file with the server table", () => {
   });
 });
 
+test("TOML write: keeps CRLF line endings in a Windows file", () => {
+  const original = HAND_WRITTEN.replace(/\n/g, "\r\n");
+  const filePath = configFile(original);
+
+  writeConfig(
+    filePath,
+    { mcp_servers: { demo: { command: "node", args: ["server.js"] } } },
+    "toml",
+    "mcp_servers",
+  );
+
+  const content = readFileSync(filePath, "utf-8");
+  assert.ok(content.startsWith(original), content);
+  assert.ok(!/(?<!\r)\n/.test(content), "every line ends with CRLF");
+  assert.ok(content.includes("[mcp_servers.demo]\r\n"), content);
+});
+
+test("TOML write: keeps blank lines at the end of the file", () => {
+  const original = `${HAND_WRITTEN}\n\n`;
+  const filePath = configFile(original);
+
+  writeConfig(
+    filePath,
+    { mcp_servers: { demo: { command: "node" } } },
+    "toml",
+    "mcp_servers",
+  );
+
+  const content = readFileSync(filePath, "utf-8");
+  assert.ok(content.startsWith(original), content);
+  assert.ok(content.includes("\n[mcp_servers.demo]\n"), content);
+});
+
+test("TOML write: a large integer elsewhere does not change the layout", () => {
+  const filePath = configFile(`big = 9007199254740993\n\n${HAND_WRITTEN}`);
+
+  writeConfig(
+    filePath,
+    { mcp_servers: { demo: { command: "node" } } },
+    "toml",
+    "mcp_servers",
+  );
+
+  const content = readFileSync(filePath, "utf-8");
+  assert.ok(content.includes("big = 9007199254740993"), content);
+  assert.ok(content.includes("\n[mcp_servers.demo]\n"), content);
+  assert.ok(!content.includes("mcp_servers.demo ="), content);
+});
+
 // ── removing ─────────────────────────────────────────────────────────────
 
 test("TOML remove: keeps comments and every other table", () => {

@@ -2,7 +2,7 @@
 
 ## [2.4.1] - 2026-09-23
 
-- keep comments and formatting in TOML configs (Codex, Grok Build) when adding or removing a server. Only the changed server's table is written, and a new server is added as its own `[mcp_servers.<name>]` table at the end of the file. Previously every comment in `config.toml` was dropped and the rest of the file was reformatted.
+- keep comments and formatting in TOML configs (Codex, Grok Build) when adding or removing a server. Only the changed server's table is written. A new server is added as its own `[mcp_servers.<name>]` table at the end of the file when the file allows it; when the servers are one inline table, it is added to that table. Previously every comment in `config.toml` was dropped and the rest of the file was reformatted.
 
 ## [2.4.0] - 2026-09-07
 

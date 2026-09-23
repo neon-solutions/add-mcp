@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import { dirname } from "path";
+import { isDeepStrictEqual } from "util";
 import * as TOML from "@iarna/toml";
 import {
   parse as parseToml,
@@ -45,28 +46,35 @@ function tomlKey(key: string): string {
 
 /**
  * Whether `content` holds exactly `expected`. Both sides go through the same
- * parser, so value types and object prototypes compare equal.
+ * parser, so value types and object prototypes compare equal, and a deep
+ * comparison copes with integers the parser returns as bigint.
  */
 function sameToml(content: string, expected: ConfigFile): boolean {
-  return (
-    JSON.stringify(parseToml(content)) ===
-    JSON.stringify(parseToml(stringifyToml(expected)))
+  return isDeepStrictEqual(
+    parseToml(content),
+    parseToml(stringifyToml(expected)),
   );
 }
 
-/** `content` with an empty `[<configKey>.<name>]` table appended per name. */
+/**
+ * `content` with an empty `[<configKey>.<name>]` table appended per name.
+ * The file's own ending, trailing blank lines included, is kept, and the
+ * new lines use the file's own line break.
+ */
 function withServerTables(
   content: string,
   names: string[],
   configKey: string,
 ): string {
+  const { newLine } = TomlFormat.autoDetectFormat(content);
   const prefix = configKey.split(".").map(tomlKey).join(".");
   const headers = names
-    .map((name) => `[${prefix}.${tomlKey(name)}]\n`)
-    .join("\n");
-  return content.trim() === ""
-    ? headers
-    : `${content.replace(/\n*$/, "\n")}\n${headers}`;
+    .map((name) => `[${prefix}.${tomlKey(name)}]${newLine}`)
+    .join(newLine);
+  if (content === "") return headers;
+
+  const lineEnd = content.endsWith(newLine) ? "" : newLine;
+  return `${content}${lineEnd}${newLine}${headers}`;
 }
 
 /**
