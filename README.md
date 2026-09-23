@@ -73,7 +73,7 @@ MCP servers can be installed to any of these agents:
 | Pi                     | `pi`                 | `.pi/mcp.json`                                                                | `$PI_CODING_AGENT_DIR/mcp.json` (defaults to `~/.pi/agent/mcp.json`)                                            |
 | VS Code                | `vscode`             | `.vscode/mcp.json`                                                            | `~/Library/Application Support/Code/User/mcp.json`                                                              |
 | Windsurf               | `windsurf`           | -                                                                             | `~/.codeium/windsurf/mcp_config.json`                                                                           |
-| Zed                    | `zed`                | `.zed/settings.json`                                                          | `~/Library/Application Support/Zed/settings.json`                                                               |
+| Zed                    | `zed`                | `.zed/settings.json`                                                          | `~/.config/zed/settings.json`                                                                                   |
 
 **Aliases:** `codeium`, `cascade` → `windsurf`, `cline-vscode` → `cline`, `gemini` → `gemini-cli`, `github-copilot` → `vscode`, `grok` → `grok-build`, `kilo`, `kilocode` → `kilo-code`, `kimi` → `kimi-code`, `kiro` → `kiro-cli`, `mastra` → `mastracode`, `pi-agent` → `pi`
 
@@ -219,12 +219,12 @@ Not every MCP client understands every field. `add-mcp` keeps one canonical
 server config and each agent declares which optional fields it supports, mapping
 them into that client's native shape:
 
-| Field              | Flag                                | Supported by                                                                        | Mapped to                                                                                                           |
-| ------------------ | ----------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Timeout            | `--timeout`                         | Claude Code, Gemini CLI, Grok Build, Kilo Code, Kimi Code, Kiro CLI, Pi             | `timeout` (milliseconds); Grok Build `tool_timeout_sec` (seconds), Kimi Code `toolTimeoutMs`, Pi `requestTimeoutMs` |
-| OAuth scopes       | `--scopes`                          | Cursor, Gemini CLI, Mastra Code                                                     | Cursor `auth.scopes`, Gemini and Mastra Code `oauth.scopes`                                                         |
-| Bearer token env   | `--bearer-token-env`                | fx                                                                                  | `bearer_token_env`                                                                                                  |
-| Tool auto-approval | `--auto-approve` / `--approve-tool` | Codex, Claude Code                                                                  | Codex approval modes; Claude Code permission allow rules                                                            |
+| Field              | Flag                                | Supported by                                                            | Mapped to                                                                                                           |
+| ------------------ | ----------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Timeout            | `--timeout`                         | Claude Code, Gemini CLI, Grok Build, Kilo Code, Kimi Code, Kiro CLI, Pi | `timeout` (milliseconds); Grok Build `tool_timeout_sec` (seconds), Kimi Code `toolTimeoutMs`, Pi `requestTimeoutMs` |
+| OAuth scopes       | `--scopes`                          | Cursor, Gemini CLI, Mastra Code                                         | Cursor `auth.scopes`, Gemini and Mastra Code `oauth.scopes`                                                         |
+| Bearer token env   | `--bearer-token-env`                | fx                                                                      | `bearer_token_env`                                                                                                  |
+| Tool auto-approval | `--auto-approve` / `--approve-tool` | Codex, Claude Code                                                      | Codex approval modes; Claude Code permission allow rules                                                            |
 
 When you target an agent that does not support a field, `add-mcp` drops it from
 that agent's config and prints a warning (e.g. _"request timeout is not

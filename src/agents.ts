@@ -52,12 +52,17 @@ function getPlatformPaths() {
       appSupport: appData,
       vscodePath: join(appData, "Code", "User"),
       gooseConfigPath: join(appData, "Block", "goose", "config", "config.yaml"),
+      zedConfigDir: join(appData, "Zed"),
     };
   } else if (platform === "darwin") {
     return {
       appSupport: join(home, "Library", "Application Support"),
       vscodePath: join(home, "Library", "Application Support", "Code", "User"),
       gooseConfigPath: join(home, ".config", "goose", "config.yaml"),
+      // Zed reads settings from ~/.config/zed on macOS, as on Linux.
+      // ~/Library/Application Support/Zed is only its data directory, so it
+      // exists wherever Zed is installed but its settings.json is never read.
+      zedConfigDir: join(home, ".config", "zed"),
     };
   } else {
     // Linux
@@ -66,11 +71,13 @@ function getPlatformPaths() {
       appSupport: configDir,
       vscodePath: join(configDir, "Code", "User"),
       gooseConfigPath: join(configDir, "goose", "config.yaml"),
+      zedConfigDir: join(configDir, "zed"),
     };
   }
 }
 
-const { appSupport, vscodePath, gooseConfigPath } = getPlatformPaths();
+const { appSupport, vscodePath, gooseConfigPath, zedConfigDir } =
+  getPlatformPaths();
 const antigravityConfigPath = join(
   home,
   ".gemini",
@@ -1222,10 +1229,7 @@ export const agents: Record<AgentType, AgentConfig> = {
   zed: {
     name: "zed",
     displayName: "Zed",
-    configPath:
-      process.platform === "darwin" || process.platform === "win32"
-        ? join(appSupport, "Zed", "settings.json")
-        : join(appSupport, "zed", "settings.json"),
+    configPath: join(zedConfigDir, "settings.json"),
     localConfigPath: ".zed/settings.json",
     projectDetectPaths: [".zed"],
     configKey: "context_servers",
@@ -1233,11 +1237,7 @@ export const agents: Record<AgentType, AgentConfig> = {
     supportedTransports: ["stdio", "http", "sse"],
     supportedFields: [],
     detectGlobalInstall: async () => {
-      const configDir =
-        process.platform === "darwin" || process.platform === "win32"
-          ? join(appSupport, "Zed")
-          : join(appSupport, "zed");
-      return existsSync(configDir);
+      return existsSync(zedConfigDir);
     },
     transformConfig: transformZedConfig,
   },

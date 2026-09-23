@@ -9,7 +9,7 @@
 import assert from "node:assert";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import {
   agents,
   getAgentTypes,
@@ -493,6 +493,16 @@ test("detectProjectAgents - detects .pi directory", () => {
 
   const detected = detectProjectAgents(tempDir);
   assert.ok(detected.includes("pi"));
+});
+
+test("zed global config is Zed's settings file, never Application Support", () => {
+  // Zed reads settings from config_dir(): ~/.config/zed on macOS as on
+  // Linux, %APPDATA%\Zed on Windows. ~/Library/Application Support/Zed is
+  // only its data directory, so a server written there is never loaded.
+  const configPath = agents.zed.configPath;
+  assert.ok(!configPath.includes("Application Support"), configPath);
+  assert.strictEqual(basename(dirname(configPath)).toLowerCase(), "zed");
+  assert.strictEqual(basename(configPath), "settings.json");
 });
 
 test("detectProjectAgents - detects .zed directory", () => {

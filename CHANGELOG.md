@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.4.1] - 2026-09-23
+
+- write Zed's global config to `~/.config/zed/settings.json` on macOS, where Zed reads it, and detect Zed by that directory. `~/Library/Application Support/Zed` is only Zed's data directory, so servers installed there were never loaded.
+
 ## [2.4.0] - 2026-09-07
 
 - read and write OpenCode V2 `mcp.servers` configs, including mixed V1/V2 files. Existing V1 `mcp.<name>` entries stay in that shape; a native entry wins when the same name exists in both maps. New files still use the V1 shape. A rename keeps the server in its existing map; if the destination name already exists for the same server, the alias is removed. If that name is a different server, the rename fails and both entries stay. Sync will not add an OpenCode server under a name that already holds a different server, and does not delete an OpenCode alias a second time after the rename. A rename onto `mcp.timeout` / `mcp.servers` settings translates `enabled`/`disabled`, V1 millisecond `timeout` to native `timeout.request`, and OAuth `clientId`/`client_id` field names. Kilo Code is unchanged.
