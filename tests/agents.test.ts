@@ -8,7 +8,7 @@
 
 import assert from "node:assert";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import {
   agents,
@@ -503,6 +503,12 @@ test("zed global config is Zed's settings file, never Application Support", () =
   assert.ok(!configPath.includes("Application Support"), configPath);
   assert.strictEqual(basename(dirname(configPath)).toLowerCase(), "zed");
   assert.strictEqual(basename(configPath), "settings.json");
+  if (process.platform === "darwin") {
+    assert.strictEqual(
+      configPath,
+      join(homedir(), ".config", "zed", "settings.json"),
+    );
+  }
 });
 
 test("detectProjectAgents - detects .zed directory", () => {
