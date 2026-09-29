@@ -759,6 +759,28 @@ test("buildAgentSelectionChoices orders detected, last selected, then remaining"
   assert.ok(zedChoice.hint.includes("selected last time"));
 });
 
+{
+  const originalCopilotHome = process.env.COPILOT_HOME;
+  const originalXdgConfigHome = process.env.XDG_CONFIG_HOME;
+  const copilotHome = createTempDir();
+  process.env.XDG_CONFIG_HOME = createTempDir();
+  process.env.COPILOT_HOME = join(copilotHome, "missing");
+  const detectedWithoutHome =
+    await agents["github-copilot-cli"].detectGlobalInstall();
+  process.env.COPILOT_HOME = copilotHome;
+  const detectedWithHome =
+    await agents["github-copilot-cli"].detectGlobalInstall();
+  if (originalCopilotHome === undefined) delete process.env.COPILOT_HOME;
+  else process.env.COPILOT_HOME = originalCopilotHome;
+  if (originalXdgConfigHome === undefined) delete process.env.XDG_CONFIG_HOME;
+  else process.env.XDG_CONFIG_HOME = originalXdgConfigHome;
+
+  test("Copilot CLI detection follows COPILOT_HOME and ignores XDG_CONFIG_HOME", () => {
+    assert.strictEqual(detectedWithoutHome, false);
+    assert.strictEqual(detectedWithHome, true);
+  });
+}
+
 // Cleanup and summary
 cleanup();
 console.log(`\n${passed} passed, ${failed} failed`);

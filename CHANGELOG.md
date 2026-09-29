@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.4.1] - 2026-09-29
+
+- fix GitHub Copilot CLI global installs and detection to use `$COPILOT_HOME` (default `~/.copilot`), the directory Copilot CLI reads. With `XDG_CONFIG_HOME` set, add-mcp wrote `$XDG_CONFIG_HOME/mcp-config.json`, which Copilot CLI never loads, and detected Copilot CLI whenever that directory existed.
+
 ## [2.4.0] - 2026-09-07
 
 - read and write OpenCode V2 `mcp.servers` configs, including mixed V1/V2 files. Existing V1 `mcp.<name>` entries stay in that shape; a native entry wins when the same name exists in both maps. New files still use the V1 shape. A rename keeps the server in its existing map; if the destination name already exists for the same server, the alias is removed. If that name is a different server, the rename fails and both entries stay. Sync will not add an OpenCode server under a name that already holds a different server, and does not delete an OpenCode alias a second time after the rename. A rename onto `mcp.timeout` / `mcp.servers` settings translates `enabled`/`disabled`, V1 millisecond `timeout` to native `timeout.request`, and OAuth `clientId`/`client_id` field names. Kilo Code is unchanged.
