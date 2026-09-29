@@ -67,6 +67,7 @@ function runCli(
     encoding: "utf-8",
     env: {
       ...process.env,
+      COPILOT_HOME: undefined,
       HOME: homeDir,
       XDG_CONFIG_HOME: join(homeDir, ".config"),
       CODEX_HOME: join(homeDir, ".codex"),
@@ -2212,6 +2213,45 @@ test("E2E CLI: Copilot CLI global install writes ~/.copilot even when XDG_CONFIG
   assert.strictEqual(
     saved.mcpServers["copilot-home"]?.url,
     "https://mcp.example.com/mcp",
+  );
+});
+
+test("E2E CLI: Copilot CLI is not detected from XDG_CONFIG_HOME alone", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+  mkdirSync(join(homeDir, ".config"), { recursive: true });
+
+  const result = runCli(
+    ["https://mcp.example.com/mcp", "-g", "-y", "--name", "detect-xdg"],
+    projectDir,
+    homeDir,
+  );
+
+  assert.match(result.stdout, /Detected 0 agents/);
+  assert.doesNotMatch(result.stdout, /Installing to: GitHub Copilot CLI/);
+});
+
+test("E2E CLI: Copilot CLI is detected from ~/.copilot", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+  mkdirSync(join(homeDir, ".config"), { recursive: true });
+  mkdirSync(join(homeDir, ".copilot"), { recursive: true });
+
+  const result = runCli(
+    ["https://mcp.example.com/mcp", "-g", "-y", "--name", "detect-home"],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+  assert.match(result.stdout, /Installing to: GitHub Copilot CLI/);
+  assert.strictEqual(
+    existsSync(join(homeDir, ".copilot", "mcp-config.json")),
+    true,
   );
 });
 

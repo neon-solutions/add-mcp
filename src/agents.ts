@@ -17,9 +17,7 @@ function getGrokHome(): string {
 }
 
 /** Copilot CLI reads `$COPILOT_HOME`, defaulting to `~/.copilot`. It ignores `XDG_CONFIG_HOME`. */
-function getCopilotHome(): string {
-  return process.env.COPILOT_HOME || join(home, ".copilot");
-}
+const copilotHome = process.env.COPILOT_HOME || join(home, ".copilot");
 
 function getKimiCodeHome(): string {
   return process.env.KIMI_CODE_HOME || join(home, ".kimi-code");
@@ -1038,7 +1036,7 @@ export const agents: Record<AgentType, AgentConfig> = {
   "github-copilot-cli": {
     name: "github-copilot-cli",
     displayName: "GitHub Copilot CLI",
-    configPath: join(getCopilotHome(), "mcp-config.json"),
+    configPath: join(copilotHome, "mcp-config.json"),
     localConfigPath: ".mcp.json",
     projectDetectPaths: [".mcp.json", ".github/mcp.json"],
     configKey: "mcpServers",
@@ -1046,7 +1044,7 @@ export const agents: Record<AgentType, AgentConfig> = {
     supportedTransports: ["stdio", "http", "sse"],
     supportedFields: [],
     detectGlobalInstall: async () => {
-      return existsSync(getCopilotHome());
+      return existsSync(copilotHome);
     },
     resolveConfigPath: resolveGitHubCopilotCliConfigPath,
     transformConfig: transformGitHubCopilotCliConfig,
