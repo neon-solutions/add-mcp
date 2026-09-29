@@ -2,7 +2,7 @@
 
 ## [2.4.1] - 2026-09-29
 
-- fix GitHub Copilot CLI global installs and detection to use `$COPILOT_HOME` (default `~/.copilot`), the directory Copilot CLI reads. With `XDG_CONFIG_HOME` set, add-mcp wrote `$XDG_CONFIG_HOME/mcp-config.json`, which Copilot CLI never loads, and detected Copilot CLI whenever that directory existed.
+- fix GitHub Copilot CLI global installs and detection to use `$COPILOT_HOME` (default `~/.copilot`), the directory Copilot CLI reads. With `XDG_CONFIG_HOME` set, add-mcp wrote `$XDG_CONFIG_HOME/mcp-config.json`, which Copilot CLI never loads, and detected Copilot CLI whenever that directory existed. An existing `$XDG_CONFIG_HOME/mcp-config.json` is left untouched; rerun the install to write the Copilot CLI path. Global `list` and `remove` now read the corrected path, so entries that exist only in the old file no longer show up there.
 
 ## [2.4.0] - 2026-09-07
 
