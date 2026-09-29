@@ -80,6 +80,16 @@ export interface FindInstallPlan {
   args?: string[];
 }
 
+type InstallableRegistryPackageDefinition = RegistryPackageDefinition & {
+  registryType: "npm" | "oci";
+};
+
+interface ResolvedPackageInputs {
+  env?: Record<string, string>;
+  headers?: Record<string, string>;
+  args?: string[];
+}
+
 export interface PromptField {
   key: string;
   label: string;
@@ -259,18 +269,34 @@ interface RegistryServerListItem {
   };
 }
 
+function isInstallablePackage(
+  pkg: RegistryPackageDefinition,
+): pkg is InstallableRegistryPackageDefinition {
+  return pkg.registryType === "npm" || pkg.registryType === "oci";
+}
+
+function pickInstallablePackage(
+  packages: RegistryPackageDefinition[],
+): InstallableRegistryPackageDefinition | undefined {
+  for (const registryType of ["npm", "oci"] as const) {
+    const pkg = packages.find(
+      (candidate) => candidate.registryType === registryType,
+    );
+    if (pkg && isInstallablePackage(pkg)) return pkg;
+  }
+  return undefined;
+}
+
 function toEntry(item: RegistryServerListItem): RegistryServerEntry | null {
   const server = item?.server;
   if (!server?.name || !server?.description || !server?.version) {
     return null;
   }
 
-  const npmPackage = (server.packages ?? []).find(
-    (pkg) => pkg.registryType === "npm",
-  );
+  const installablePackage = pickInstallablePackage(server.packages ?? []);
 
   const hasRemotes = Array.isArray(server.remotes) && server.remotes.length > 0;
-  if (!npmPackage && !hasRemotes) {
+  if (!installablePackage && !hasRemotes) {
     return null;
   }
 
@@ -281,7 +307,7 @@ function toEntry(item: RegistryServerListItem): RegistryServerEntry | null {
     version: server.version,
     repositoryUrl: server.repository?.url,
     remotes: server.remotes,
-    package: npmPackage,
+    package: installablePackage,
   };
 }
 
@@ -385,6 +411,22 @@ function pickRemote(
 
 function formatPackageTarget(pkg: RegistryPackageDefinition): string {
   return pkg.identifier;
+}
+
+function buildPackageInstallTarget(
+  pkg: InstallableRegistryPackageDefinition,
+  resolved: ResolvedPackageInputs,
+): { target: string; args?: string[] } {
+  if (pkg.registryType === "npm") {
+    return { target: pkg.identifier, args: resolved.args };
+  }
+
+  const args = ["--rm", "-i"];
+  for (const name of Object.keys(resolved.env ?? {})) {
+    args.push("-e", name);
+  }
+  args.push(pkg.identifier, ...(resolved.args ?? []));
+  return { target: "docker run", args };
 }
 
 function transportLabel(entry: RegistryServerEntry): string {
@@ -531,11 +573,9 @@ async function resolveInteractiveRemote(
   };
 }
 
-function resolveNonInteractivePackage(pkg: RegistryPackageDefinition): {
-  env?: Record<string, string>;
-  headers?: Record<string, string>;
-  args?: string[];
-} {
+function resolveNonInteractivePackage(
+  pkg: RegistryPackageDefinition,
+): ResolvedPackageInputs {
   const env: Record<string, string> = {};
   for (const field of packageVariableFields(pkg.environmentVariables)) {
     if (field.isRequired) {
@@ -564,11 +604,7 @@ function resolveNonInteractivePackage(pkg: RegistryPackageDefinition): {
 
 async function resolveInteractivePackage(
   pkg: RegistryPackageDefinition,
-): Promise<{
-  env?: Record<string, string>;
-  headers?: Record<string, string>;
-  args?: string[];
-} | null> {
+): Promise<ResolvedPackageInputs | null> {
   const promptPackageArg: PackageArgPrompt = async (info) =>
     p.text({
       message: `${info.label} ${info.isRequired ? "(required)" : "(optional)"}`,
@@ -609,7 +645,8 @@ export async function buildInstallPlanForEntry(
   options: FindCommandOptions,
 ): Promise<FindInstallPlan | null> {
   const remote = pickRemote(entry, options.preferredTransport);
-  const pkg = entry.package ?? null;
+  const pkg =
+    entry.package && isInstallablePackage(entry.package) ? entry.package : null;
   const hasRemote = remote !== null;
   const hasPackage = pkg !== null;
 
@@ -647,12 +684,14 @@ export async function buildInstallPlanForEntry(
       : await resolveInteractivePackage(pkg);
     if (!resolved) return null;
 
+    const installTarget = buildPackageInstallTarget(pkg, resolved);
+
     return {
-      target: formatPackageTarget(pkg),
+      target: installTarget.target,
       serverName: resolveServerName(entry),
       env: resolved.env,
       headers: resolved.headers,
-      args: resolved.args,
+      args: installTarget.args,
     };
   }
 
