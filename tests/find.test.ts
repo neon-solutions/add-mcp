@@ -9,6 +9,7 @@ import {
   formatFindResultRow,
   formatRegistryFailure,
   getDefaultFindRegistries,
+  parseRegistryOverride,
   rankRegistryEntries,
   resolveOfficialRegistryServersUrl,
   resolveServerName,
@@ -1098,6 +1099,35 @@ test("searchRegistry filters out non-installable entries (no npm package and no 
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+
+test("parseRegistryOverride keeps the label for a built-in registry URL", () => {
+  const parsed = parseRegistryOverride(
+    "  https://add-mcp.com/registry/api/v1/servers  ",
+  );
+  assert.deepStrictEqual(parsed, {
+    url: "https://add-mcp.com/registry/api/v1/servers",
+    label: "add-mcp registry",
+  });
+});
+
+test("parseRegistryOverride accepts a custom http(s) URL", () => {
+  const parsed = parseRegistryOverride("http://127.0.0.1:4010/v0.1/servers");
+  assert.deepStrictEqual(parsed, {
+    url: "http://127.0.0.1:4010/v0.1/servers",
+  });
+});
+
+test("parseRegistryOverride rejects URLs that are not http(s)", () => {
+  assert.throws(
+    () => parseRegistryOverride("ftp://example.com/servers"),
+    /Invalid --registry URL/,
+  );
+  assert.throws(
+    () => parseRegistryOverride("not a url"),
+    /Invalid --registry URL/,
+  );
+  assert.throws(() => parseRegistryOverride("   "), /Invalid --registry URL/);
 });
 
 testChain.then(() => {

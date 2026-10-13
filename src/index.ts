@@ -28,6 +28,7 @@ import {
 import { parseSource, isRemoteSource } from "./source-parser.js";
 import {
   getDefaultFindRegistries,
+  parseRegistryOverride,
   runFind,
   type FindRegistrySearchConfig,
 } from "./find.js";
@@ -180,6 +181,7 @@ interface Options {
   yes?: boolean;
   all?: boolean;
   gitignore?: boolean;
+  registry?: string;
 }
 
 async function ensureFindRegistriesConfigured(): Promise<
@@ -290,6 +292,18 @@ function extractSubcommandOptionsFromArgv(): Partial<Options> {
     if ((arg === "-n" || arg === "--name") && argv[i + 1]) {
       result.name = argv[i + 1];
       i += 1;
+      continue;
+    }
+    if (arg === "--registry" || arg.startsWith("--registry=")) {
+      const value = arg.startsWith("--registry=")
+        ? arg.slice("--registry=".length)
+        : argv[i + 1];
+      if (!arg.startsWith("--registry=") && value) {
+        i += 1;
+      }
+      if (value !== undefined) {
+        result.registry = value;
+      }
       continue;
     }
     if (arg === "-a" || arg === "--agent") {
@@ -519,10 +533,30 @@ async function runFindCommand(
   };
   const query = (keyword ?? "").trim();
 
-  const registries = await ensureFindRegistriesConfigured();
-  if (!registries) {
-    p.cancel("Find cancelled");
-    process.exit(0);
+  let registries: FindRegistrySearchConfig[];
+  if (options.registry !== undefined) {
+    try {
+      registries = [parseRegistryOverride(options.registry)];
+    } catch (error) {
+      p.log.error(
+        error instanceof Error ? error.message : "Invalid --registry URL",
+      );
+      process.exit(1);
+    }
+    const selected = registries[0];
+    if (selected) {
+      const target = selected.label
+        ? `${selected.label} (${selected.url})`
+        : selected.url;
+      p.log.info(`Using ${target} for this search.`);
+    }
+  } else {
+    const configured = await ensureFindRegistriesConfigured();
+    if (!configured) {
+      p.cancel("Find cancelled");
+      process.exit(0);
+    }
+    registries = configured;
   }
 
   const installPlan = await runFind(query, {
@@ -570,6 +604,10 @@ program
   )
   .option("-y, --yes", "Skip confirmation prompts")
   .option(
+    "--registry <url>",
+    "Registry API URL to search instead of the saved registries",
+  )
+  .option(
     "--auto-approve",
     "Auto-approve MCP tool calls for agents that support it (Codex, Claude Code)",
   )
@@ -603,6 +641,10 @@ program
     "Server name override (defaults to catalog entry name)",
   )
   .option("-y, --yes", "Skip confirmation prompts")
+  .option(
+    "--registry <url>",
+    "Registry API URL to search instead of the saved registries",
+  )
   .option(
     "--auto-approve",
     "Auto-approve MCP tool calls for agents that support it (Codex, Claude Code)",

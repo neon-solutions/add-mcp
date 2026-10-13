@@ -13,7 +13,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import yaml from "js-yaml";
 import * as TOML from "@iarna/toml";
@@ -21,6 +21,7 @@ import * as TOML from "@iarna/toml";
 let passed = 0;
 let failed = 0;
 let tempDirs: string[] = [];
+const registryServers: ChildProcess[] = [];
 
 function test(name: string, fn: () => void) {
   try {
@@ -41,6 +42,14 @@ function createTempDir(): string {
 }
 
 function cleanup() {
+  for (const child of registryServers) {
+    try {
+      child.kill("SIGKILL");
+    } catch {
+      // Ignore cleanup errors
+    }
+  }
+  registryServers.length = 0;
   for (const dir of tempDirs) {
     try {
       rmSync(dir, { recursive: true, force: true });
@@ -100,6 +109,83 @@ function windsurfConfigPath(homeDir: string): string {
 
 function antigravityConfigPath(homeDir: string): string {
   return join(homeDir, ".gemini", "config", "mcp_config.json");
+}
+
+function startRegistryServer(payload: unknown): {
+  url: string;
+  requestsPath: string;
+} {
+  const dir = createTempDir();
+  const payloadPath = join(dir, "payload.json");
+  const portPath = join(dir, "port");
+  const requestsPath = join(dir, "requests.log");
+  writeFileSync(payloadPath, JSON.stringify(payload), "utf-8");
+
+  const child = spawn(
+    process.execPath,
+    [
+      "-e",
+      `
+        const http = require("node:http");
+        const fs = require("node:fs");
+        const payload = fs.readFileSync(process.env.REGISTRY_PAYLOAD_FILE, "utf8");
+        const server = http.createServer((req, res) => {
+          fs.appendFileSync(process.env.REGISTRY_REQUESTS_FILE, (req.url ?? "") + "\\n");
+          res.setHeader("content-type", "application/json");
+          res.end(payload);
+        });
+        server.listen(0, "127.0.0.1", () => {
+          const address = server.address();
+          fs.writeFileSync(process.env.REGISTRY_PORT_FILE, String(address.port));
+        });
+      `,
+    ],
+    {
+      stdio: "ignore",
+      env: {
+        ...process.env,
+        REGISTRY_PAYLOAD_FILE: payloadPath,
+        REGISTRY_PORT_FILE: portPath,
+        REGISTRY_REQUESTS_FILE: requestsPath,
+      },
+    },
+  );
+  registryServers.push(child);
+
+  const started = Date.now();
+  let port = "";
+  while (!/^\d+$/.test(port)) {
+    if (Date.now() - started > 5000) {
+      throw new Error("timed out waiting for the test registry");
+    }
+    if (existsSync(portPath)) {
+      port = readFileSync(portPath, "utf8").trim();
+    }
+    if (!/^\d+$/.test(port)) {
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 20);
+    }
+  }
+
+  return {
+    url: `http://127.0.0.1:${port}/v0.1/servers`,
+    requestsPath,
+  };
+}
+
+function overrideRegistryPayload(remoteUrl: string) {
+  return {
+    servers: [
+      {
+        server: {
+          name: "com.example/override",
+          title: "override-server",
+          description: "Server served only by the --registry override",
+          version: "1.0.0",
+          remotes: [{ type: "streamable-http", url: remoteUrl }],
+        },
+      },
+    ],
+  };
 }
 
 function seedFindRegistries(homeDir: string) {
@@ -423,6 +509,110 @@ test("E2E CLI: search alias defaults to HTTP endpoint when both are available", 
     selected?.url,
     "https://mcp.linear.app/mcp",
     "expected search alias to prefer HTTP endpoint by default",
+  );
+});
+
+test("E2E CLI: find --registry searches that URL and keeps the saved registries", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+  seedFindRegistries(homeDir);
+  const configPath = join(homeDir, ".config", "add-mcp", "config.json");
+  const configBefore = readFileSync(configPath, "utf-8");
+  const remoteUrl = "https://override.example.test/mcp";
+  const registry = startRegistryServer(overrideRegistryPayload(remoteUrl));
+
+  const result = runCli(
+    [
+      "find",
+      "vercel",
+      "-a",
+      "claude-code",
+      "--registry",
+      registry.url,
+      "-g",
+      "-y",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.ok(
+    output.includes(`Using ${registry.url}`),
+    `expected override registry in output:\n${output}`,
+  );
+  assert.doesNotMatch(output, /Saved to/);
+  assert.strictEqual(readFileSync(configPath, "utf-8"), configBefore);
+  assert.strictEqual(existsSync(join(projectDir, ".mcp.json")), false);
+
+  const claudeConfig = JSON.parse(
+    readFileSync(join(homeDir, ".claude.json"), "utf-8"),
+  ) as { mcpServers?: Record<string, { url?: string }> };
+  const installed = Object.values(claudeConfig.mcpServers ?? {}).find(
+    (server) => server.url === remoteUrl,
+  );
+  assert.ok(installed, "override registry server should be installed");
+
+  const requests = existsSync(registry.requestsPath)
+    ? readFileSync(registry.requestsPath, "utf-8")
+    : "";
+  assert.match(requests, /search=vercel/);
+  assert.match(requests, /source=cli/);
+});
+
+test("E2E CLI: search --registry=URL does not seed the default registry", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+  const remoteUrl = "https://override.example.test/search-mcp";
+  const registry = startRegistryServer(overrideRegistryPayload(remoteUrl));
+
+  const result = runCli(
+    ["search", "notion", `--registry=${registry.url}`, "-a", "cursor", "-y"],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  assert.strictEqual(
+    existsSync(join(homeDir, ".config", "add-mcp", "config.json")),
+    false,
+  );
+  const cursorConfig = JSON.parse(
+    readFileSync(join(projectDir, ".cursor", "mcp.json"), "utf-8"),
+  ) as { mcpServers?: Record<string, { url?: string }> };
+  const installed = Object.values(cursorConfig.mcpServers ?? {}).find(
+    (server) => server.url === remoteUrl,
+  );
+  assert.ok(installed, "search alias should install from --registry");
+});
+
+test("E2E CLI: find --registry rejects a non-http URL", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    ["find", "vercel", "--registry", "ftp://example.com/servers", "-y"],
+    projectDir,
+    homeDir,
+  );
+
+  assert.notStrictEqual(result.status, 0);
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /Invalid --registry URL/);
+  assert.strictEqual(
+    existsSync(join(homeDir, ".config", "add-mcp", "config.json")),
+    false,
   );
 });
 
