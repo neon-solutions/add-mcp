@@ -18,6 +18,12 @@ npx add-mcp find neon
 
 The first `find`/`search` run automatically saves the default registry to `~/.config/add-mcp/config.json` (respects `XDG_CONFIG_HOME`) and reuses it on every subsequent search.
 
+To search a different registry once, pass `--registry <url>`. This does not update the saved config:
+
+```bash
+npx add-mcp find vercel -a claude-code --registry https://registry.modelcontextprotocol.io/v0.1/servers -g -y
+```
+
 :::note
 The add-mcp registry previously lived at `mcp.agent-tooling.dev`. That URL keeps working — existing configs are not broken — but new installs use `add-mcp.com/registry` and the CLI migrates saved configs automatically.
 :::
