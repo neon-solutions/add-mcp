@@ -653,6 +653,27 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "au.com.ajust.mcp/mcp",
+      "title": "Adjust",
+      "description": "Adjust provides mobile app measurement, attribution, analytics, and growth tooling. This domain exposes an MCP server for accessing Adjust reporting data from MCP clients.",
+      "version": "1.0.0",
+      "websiteUrl": "https://www.adjust.com/",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/mcp.ajust.com.au"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.ajust.com.au/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "io.adobe/adobe-acrobat-mcp",
       "title": "Adobe Acrobat",
       "description": "Adobe Developer provides access to APIs, events, and tooling across Adobe products including Experience Cloud, Creative Cloud, Document Cloud, and App Builder. It also publishes MCP connectors that let AI clients access Adobe capabilities such as creativity, marketing, journey optimization, express, Photoshop, and Acrobat.",
@@ -800,6 +821,27 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.adslighthouse/mcp",
+      "title": "Ads Lighthouse",
+      "description": "Ads Lighthouse is a managed service for monitoring Google and Bing brand-search ads by keyword, location, device, and time. It stores observed ads and related search context so marketing, SEM, and affiliate-compliance teams can review competitors, affiliates, and policy issues.",
+      "version": "1.0.0",
+      "websiteUrl": "https://adslighthouse.com/mcp",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/adslighthouse.com"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://adslighthouse.com/api/v1/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.advancedwebranking/mcp",
       "title": "Advanced Web Ranking",
       "description": "Advanced Web Ranking is an SEO rank tracking and visibility platform for agencies and in-house teams. It provides tracked keyword rankings, SERP and market share data, reporting, and related SEO analysis features.",
@@ -919,6 +961,48 @@
         {
           "type": "streamable-http",
           "url": "https://mcp.adobeaemcloud.com/adobe/mcp/experience-governance"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "fun.aeon.www/aeon-connect-mcp-server",
+      "title": "Aeon Connect",
+      "description": "Aeon is an open-source autonomous agent framework that runs scheduled skills in the operator’s own GitHub repository using GitHub Actions. Aeon Connect provides a hosted dashboard and remote MCP access for driving that self-hosted agent.",
+      "version": "1.0.0",
+      "websiteUrl": "https://www.aeon.fun/docs#mcp-hosted",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/www.aeon.fun"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://www.aeon.fun/connect/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "fun.aeon.www/aeon-docs-mcp-server",
+      "title": "Aeon docs",
+      "description": "Aeon is an open-source autonomous agent framework that runs scheduled skills in the operator’s own GitHub repository using GitHub Actions. Aeon Connect provides a hosted dashboard and remote MCP access for driving that self-hosted agent.",
+      "version": "1.0.0",
+      "websiteUrl": "https://www.aeon.fun/developers",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/www.aeon.fun"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://www.aeon.fun/mcp"
         }
       ]
     }
@@ -1116,6 +1200,27 @@
         {
           "type": "streamable-http",
           "url": "https://agent.news/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "to.agentservices/mcp",
+      "title": "AgentServices",
+      "description": "AgentServices is a hosted API platform for AI agents that offers crypto market data, web research, on-chain analytics, inference, and ERC-8004 identity/reputation endpoints. It also publishes a remote MCP server for connecting those capabilities to MCP-compatible clients.",
+      "version": "1.0.0",
+      "websiteUrl": "https://agentservices.to/docs",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/agentservices.to"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://agentservices.to/mcp"
         }
       ]
     }
@@ -1398,9 +1503,9 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.airtable/mcp",
       "title": "Airtable",
-      "description": "Airtable is a cloud platform for building and collaborating on structured data workflows, combining spreadsheet-like tables with relational database features. Users organize records, fields, views, automations, and related workspace content in hosted bases.",
+      "description": "Airtable is a cloud platform for building collaborative databases, workflows, interfaces, and automations. It lets teams store structured data in bases and access or manipulate that data through APIs and AI-tool integrations.",
       "version": "1.0.0",
-      "websiteUrl": "https://support.airtable.com/docs/using-the-airtable-mcp-server",
+      "websiteUrl": "https://airtable.com/developers/agents/mcp/getting-started",
       "icons": [
         {
           "src": "https://integrations.sh/logo/airtable.com"
@@ -1409,7 +1514,15 @@
       "remotes": [
         {
           "type": "streamable-http",
-          "url": "https://mcp.airtable.com/mcp"
+          "url": "https://mcp.airtable.com/mcp",
+          "headers": [
+            {
+              "name": "Authorization",
+              "description": "Airtable personal access token. Use Bearer <token>.",
+              "isRequired": true,
+              "isSecret": true
+            }
+          ]
         }
       ]
     }
@@ -1515,6 +1628,90 @@
         {
           "type": "streamable-http",
           "url": "https://mcp.columnapi.com/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "au.com.ajust.agent/ajust-mcp-server",
+      "title": "Ajust",
+      "description": "Ajust is an Australian consumer advocacy service that helps people resolve problems with businesses such as refunds, billing disputes, cancellations, and complaints. It offers AI-guided consumer help and a partner backend API for approved integrations.",
+      "version": "1.0.0",
+      "websiteUrl": "https://agent.ajust.com.au/.well-known/mcp/server-card.json",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/agent.ajust.com.au"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://agent.ajust.com.au/api/mcp/claude"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "au.com.ajust/ajust-mcp-server-chatgpt-endpoint",
+      "title": "Ajust   (ChatGPT endpoint)",
+      "description": "Ajust is an Australian consumer advocacy service that helps people resolve complaints with businesses, including refunds, cancellations, billing disputes, and warranty issues. It offers free self-help guides and an AI-assisted case workflow, and also provides partner integrations for approved backends.",
+      "version": "1.0.0",
+      "websiteUrl": "https://agent.ajust.com.au/.well-known/mcp/server-card.json",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/ajust.com.au"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://agent.ajust.com.au/api/mcp/chatgpt"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "au.com.ajust/ajust-mcp-server-claude-endpoint",
+      "title": "Ajust   (Claude endpoint)",
+      "description": "Ajust is an Australian consumer advocacy service that helps people resolve complaints with businesses, including refunds, cancellations, billing disputes, and warranty issues. It offers free self-help guides and an AI-assisted case workflow, and also provides partner integrations for approved backends.",
+      "version": "1.0.0",
+      "websiteUrl": "https://agent.ajust.com.au/.well-known/mcp/server-card.json",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/ajust.com.au"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://agent.ajust.com.au/api/mcp/claude"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "au.com.ajust.agent/ajust-mcp-server-chatgpt-connector",
+      "title": "Ajust   for ChatGPT",
+      "description": "Ajust is an Australian consumer advocacy service that helps people resolve problems with businesses such as refunds, billing disputes, cancellations, and complaints. It offers AI-guided consumer help and a partner backend API for approved integrations.",
+      "version": "1.0.0",
+      "websiteUrl": "https://agent.ajust.com.au/.well-known/mcp/server-card.json",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/agent.ajust.com.au"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://agent.ajust.com.au/api/mcp/chatgpt"
         }
       ]
     }
@@ -2325,9 +2522,9 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.apple/mcp",
       "title": "Apple Music",
-      "description": "Apple develops consumer and developer platforms including the App Store, Siri integrations, and Apple Music services. Its developer documentation covers APIs for managing App Store Connect resources and integrating cloud-backed media services with Siri.",
+      "description": "Apple provides consumer devices, software platforms, and digital services, along with developer tooling and APIs for building and distributing apps and media integrations. Its developer documentation covers services including App Store Connect, Siri integrations, and Apple Music-related APIs.",
       "version": "1.0.0",
-      "websiteUrl": "https://mcp.music.apple.com/v1/longandcomplexstring294/mcp",
+      "websiteUrl": "https://integrations.sh/apple.com/apple-music-mcp-server/",
       "icons": [
         {
           "src": "https://integrations.sh/logo/apple.com"
@@ -2598,9 +2795,9 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.atlassian/mcp",
       "title": "Atlassian Rovo",
-      "description": "Atlassian builds cloud and self-managed software for project tracking, documentation, source control, service management, and AI-assisted teamwork. Its products include Jira, Confluence, Bitbucket, Jira Service Management, Rovo, and the Teamwork Graph platform.",
+      "description": "Atlassian exposes tenant-scoped Jira and Confluence Cloud REST APIs on `*.atlassian.net`, authenticated either with Atlassian account API-token Basic auth or Atlassian OAuth 2.0 (3LO) bearer tokens.",
       "version": "1.0.0",
-      "websiteUrl": "https://www.atlassian.com/platform/remote-mcp-server",
+      "websiteUrl": "https://community.atlassian.com/forums/Atlassian-Platform-articles/Using-the-Atlassian-Remote-MCP-Server-beta/ba-p/3005104",
       "icons": [
         {
           "src": "https://integrations.sh/logo/atlassian.com"
@@ -2890,34 +3087,7 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.avalara/avalara-mcp-server-family",
-      "title": "Avalara   family",
-      "description": "Avalara provides tax calculation, compliance, returns, e-invoicing, and related tax-data products for businesses. Its developer portal covers APIs and AI integration endpoints for multiple Avalara product lines.",
-      "version": "1.0.0",
-      "websiteUrl": "https://developer.avalara.com/mcp-servers/",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/avalara.com"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://mcp.avalara.com/{product}",
-          "variables": {
-            "product": {
-              "description": "Product-specific MCP path appended to https://mcp.avalara.com/ as shown in Avalara's sample code.",
-              "isRequired": true
-            }
-          }
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.avalara/avi-a2a-server",
+      "name": "com.avalara/mcp",
       "title": "Avi A2A",
       "description": "Avalara provides tax calculation, compliance, returns, e-invoicing, and related tax-data products for businesses. Its developer portal covers APIs and AI integration endpoints for multiple Avalara product lines.",
       "version": "1.0.0",
@@ -2959,7 +3129,7 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.trymalcolm/aviva-mcp-server",
+      "name": "com.trymalcolm/mcp",
       "title": "Aviva",
       "description": "Marrow is middleware for insurance distribution through AI agents, translating conversational requests into insurer quote, compare, and bind workflows while enforcing compliance controls. It connects AI applications and partners to insurer pricing and underwriting systems through a canonical protocol.",
       "version": "1.0.0",
@@ -3000,6 +3170,48 @@
               "isRequired": false
             }
           }
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.awardtravelfinder/award-travel-finder-mcp-server",
+      "title": "Award Travel Finder",
+      "description": "Award Travel Finder is a travel search service focused on finding award-flight availability and related loyalty-program data using points and miles. It offers tools for AI agents and developers to search award seats, compare redemptions, and work with airline and hotel program information.",
+      "version": "1.0.0",
+      "websiteUrl": "https://awardtravelfinder.com/mcp",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/awardtravelfinder.com"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.awardtravelfinder.com/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.awardtravelfinder/award-travel-finder-mcp-server-root-endpoint",
+      "title": "Award Travel Finder   (root endpoint)",
+      "description": "Award Travel Finder is a travel search service focused on finding award-flight availability and related loyalty-program data using points and miles. It offers tools for AI agents and developers to search award seats, compare redemptions, and work with airline and hotel program information.",
+      "version": "1.0.0",
+      "websiteUrl": "https://awardtravelfinder.com/mcp",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/awardtravelfinder.com"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://awardtravelfinder.com/mcp"
         }
       ]
     }
@@ -3070,38 +3282,11 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "aws.api/aws-mcp-server",
-      "title": "AWS",
-      "description": "api.aws is AWS’s domain for service endpoints, including managed Model Context Protocol servers. These endpoints provide access to AWS capabilities such as AWS service operations and AWS Marketplace discovery tools.",
+      "name": "aws.api/mcp",
+      "title": "AWS Marketplace",
+      "description": "api.aws is an AWS-owned domain used for AWS service endpoints. In the material found here, it is used for managed AWS MCP Server endpoints that let AI agents access AWS documentation and AWS actions under AWS identity controls.",
       "version": "1.0.0",
       "websiteUrl": "https://docs.aws.amazon.com/agent-toolkit/latest/userguide/mcp-server.html",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/api.aws"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://aws-mcp.us-east-1.api.aws/mcp",
-          "variables": {
-            "region": {
-              "description": "Supported endpoints are `https://aws-mcp.us-east-1.api.aws/mcp` and `https://aws-mcp.eu-central-1.api.aws/mcp`.",
-              "isRequired": true
-            }
-          }
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "aws.api/aws-marketplace-mcp-server",
-      "title": "AWS Marketplace",
-      "description": "api.aws is AWS’s domain for service endpoints, including managed Model Context Protocol servers. These endpoints provide access to AWS capabilities such as AWS service operations and AWS Marketplace discovery tools.",
-      "version": "1.0.0",
-      "websiteUrl": "https://docs.aws.amazon.com/agent-toolkit/latest/userguide/getting-started-aws-mcp-server.html",
       "icons": [
         {
           "src": "https://integrations.sh/logo/api.aws"
@@ -3258,6 +3443,27 @@
         {
           "type": "streamable-http",
           "url": "https://barcelo-mcp.com/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.baremetrics/mcp",
+      "title": "Baremetrics",
+      "description": "Baremetrics is a subscription analytics and revenue recovery platform for SaaS businesses. It connects billing data from systems like Stripe, Chargebee, and Recurly to provide metrics, dunning, cancellation insights, and forecasting.",
+      "version": "1.0.0",
+      "websiteUrl": "https://help.baremetrics.com/en/articles/15427470-connecting-baremetrics-to-ai-tools-via-mcp-claude-cursor-codex",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/baremetrics.com"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://app.baremetrics.com/mcp"
         }
       ]
     }
@@ -3426,6 +3632,48 @@
         {
           "type": "streamable-http",
           "url": "https://spelling.widgets.widget.olutely.com/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.beehiiv/beehiiv-mcp-server",
+      "title": "beehiiv",
+      "description": "beehiiv is a newsletter publishing platform for creators, publishers, and brands. It provides tools to create, distribute, grow, and monetize newsletters, along with websites, automations, podcasts, analytics, and related audience features.",
+      "version": "1.0.0",
+      "websiteUrl": "https://www.beehiiv.com/support/article/39255979546263-getting-started-with-the-beehiiv-mcp",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/beehiiv.com"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://developers.beehiiv.com/_mcp/server"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.beehiiv/beehiiv-public-pricing-mcp-endpoint",
+      "title": "beehiiv public pricing  endpoint",
+      "description": "beehiiv is a newsletter publishing platform for creators, publishers, and brands. It provides tools to create, distribute, grow, and monetize newsletters, along with websites, automations, podcasts, analytics, and related audience features.",
+      "version": "1.0.0",
+      "websiteUrl": "https://www.beehiiv.com/llms.txt",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/beehiiv.com"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://www.beehiiv.com/api/mcp"
         }
       ]
     }
@@ -3707,6 +3955,27 @@
         {
           "type": "streamable-http",
           "url": "https://mcp.services.biorender.com/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "co.bitcoinyield/mcp",
+      "title": "BitcoinYield",
+      "description": "BitcoinYield is a live crypto-yield comparison site that ranks earning opportunities for Bitcoin, stablecoins, ETH, SOL, and other assets across DeFi and CeFi by yield and risk. It publishes current yield snapshots, offer comparisons, and methodology pages for tracked assets and platforms.",
+      "version": "1.0.0",
+      "websiteUrl": "https://bitcoinyield.co/docs",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/bitcoinyield.co"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://bitcoinyield.co/api/mcp"
         }
       ]
     }
@@ -4261,6 +4530,54 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "new.brew/brew-mcp-server",
+      "title": "Brew",
+      "description": "Brew is an AI-native email service provider that stores contacts, manages sending infrastructure and domain authentication, and uses AI to generate on-brand emails, automations, and audience segments. It also provides analytics, domain management, and automation tooling for marketing and transactional email workflows.",
+      "version": "1.0.0",
+      "websiteUrl": "https://docs.brew.new/api-reference/mcp/overview",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/brew.new"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://brew.new/api/mcp",
+          "variables": {
+            "brand_id": {
+              "description": "MCP connections are scoped to one brand or the whole organization; no brand appears in the MCP URL.",
+              "isRequired": false
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "new.brew/mcp-server",
+      "title": "Brew",
+      "description": "Brew is an AI-native email service provider that stores contacts, manages sending infrastructure and domain authentication, and uses AI to generate on-brand emails, automations, and audience segments. It also provides analytics, domain management, and automation tooling for marketing and transactional email workflows.",
+      "version": "1.0.0",
+      "websiteUrl": "https://integrations.sh/brew.new/mcp-server/",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/brew.new"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://brew.new/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.brex/mcp",
       "title": "Brex",
       "description": "Brex provides business financial software including corporate cards, expense management, bill pay, banking, travel, and accounting workflows. Its platform is used by companies to control and automate spending and related finance operations.",
@@ -4338,41 +4655,6 @@
         {
           "type": "streamable-http",
           "url": "https://bbnmcp.cfdomains.com/mcp"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "io.bronto/mcp",
-      "title": "Bronto Hosted",
-      "description": "Bronto is an observability platform for logs, traces, and metrics with long-retention search and AI-assisted investigation features. It stores telemetry data, supports ingestion from common collectors and cloud sources, and offers MCP access so AI agents can query that telemetry directly.",
-      "version": "1.0.0",
-      "websiteUrl": "https://docs.bronto.io/ai-features/hosted-mcp",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/bronto.io"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://mcp.{region}.bronto.io/mcp",
-          "variables": {
-            "region": {
-              "description": "Bronto region, documented as `eu` or `us`.",
-              "isRequired": true
-            }
-          },
-          "headers": [
-            {
-              "name": "Authorization",
-              "description": "Bronto API key. Use Bearer <token>.",
-              "isRequired": true,
-              "isSecret": true
-            }
-          ]
         }
       ]
     }
@@ -4480,41 +4762,20 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "io.builder/mcp",
-      "title": "Builder",
-      "description": "Builder.io is a visual development and content management platform for building and publishing digital experiences. It provides content delivery, content management, asset upload, and AI-assisted tooling for websites and applications.",
+      "name": "com.buffer/mcp",
+      "title": "Buffer",
+      "description": "Buffer is a social media publishing platform for scheduling posts, managing channels, storing ideas, and viewing post performance across multiple networks. Its API and related tools let developers and AI assistants automate posting and account workflows.",
       "version": "1.0.0",
-      "websiteUrl": "https://www.builder.io/c/docs/mcp-builder-server",
+      "websiteUrl": "https://developers.buffer.com/guides/integrations/mcp.html",
       "icons": [
         {
-          "src": "https://integrations.sh/logo/builder.io"
+          "src": "https://integrations.sh/logo/buffer.com"
         }
       ],
       "remotes": [
         {
           "type": "streamable-http",
-          "url": "https://mcp.builder.io"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "so.buildy.app/mcp",
-      "title": "Buildy",
-      "description": "Buildy hosts interactive web apps that agents can create, update, and render inline, publishing each app at a Buildy URL. The service supports building and operating those apps through either MCP tools or its HTTP API.",
-      "version": "1.0.0",
-      "websiteUrl": "https://buildy.so/build-mcp.md",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/app.buildy.so"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://app.buildy.so/mcp"
+          "url": "https://mcp.buffer.com/mcp"
         }
       ]
     }
@@ -4944,7 +5205,7 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.canva/mcp",
       "title": "Canva",
-      "description": "Canva is a visual design platform for creating, editing, and managing designs, assets, teams, and brand content. Its developer platform supports app building, workflow integrations, organization administration, identity provisioning, and AI assistant connectivity.",
+      "description": "Canva is a visual design and content creation platform with products for individuals, teams, and enterprises. It also provides developer tooling for integrating Canva design capabilities, administration, provisioning, and AI-assisted workflows.",
       "version": "1.0.0",
       "websiteUrl": "https://www.canva.dev/docs/mcp/",
       "icons": [
@@ -5061,27 +5322,6 @@
         {
           "type": "streamable-http",
           "url": "https://mcp.carbonarc.ai/research"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.awsapprunner.us-east-2.4ygmimr3yj/mcp",
-      "title": "CardChain",
-      "description": "This AWS App Runner-hosted service identifies itself as CardChain API and CardChain MCP Server. Its public root and MCP endpoints return basic service metadata, and the host publishes OAuth/OpenID discovery documents for authenticating MCP clients.",
-      "version": "1.0.0",
-      "websiteUrl": "https://4ygmimr3yj.us-east-2.awsapprunner.com/mcp",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/4ygmimr3yj.us-east-2.awsapprunner.com"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://4ygmimr3yj.us-east-2.awsapprunner.com/mcp"
         }
       ]
     }
@@ -5762,6 +6002,27 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.chessigma/mcp",
+      "title": "Chessigma",
+      "description": "Chessigma is a chess analysis and puzzle platform that lets users analyze games, identify openings, solve daily puzzles, and estimate Elo changes. Its tools run largely client-side with Stockfish in the browser and also provide public developer access for chess-related data and utilities.",
+      "version": "1.0.0",
+      "websiteUrl": "https://www.chessigma.com/developers/mcp",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/chessigma.com"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://www.chessigma.com/api/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "ai.chessvia/mcp",
       "title": "Chessvia Openings",
       "description": "Chessvia is an AI chess coaching service centered on \"Chessy,\" a voice- and text-enabled chess tutor for playing, analysis, and personalized instruction. Its public site markets gameplay, analysis, and coaching features for chess learners.",
@@ -5827,7 +6088,7 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "ai.circleback/mcp",
       "title": "Circleback",
-      "description": "Circleback is an AI meeting productivity platform that records or transcribes meetings, generates notes and action items, and lets users search meeting, calendar, and email context. It also supports automations and exposes that context to AI tools and the terminal.",
+      "description": "Circleback is an AI meeting productivity platform that captures meetings and conversations, producing transcripts, notes, action items, and related context like calendar events, emails, people, and companies. It supports online meetings, in-person recording, Slack huddles, and imported audio or video.",
       "version": "1.0.0",
       "websiteUrl": "https://circleback.ai/docs/mcp",
       "icons": [
@@ -5839,27 +6100,6 @@
         {
           "type": "streamable-http",
           "url": "https://app.circleback.ai/api/mcp"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "io.github.ondata/mcp",
-      "title": "CKAN   (hosted endpoint)",
-      "description": "ondata.github.io is a GitHub Pages site for onData projects. It presents tools for working with open data and Italian legal texts, including a CKAN-focused MCP server project and a Normattiva-to-Markdown converter.",
-      "version": "1.0.0",
-      "websiteUrl": "https://ondata.github.io/ckan-mcp-server/",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/ondata.github.io"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://ckan-mcp-server.andy-pr.workers.dev/mcp"
         }
       ]
     }
@@ -5953,7 +6193,7 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.clickup/mcp",
       "title": "ClickUp",
-      "description": "ClickUp is a work management platform for tasks, docs, goals, chat, and related workflow data inside team workspaces. It lets teams organize work in hierarchies such as spaces, folders, lists, and tasks.",
+      "description": "ClickUp is a work management and productivity platform for organizing tasks, docs, chat, goals, and related workflow data inside workspaces. It also offers AI features, including an MCP server that lets external AI assistants interact with ClickUp workspace content.",
       "version": "1.0.0",
       "websiteUrl": "https://developer.clickup.com/docs/connect-an-ai-assistant-to-clickups-mcp-server",
       "icons": [
@@ -6140,27 +6380,6 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.googleapis.cloudresourcemanager/mcp",
-      "title": "Cloud Resource Manager",
-      "description": "Cloud Resource Manager is a Google Cloud service for creating, reading, and updating metadata for Google Cloud resource containers such as organizations, folders, projects, and tags.",
-      "version": "1.0.0",
-      "websiteUrl": "https://docs.cloud.google.com/resource-manager/reference/mcp",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/cloudresourcemanager.googleapis.com"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://cloudresourcemanager.googleapis.com/mcp"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.googleapis.run/mcp",
       "title": "Cloud Run Admin API",
       "description": "Google Cloud Run is a managed service for deploying and running containers, jobs, and related resources on Google Cloud. The `run.googleapis.com` domain hosts Cloud Run's admin control-plane interfaces.",
@@ -6268,9 +6487,9 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.cloudflare/mcp",
       "title": "Cloudflare Developer Platform",
-      "description": "Cloudflare provides a global cloud platform for application delivery, security, developer compute, storage, AI, and Zero Trust networking. Its products include Workers, R2, D1, AI services, CDN/DNS, and enterprise network and security controls.",
+      "description": "Cloudflare provides developer infrastructure, security, Zero Trust, and network services on a global edge network. Its platform includes compute, storage, AI, media, application security, and enterprise networking products.",
       "version": "1.0.0",
-      "websiteUrl": "https://developers.cloudflare.com/agents/model-context-protocol/",
+      "websiteUrl": "https://developers.cloudflare.com/workers/ci-cd/builds/",
       "icons": [
         {
           "src": "https://integrations.sh/logo/cloudflare.com"
@@ -6427,6 +6646,35 @@
         {
           "type": "streamable-http",
           "url": "https://www.pyxl.pro/api/mcp/pythonmaster"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "co.cofounder/mcp",
+      "title": "Cofounder",
+      "description": "Cofounder is an agent-native operating system for running a company, spanning engineering, sales, marketing, finance, and operations. Its product includes a web app plus hosted agent interfaces for programmatic access.",
+      "version": "1.0.0",
+      "websiteUrl": "https://docs.cofounder.co/cli/get-started/connect-an-agent",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/cofounder.co"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://api.superoptimizers.cofounder.co/mcp",
+          "headers": [
+            {
+              "name": "Authorization",
+              "description": "Cofounder session token. Use Bearer <token>.",
+              "isRequired": true,
+              "isSecret": true
+            }
+          ]
         }
       ]
     }
@@ -6765,9 +7013,9 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.context7/context7",
+      "name": "com.context7/mcp",
       "title": "Context7",
-      "description": "Context7 provides version-specific software-library documentation and code examples for developers and AI coding agents. It indexes docs from repositories, websites, llms.txt files, OpenAPI specs, and similar sources, then serves relevant snippets on demand.",
+      "description": "Context7 provides version-specific software library documentation and code examples for AI coding agents and developers. It indexes sources such as code repositories, websites, llms.txt files, OpenAPI specs, and Confluence spaces, then serves filtered documentation snippets and search results.",
       "version": "1.0.0",
       "websiteUrl": "https://context7.com/docs/resources/all-clients",
       "icons": [
@@ -6781,33 +7029,12 @@
           "url": "https://mcp.context7.com/mcp",
           "headers": [
             {
-              "name": "CONTEXT7_API_KEY",
-              "description": "Context7 API key. Use <token>.",
+              "name": "Authorization",
+              "description": "Context7 API key. Use Bearer <token>.",
               "isRequired": true,
               "isSecret": true
             }
           ]
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.context7/context7-mcp-oauth-endpoint",
-      "title": "Context7 OAuth",
-      "description": "Context7 provides version-specific software-library documentation and code examples for developers and AI coding agents. It indexes docs from repositories, websites, llms.txt files, OpenAPI specs, and similar sources, then serves relevant snippets on demand.",
-      "version": "1.0.0",
-      "websiteUrl": "https://context7.com/docs/howto/oauth",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/context7.com"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://mcp.context7.com/mcp/oauth"
         }
       ]
     }
@@ -6829,27 +7056,6 @@
         {
           "type": "streamable-http",
           "url": "https://api.clarivate.com/lifesciences/mcp-regulatory/mcp"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "app.run.a.cortenoi-mcp-drmpaogcjq-ew/mcp",
-      "title": "Cortenoi",
-      "description": "This domain hosts an MCP server endpoint on Google Cloud Run. No additional public product or developer documentation was discoverable from the domain itself.",
-      "version": "1.0.0",
-      "websiteUrl": "https://cortenoi-mcp-drmpaogcjq-ew.a.run.app/mcp",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/cortenoi-mcp-drmpaogcjq-ew.a.run.app"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "sse",
-          "url": "https://cortenoi-mcp-drmpaogcjq-ew.a.run.app/mcp"
         }
       ]
     }
@@ -7007,48 +7213,6 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.herokuapp.cowboy-model-finder-mcp-app-8b3709a7529a/cowboy-model-finder-mcp",
-      "title": "Cowboy Model Finder",
-      "description": "Cowboy Model Finder appears to be a hosted Model Context Protocol server deployed on Heroku. It exposes MCP connection endpoints for clients, with no separate public developer documentation or other integration surfaces found on the domain.",
-      "version": "1.0.0",
-      "websiteUrl": "https://integrations.sh/cowboy-model-finder-mcp-app-8b3709a7529a.herokuapp.com/cowboy-model-finder-mcp/",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/cowboy-model-finder-mcp-app-8b3709a7529a.herokuapp.com"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://cowboy-model-finder-mcp-app-8b3709a7529a.herokuapp.com/mcp"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.herokuapp.cowboy-model-finder-mcp-app-8b3709a7529a/cowboy-model-finder-mcp-sse",
-      "title": "Cowboy Model Finder  (SSE)",
-      "description": "Cowboy Model Finder appears to be a hosted Model Context Protocol server deployed on Heroku. It exposes MCP connection endpoints for clients, with no separate public developer documentation or other integration surfaces found on the domain.",
-      "version": "1.0.0",
-      "websiteUrl": "https://integrations.sh/cowboy-model-finder-mcp-app-8b3709a7529a.herokuapp.com/cowboy-model-finder-mcp-sse/",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/cowboy-model-finder-mcp-app-8b3709a7529a.herokuapp.com"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "sse",
-          "url": "https://cowboy-model-finder-mcp-app-8b3709a7529a.herokuapp.com/sse"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "do.craft/mcp",
       "title": "Craft",
       "description": "Craft is a document and note-taking workspace for writing, tasks, daily notes, collections, and collaboration across web and native apps. It lets users organize and share content, and offers API/MCP-based access to selected workspace content.",
@@ -7147,27 +7311,6 @@
         {
           "type": "sse",
           "url": "https://createstate.ai/chatgpt/sse"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "md.creed/mcp",
-      "title": "Creed",
-      "description": "Creed is a personal context file service that lets users maintain a structured Markdown profile for AI assistants. Connected agents read that profile before responding and can propose or directly apply updates based on user permissions.",
-      "version": "1.0.0",
-      "websiteUrl": "https://creed.md/docs",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/creed.md"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://creed.md/mcp"
         }
       ]
     }
@@ -7406,6 +7549,27 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "st.datafa/mcp",
+      "title": "DataFast",
+      "description": "DataFast is a web analytics platform that helps teams track website traffic, goals, funnels, visitors, and revenue attribution. It also supports payment-provider integrations so users can connect business metrics like subscriptions, MRR, LTV, and churn to acquisition sources.",
+      "version": "1.0.0",
+      "websiteUrl": "https://datafa.st/docs/mcp-introduction",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/datafa.st"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://datafa.st/api/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.googleapis.dataflow/mcp",
       "title": "Dataflow",
       "description": "Google Cloud Dataflow is a managed service for running batch and streaming data processing pipelines. It lets users launch, inspect, and manage Dataflow jobs and templates on Google Cloud.",
@@ -7534,9 +7698,9 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.datocms/mcp",
       "title": "DatoCMS",
-      "description": "DatoCMS is a headless content management system for modeling, managing, and delivering structured content to websites and applications. It provides APIs and tooling for content delivery, content management, schema migrations, and AI-assisted workflows.",
+      "description": "DatoCMS is a headless CMS for modeling content and delivering it to websites, apps, and other clients. It provides hosted content management, content delivery, asset handling, search, and AI-assistant integration features.",
       "version": "1.0.0",
-      "websiteUrl": "https://www.datocms.com/docs/mcp-server",
+      "websiteUrl": "https://www.datocms.com/docs/mcp-server.md",
       "icons": [
         {
           "src": "https://integrations.sh/logo/datocms.com"
@@ -7701,6 +7865,27 @@
         {
           "type": "streamable-http",
           "url": "https://developers.deepgram.com/_mcp/server"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.deepwiki/mcp",
+      "title": "DeepWiki",
+      "description": "DeepWiki MCP server discovered by integrations.sh.",
+      "version": "1.0.0",
+      "websiteUrl": "https://integrations.sh/deepwiki.com/deepwiki/",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/deepwiki.com"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.deepwiki.com/mcp"
         }
       ]
     }
@@ -8004,9 +8189,9 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "in.district/mcp",
       "title": "District",
-      "description": "District is a consumer platform for discovering and booking movies, events, dining, and sports activities. Its public site is district.in, and it also operates an MCP server on a separate subdomain.",
+      "description": "District is Zomato's going-out app for India for discovering and booking movies, live events, dining, sports venues, activities, and stores. Its public site focuses on consumer listings and bookings.",
       "version": "1.0.0",
-      "websiteUrl": "https://mcp-server.district.in/.well-known/oauth-authorization-server",
+      "websiteUrl": "https://district.in/llms.txt",
       "icons": [
         {
           "src": "https://integrations.sh/logo/district.in"
@@ -8079,27 +8264,6 @@
         {
           "type": "streamable-http",
           "url": "https://mcp.app.docketai.com"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.x/docs-mcp",
-      "title": "Docs",
-      "description": "X is a social platform centered on short-form posts, user accounts, messaging, trends, and advertising. Its developer platform provides programmatic access to public conversation data, account actions, enterprise data products, and ad campaign management.",
-      "version": "1.0.0",
-      "websiteUrl": "https://docs.x.com/tools/mcp",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/x.com"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://docs.x.com/mcp"
         }
       ]
     }
@@ -8873,6 +9037,27 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.erank.members/mcp",
+      "title": "eRank",
+      "description": "eRank is a service for Etsy sellers that provides research and analytics tools. The members.erank.com host is its authenticated member area and also publishes an MCP endpoint for AI clients.",
+      "version": "1.0.0",
+      "websiteUrl": "https://members.erank.com/.well-known/oauth-protected-resource",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/members.erank.com"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://members.erank.com/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.googleapis.clouderrorreporting/mcp",
       "title": "Error Reporting",
       "description": "Google Cloud Error Reporting groups and counts application errors from Google Cloud services and custom applications. It provides APIs to report error events and inspect error groups, events, and statistics.",
@@ -8936,6 +9121,27 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.evernote/mcp",
+      "title": "Evernote",
+      "description": "Evernote is a note-taking and productivity service for capturing, organizing, searching, and creating notes, notebooks, tags, tasks, and attachments. The site also publishes browser-based AI and document tools alongside the core Evernote platform.",
+      "version": "1.0.0",
+      "websiteUrl": "https://dev.evernote.com/mcp",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/evernote.com"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.evernote.com/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "ai.every/mcp",
       "title": "Every Admin",
       "description": "Every is an AI-native operations platform for freelancers, consultants, agencies, and other client-service businesses. It combines CRM, proposals, invoicing, payments, booking, and related workflows with an AI assistant.",
@@ -8957,7 +9163,7 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "dev.evlog/evlog-mcp-server",
+      "name": "dev.evlog/mcp",
       "title": "evlog",
       "description": "evlog is a TypeScript logging library for structured logs, wide events, and structured errors across web apps, scripts, and server runtimes. Its documentation covers framework integrations, log drains, audit logging, and AI-observability use cases.",
       "version": "1.0.0",
@@ -8971,27 +9177,6 @@
         {
           "type": "streamable-http",
           "url": "https://evlog.dev/mcp"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "dev.evlog/mcp-server",
-      "title": "Evlog",
-      "description": "evlog is a TypeScript logging library for structured logs, wide events, and structured errors across web apps, scripts, and server runtimes. Its documentation covers framework integrations, log drains, audit logging, and AI-observability use cases.",
-      "version": "1.0.0",
-      "websiteUrl": "https://integrations.sh/evlog.dev/mcp-server/",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/evlog.dev"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://www.evlog.dev/.well-known/mcp/server-card.json"
         }
       ]
     }
@@ -9547,6 +9732,27 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "dev.hugomrdias.fil-app/mcp",
+      "title": "fil-api",
+      "description": "fil stores files and folders on Filecoin and returns retrieval links for sharing and verification. It includes a web app, a command-line tool, and public read-only data access for Filecoin storage records and related metadata.",
+      "version": "1.0.0",
+      "websiteUrl": "https://fil-app.hugomrdias.dev/docs/api#mcp-server",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/fil-app.hugomrdias.dev"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://fil-api.hugomrdias.dev/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "io.intercom/fin-agent-api-mcp-server",
       "title": "Fin Agent API",
       "description": "Intercom is a customer service platform for support teams, with messaging, inbox, help center, ticketing, and AI agent features. It provides APIs and MCP servers for accessing workspace data and Fin capabilities.",
@@ -9596,6 +9802,27 @@
         {
           "type": "streamable-http",
           "url": "https://www.finn.com/api/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "io.finta/mcp",
+      "title": "Finta",
+      "description": "Finta syncs financial data from banks, investment accounts, and Stripe into productivity tools such as Notion, Airtable, Google Sheets, and Coda. It stores synced account, transaction, balance, and holdings data so users can query and manage it from apps and AI tools.",
+      "version": "1.0.0",
+      "websiteUrl": "https://docs.finta.io/mcp/overview",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/finta.io"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.finta.io/mcp"
         }
       ]
     }
@@ -10125,7 +10352,7 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "org.framagit/framagit-mcp",
+      "name": "org.framagit/mcp",
       "title": "Framagit",
       "description": "Framagit is Framasoft’s hosted GitLab Community Edition instance for source code hosting and collaborative software development. It provides Git repositories, project management, and related GitLab features on the `framagit.org` domain.",
       "version": "1.0.0",
@@ -10139,27 +10366,6 @@
         {
           "type": "streamable-http",
           "url": "https://framagit.org/api/v4/mcp"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "org.framagit/framagit-orbit-mcp",
-      "title": "Framagit Orbit",
-      "description": "Framagit is Framasoft’s hosted GitLab Community Edition instance for source code hosting and collaborative software development. It provides Git repositories, project management, and related GitLab features on the `framagit.org` domain.",
-      "version": "1.0.0",
-      "websiteUrl": "https://framagit.org/.well-known/oauth-protected-resource",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/framagit.org"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://framagit.org/api/v4/orbit/mcp"
         }
       ]
     }
@@ -10664,48 +10870,6 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.getoffers.stage/mcp",
-      "title": "GetOffers",
-      "description": "GetOffers is a B2B travel and expense management platform for companies, travel agencies, and hotels. It supports searching, booking, and managing flights, hotels, transfers, car rentals, yachts, and experiences with AI-assisted workflows.",
-      "version": "1.0.0",
-      "websiteUrl": "https://stage.getoffers.com/",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/stage.getoffers.com"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://stage.getoffers.com/.well-known/mcp/server-card.json"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.getoffers/mcp",
-      "title": "GetOffers",
-      "description": "GetOffers is a B2B corporate travel and expense management platform for searching, booking, and managing flights, hotels, transfers, car rentals, yachts, and experiences. It serves companies, travel agencies, and hotel partners through an AI-assisted booking platform.",
-      "version": "1.0.0",
-      "websiteUrl": "https://getoffers.com/.well-known/mcp/server-card.json",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/getoffers.com"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://getoffers.com/.well-known/mcp/server-card.json"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.getyourguide/mcp",
       "title": "GetYourGuide",
       "description": "GetYourGuide is a travel marketplace for tours, activities, and attractions. It also operates supplier and connectivity programs that let partners connect reservation and ticketing systems to its marketplace.",
@@ -10727,11 +10891,32 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "cafe.git/mcp",
+      "title": "Git",
+      "description": "Exposes mcp for this service.",
+      "version": "1.0.0",
+      "websiteUrl": "https://integrations.sh/git.cafe/gitcafe-mcp-server/",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/git.cafe"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://git.cafe/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.github/mcp",
       "title": "GitHub",
-      "description": "GitHub is a software development platform centered on Git repositories, collaboration, automation, and code hosting. It also provides APIs, CLI tooling, and agent integrations for working with repositories, issues, pull requests, workflows, and related developer workflows.",
+      "description": "GitHub is a software development platform for hosting repositories, collaboration workflows, automation, and related developer services. It provides source control, issues, pull requests, CI/CD, package and security features, and AI-assisted tooling through GitHub Copilot.",
       "version": "1.0.0",
-      "websiteUrl": "https://github.com/github/github-mcp-server",
+      "websiteUrl": "https://docs.github.com/en/copilot/how-tos/provide-context/use-mcp-in-your-ide/use-the-github-mcp-server",
       "icons": [
         {
           "src": "https://integrations.sh/logo/github.com"
@@ -10740,15 +10925,7 @@
       "remotes": [
         {
           "type": "streamable-http",
-          "url": "https://api.githubcopilot.com/mcp/",
-          "headers": [
-            {
-              "name": "Authorization",
-              "description": "GitHub personal access token (fine-grained or classic). Use Bearer <token>.",
-              "isRequired": true,
-              "isSecret": true
-            }
-          ]
+          "url": "https://api.githubcopilot.com/mcp/"
         }
       ]
     }
@@ -11216,7 +11393,7 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.gorgias/mcp",
       "title": "Gorgias",
-      "description": "Gorgias provides a customer support and conversational AI platform for ecommerce brands. Its products center on a helpdesk, automation, and AI tools for handling support interactions and related account configuration.",
+      "description": "Gorgias is an ecommerce customer support and conversational AI platform that unifies helpdesk channels such as email, chat, voice, SMS, and social messaging. It lets merchants manage support operations, automation, analytics, and app integrations from a tenant-specific Gorgias account.",
       "version": "1.0.0",
       "websiteUrl": "https://docs.gorgias.com/en-US/connect-your-ai-assistant-to-the-gorgias-mcp-6310546",
       "icons": [
@@ -11228,27 +11405,6 @@
         {
           "type": "streamable-http",
           "url": "https://mcp.gorgias.com/mcp"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.goupword/mcp-server",
-      "title": "Goupword",
-      "description": "upword is an AI-powered content and publishing platform for agencies and local service businesses that aims to improve visibility in AI answer engines and search. It generates citation-oriented content and offers a WordPress publishing integration for customer sites.",
-      "version": "1.0.0",
-      "websiteUrl": "https://integrations.sh/goupword.com/mcp-server/",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/goupword.com"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://www.goupword.com/.well-known/mcp/server-card.json"
         }
       ]
     }
@@ -11629,27 +11785,6 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "ai.usehalyard.mcp/halyard-mcp-server",
-      "title": "Halyard",
-      "description": "Halyard is an organizational context engine that indexes a team's knowledge into a graph and lets AI agents retrieve it or ask human experts through Slack. It provides MCP tools for knowledge search and updates, people and org data, expert conversations, and delivery metrics.",
-      "version": "1.0.0",
-      "websiteUrl": "https://mcp.usehalyard.ai/install",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/mcp.usehalyard.ai"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://mcp.usehalyard.ai"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "ai.com.mcp/mcp",
       "title": "HAPI  Registry",
       "description": "mcp.com.ai is the documentation and product site for La Rebelion's HAPI MCP stack, which helps developers turn APIs into MCP-compatible services and interact with them through cloud and local tooling. Its docs describe components including HAPI Server, runMCP, chatMCP, and QBot.",
@@ -11979,27 +12114,6 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.gohighlevel/mcp",
-      "title": "HighLevel",
-      "description": "HighLevel is a CRM and marketing automation platform with features for contacts, conversations, calendars, payments, workflows, and marketplace apps. Its developer platform lets agencies and sub-accounts build custom integrations and AI-connected workflows against HighLevel data.",
-      "version": "1.0.0",
-      "websiteUrl": "https://marketplace.gohighlevel.com/docs/other/mcp/",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/gohighlevel.com"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://services.leadconnectorhq.com/mcp/"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.leadconnectorhq/mcp",
       "title": "HighLevel",
       "description": "LeadConnector/HighLevel provides CRM, messaging, calendar, payments, workflow, and related business automation features for customer management and marketing operations. Its platform supports account-level integrations and AI access to account data and tools.",
@@ -12208,9 +12322,38 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "io.honeycomb.mcp/mcp",
+      "title": "Honeycomb",
+      "description": "Honeycomb provides observability tooling for querying and analyzing telemetry such as traces, events, metrics, SLOs, triggers, and boards. Its MCP server lets AI agents access and act on that Honeycomb data through the Model Context Protocol.",
+      "version": "1.0.0",
+      "websiteUrl": "https://docs.honeycomb.io/integrations/mcp",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/mcp.honeycomb.io"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.honeycomb.io/mcp",
+          "headers": [
+            {
+              "name": "Authorization",
+              "description": "Honeycomb API key. Use Bearer <token>.",
+              "isRequired": true,
+              "isSecret": true
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "io.honeycomb/mcp",
       "title": "Honeycomb",
-      "description": "Honeycomb is an observability platform for exploring telemetry from distributed systems and applications. It helps teams investigate performance, reliability, and behavior using high-cardinality event, trace, and related operational data.",
+      "description": "Honeycomb is an observability platform for exploring telemetry, traces, and high-cardinality event data from modern software systems. It helps engineering teams investigate production behavior, analyze reliability, and debug distributed applications.",
       "version": "1.0.0",
       "websiteUrl": "https://docs.honeycomb.io/integrations/mcp/configuration-guide",
       "icons": [
@@ -12221,13 +12364,28 @@
       "remotes": [
         {
           "type": "streamable-http",
-          "url": "https://mcp.honeycomb.io/mcp",
-          "variables": {
-            "region": {
-              "description": "Honeycomb publishes separate US and EU MCP endpoints.",
-              "isRequired": false
-            }
-          }
+          "url": "https://mcp.honeycomb.io/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "sh.hoplite/mcp",
+      "title": "Hoplite",
+      "description": "Hoplite is a cloud coding-agent platform for starting, supervising, and reviewing work in GitHub-backed repositories. It runs agent work in managed cloud workspaces and can return repository changes and pull requests for human review.",
+      "version": "1.0.0",
+      "websiteUrl": "https://hoplite.sh/docs/mcp-server",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/hoplite.sh"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://api.hoplite.sh/mcp"
         }
       ]
     }
@@ -12411,9 +12569,30 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.htmlcsstoimage/mcp",
+      "title": "HTML/CSS to Image",
+      "description": "HTML/CSS to Image is a service that converts HTML, CSS, templates, and public URLs into rendered images and PDFs. It is used for generated social cards, screenshots, certificates, reports, and similar visual assets.",
+      "version": "1.0.0",
+      "websiteUrl": "https://docs.htmlcsstoimage.com/integrations/mcp/",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/htmlcsstoimage.com"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.hcti.io"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.hubspot/mcp",
       "title": "HubSpot",
-      "description": "HubSpot is a customer platform and CRM that includes APIs and developer tooling for CRM data, apps, CMS content, and automation. It also provides AI integration surfaces such as a remote MCP server and agent-oriented command-line tools.",
+      "description": "HubSpot is a customer platform and CRM for marketing, sales, service, content, commerce, and operations teams. It lets businesses manage customer data, automate workflows, and build integrations and custom extensions on top of its platform.",
       "version": "1.0.0",
       "websiteUrl": "https://developers.hubspot.com/docs/apps/developer-platform/build-apps/integrate-with-the-remote-hubspot-mcp-server",
       "icons": [
@@ -12488,6 +12667,27 @@
         {
           "type": "streamable-http",
           "url": "https://www.pyxl.pro/api/mcp/aihumanize"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "pro.texthumanizer/mcp",
+      "title": "Humanizer PRO",
+      "description": "Humanizer PRO is a web service for rewriting draft text to sound more natural, scanning text for AI-style signals, and tracking word-balance usage across plans and integrations. It also offers hosted integrations for AI assistants and workflow tools using the same account balance.",
+      "version": "1.0.0",
+      "websiteUrl": "https://texthumanizer.pro/mcp-docs",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/texthumanizer.pro"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://texthumanizer.pro/mcp"
         }
       ]
     }
@@ -12630,6 +12830,27 @@
         {
           "type": "streamable-http",
           "url": "https://idealo-app-in-chatgpt.idealo.tools/v5/mcp/"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.idenfy/mcp",
+      "title": "iDenfy Documentation",
+      "description": "iDenfy is a RegTech platform for identity verification, business verification, AML screening, age estimation, and fraud prevention. It helps businesses onboard users and companies and meet KYC, KYB, and AML compliance requirements.",
+      "version": "1.0.0",
+      "websiteUrl": "https://documentation.idenfy.com/resources/mcp",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/idenfy.com"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://documentation.idenfy.com/mcp"
         }
       ]
     }
@@ -12999,7 +13220,7 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "sh.integrations/mcp",
       "title": "integrations.sh",
-      "description": "integrations.sh is a searchable registry of developer and agent integration surfaces for other services. It catalogs APIs, GraphQL endpoints, MCP servers, and CLIs along with authentication metadata and discovery signals.",
+      "description": "integrations.sh is a registry of developer and agent integration surfaces across many services, including APIs, GraphQL endpoints, MCP servers, and CLIs. It also provides tools for discovering what integration surfaces a domain exposes.",
       "version": "1.0.0",
       "websiteUrl": "https://integrations.sh/integrations.sh/integrations-sh-mcp-server/",
       "icons": [
@@ -13144,7 +13365,28 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "io.invideo/invideo-mcp-server",
+      "name": "com.useinvent/mcp",
+      "title": "Invent",
+      "description": "Invent is a customer communication platform for businesses to run AI assistants across messaging channels, shared inboxes, contacts, broadcasts, knowledge, workflows, and related workspace features. It lets organizations manage conversations, channels, campaigns, and operational data from one system.",
+      "version": "1.0.0",
+      "websiteUrl": "https://docs.useinvent.com/workspace-management/ai-apps",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/useinvent.com"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://api.useinvent.com/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "io.invideo/mcp",
       "title": "Invideo",
       "description": "Invideo is an online AI video creation platform for generating and editing videos from text prompts, with tools for scripts, voiceovers, stock or generated visuals, subtitles, and related media workflows.",
       "version": "1.0.0",
@@ -13158,27 +13400,6 @@
         {
           "type": "streamable-http",
           "url": "https://app-mcp.invideo.io"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "io.invideo/invideo-remote-mcp-server",
-      "title": "Invideo",
-      "description": "Invideo is an online AI video creation platform for generating and editing videos from text prompts, with tools for scripts, voiceovers, stock or generated visuals, subtitles, and related media workflows.",
-      "version": "1.0.0",
-      "websiteUrl": "https://help.invideo.io/en/articles/11316042-invideo-model-context-protocol-server",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/invideo.io"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "sse",
-          "url": "https://mcp.invideo.io/sse"
         }
       ]
     }
@@ -13822,6 +14043,27 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.onkeiki/mcp",
+      "title": "Keiki",
+      "description": "Keiki is a hosted platform for building and operating autonomous AI agents that work across messaging channels like SMS, WhatsApp, Telegram, Slack, and email. It manages agent configuration, conversations, tools, memory, observability, and channel delivery for customer-facing or team-facing workflows.",
+      "version": "1.0.0",
+      "websiteUrl": "https://onkeiki.com/developers",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/onkeiki.com"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://onkeiki.com/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.kbb/mcp",
       "title": "Kelley Blue Book",
       "description": "Kelley Blue Book provides vehicle data, values, and related automotive content. Its business offerings include APIs such as InfoDriver Web Service and advertising data services for integrating KBB data into applications.",
@@ -13901,9 +14143,9 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "sh.kernel/mcp",
       "title": "Kernel",
-      "description": "Kernel provides cloud-based browsers and related infrastructure for AI agents, including browser automation, code execution for agent apps, and tooling for observing and managing those sessions. It also offers a hosted MCP server and CLI for interacting with those capabilities.",
+      "description": "Kernel provides cloud browser infrastructure for AI agents and automations, including isolated Chromium sessions, browser control, profiles, proxies, managed authentication, telemetry, and replays. It is designed for agent workflows that need to interact with websites rather than purpose-built APIs.",
       "version": "1.0.0",
-      "websiteUrl": "https://kernel.sh/docs/reference/mcp-server",
+      "websiteUrl": "https://www.kernel.sh/docs/reference/mcp-server",
       "icons": [
         {
           "src": "https://integrations.sh/logo/kernel.sh"
@@ -14209,6 +14451,27 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "app.knock/mcp",
+      "title": "Knock",
+      "description": "Knock is a customer messaging and notification infrastructure platform for building workflows, templates, preferences, and multi-channel delivery across email, in-app, push, SMS, and chat. It also provides management tooling for notification resources and AI-agent access via MCP.",
+      "version": "1.0.0",
+      "websiteUrl": "https://docs.knock.app/ai/mcp-server",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/knock.app"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.knock.app/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "md.idoctor/mcp",
       "title": "Kokiko",
       "description": "idoctor.md appears to host Kokiko, an MCP server endpoint on a subdomain. No broader product or developer documentation for additional programmatic surfaces could be verified from the domain.",
@@ -14356,11 +14619,32 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "ae.kredit/mcp",
+      "name": "ae.kredit/kredit-mcp-server",
       "title": "Kredit",
-      "description": "Kredit is a UAE credit card comparison platform. It helps users find and compare credit cards from banks and brands in the United Arab Emirates.",
+      "description": "Kredit is a UAE credit-card comparison platform that publishes card rankings, reward-rate datasets, and recommendation tooling. It helps users compare UAE credit cards and related financial products such as bank accounts.",
       "version": "1.0.0",
-      "websiteUrl": "https://kredit.ae/llms.txt",
+      "websiteUrl": "https://kredit.ae/chatgpt",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/kredit.ae"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://kredit.ae/api/mcp/v2"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "ae.kredit/kredit-mcp-server-2",
+      "title": "Kredit   (SSE endpoint)",
+      "description": "Kredit is a UAE credit-card comparison platform that publishes card rankings, reward-rate datasets, and recommendation tooling. It helps users compare UAE credit cards and related financial products such as bank accounts.",
+      "version": "1.0.0",
+      "websiteUrl": "https://kredit.ae/chatgpt",
       "icons": [
         {
           "src": "https://integrations.sh/logo/kredit.ae"
@@ -14701,6 +14985,37 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.gohighlevel/mcp",
+      "title": "LeadConnector",
+      "description": "HighLevel is a CRM and sales/marketing automation platform for agencies and businesses. It combines contacts, messaging, calendars, payments, workflows, and related business operations in one system.",
+      "version": "1.0.0",
+      "websiteUrl": "https://marketplace.gohighlevel.com/docs/other/mcp/",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/gohighlevel.com"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://services.leadconnectorhq.com/mcp/",
+          "variables": {
+            "client": {
+              "description": "Use the per-client endpoint when supported by your MCP client.",
+              "isRequired": false
+            },
+            "locationId": {
+              "description": "Required in MCP client config for the original single-location endpoint.",
+              "isRequired": false
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.leapscholar/mcp",
       "title": "LeapScholar",
       "description": "LeapScholar is a study-abroad counseling and admissions platform focused on helping Indian students find universities, prepare applications, and get visa and test-prep support. Its public site also includes university/course discovery content and an AI chat experience for study-abroad queries.",
@@ -14948,7 +15263,7 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "app.lightfield/mcp",
       "title": "Lightfield",
-      "description": "Lightfield is an AI-native CRM that captures emails, meetings, and other customer interactions to maintain a continuously updated relationship record. It provides CRM records, workflows, and agent-assisted operations for sales and customer-facing teams.",
+      "description": "Lightfield is an AI-native CRM that automatically captures emails, meetings, and other customer interactions to build and update relationship records. It provides a shared customer-memory model and agent layer for sales workflows, reporting, and automations.",
       "version": "1.0.0",
       "websiteUrl": "https://docs.lightfield.app/getting-started/mcp-quickstart/",
       "icons": [
@@ -15072,41 +15387,6 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "ai.litellm/mcp",
-      "title": "LiteLLM  Gateway",
-      "description": "LiteLLM is an AI gateway that provides a unified interface for calling many LLM providers and related model capabilities through OpenAI-compatible and gateway-specific endpoints. It also includes MCP gateway features for exposing and using tools through the Model Context Protocol.",
-      "version": "1.0.0",
-      "websiteUrl": "https://docs.litellm.ai/docs/mcp",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/litellm.ai"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://litellm-api.up.railway.app/mcp",
-          "headers": [
-            {
-              "name": "Authorization",
-              "description": "LiteLLM Virtual Key. Use Bearer <token>.",
-              "isRequired": true,
-              "isSecret": true
-            },
-            {
-              "name": "x-litellm-api-key",
-              "description": "LiteLLM Virtual Key. Use Bearer <token>.",
-              "isRequired": true,
-              "isSecret": true
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.littlecaesars/mcp",
       "title": "Little Caesars",
       "description": "Little Caesars is a pizza restaurant chain that offers online ordering for pickup and delivery through its website and mobile app. Its public web presence is focused on consumer ordering, company information, and franchise information.",
@@ -15142,6 +15422,27 @@
         {
           "type": "streamable-http",
           "url": "https://developers.llamaindex.ai/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "ai.llmpulse/mcp",
+      "title": "LLM Pulse",
+      "description": "LLM Pulse is an AI search and generative engine optimization platform that tracks how brands appear in AI-generated answers across products like ChatGPT, Perplexity, Gemini, and Google AI Overviews. It measures mentions, citations, share of voice, sentiment, and related visibility data for brands and competitors.",
+      "version": "1.0.0",
+      "websiteUrl": "https://llmpulse.ai/api-docs/integrations#mcp",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/llmpulse.ai"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://api.llmpulse.ai/api/v1/mcp"
         }
       ]
     }
@@ -15341,6 +15642,27 @@
         {
           "type": "streamable-http",
           "url": "https://mcp.lona.agency/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "so.loops/mcp",
+      "title": "Loops",
+      "description": "Loops is an email platform for software companies that combines transactional, lifecycle, and marketing email. It provides contact management, events, campaigns, workflows, and email content tooling in one product.",
+      "version": "1.0.0",
+      "websiteUrl": "https://loops.so/docs/mcp-server",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/loops.so"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.loops.so"
         }
       ]
     }
@@ -15839,6 +16161,56 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "ai.magichour/magic-hour-mcp",
+      "title": "Magic Hour",
+      "description": "Magic Hour is an AI media platform for generating and editing video, images, and audio in a browser workspace and through developer APIs. It also publishes agent-oriented resources such as MCP servers, OpenAPI, llms.txt, and agent skills for integrating those capabilities into apps and AI assistants.",
+      "version": "1.0.0",
+      "websiteUrl": "https://docs.magichour.ai/integration/model-context-protocol",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/magichour.ai"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.magichour.ai/",
+          "headers": [
+            {
+              "name": "Authorization",
+              "description": "Magic Hour API key. Use Bearer <token>.",
+              "isRequired": true,
+              "isSecret": true
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "ai.magichour/magic-hour-api-docs-mcp",
+      "title": "Magic Hour API Docs",
+      "description": "Magic Hour is an AI media platform for generating and editing video, images, and audio in a browser workspace and through developer APIs. It also publishes agent-oriented resources such as MCP servers, OpenAPI, llms.txt, and agent skills for integrating those capabilities into apps and AI assistants.",
+      "version": "1.0.0",
+      "websiteUrl": "https://docs.magichour.ai/integration/api-docs-mcp",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/magichour.ai"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://docs.magichour.ai/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.magicpatterns/mcp",
       "title": "Magic Patterns",
       "description": "Magic Patterns is a design and UI generation product that helps users create, iterate on, and export designs and code. It also supports design systems and AI-assisted workflows for moving between prompts, designs, and implementation.",
@@ -16211,35 +16583,6 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.trymalcolm/marrow-mcp-server",
-      "title": "Marrow",
-      "description": "Marrow is middleware for insurance distribution through AI agents, translating conversational requests into insurer quote, compare, and bind workflows while enforcing compliance controls. It connects AI applications and partners to insurer pricing and underwriting systems through a canonical protocol.",
-      "version": "1.0.0",
-      "websiteUrl": "https://www.onmarrow.com/docs/for-partners/mcp-server",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/trymalcolm.com"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "sse",
-          "url": "https://mcp.trymalcolm.com/sse",
-          "headers": [
-            {
-              "name": "Authorization",
-              "description": "Marrow API key. Use Bearer <token>.",
-              "isRequired": true,
-              "isSecret": true
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.massive/mcp",
       "title": "Massive",
       "description": "Massive provides financial market data covering stocks, options, futures, indices, forex, crypto, and related datasets. Its products include on-demand APIs, streaming feeds, bulk historical files, and AI-oriented access through MCP and LLM-friendly documentation.",
@@ -16348,27 +16691,6 @@
         {
           "type": "streamable-http",
           "url": "https://chatgptcompanion.gateway.api.mcafee.com/mcp"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "ai.usehalyard.mcp/mcp-server",
-      "title": "Mcp",
-      "description": "Halyard is an organizational context engine that indexes a team's knowledge into a graph and lets AI agents retrieve it or ask human experts through Slack. It provides MCP tools for knowledge search and updates, people and org data, expert conversations, and delivery metrics.",
-      "version": "1.0.0",
-      "websiteUrl": "https://integrations.sh/mcp.usehalyard.ai/mcp-server/",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/mcp.usehalyard.ai"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://mcp.usehalyard.ai/openapi.json"
         }
       ]
     }
@@ -16670,37 +16992,8 @@
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "ai.mermaid/mermaid-mcp-server",
-      "title": "Mermaid",
-      "description": "Mermaid Chart provides browser-based tools for creating, editing, and sharing Mermaid diagrams, plus AI-assisted diagram generation features. The site also hosts the open-source Mermaid documentation and ecosystem resources.",
-      "version": "1.0.0",
-      "websiteUrl": "https://mermaid.ai/docs/ai/mcp-server",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/mermaid.ai"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://mcp.mermaid.ai/mcp",
-          "headers": [
-            {
-              "name": "Authorization",
-              "description": "Mermaid Chart API token. Use Bearer <token>.",
-              "isRequired": true,
-              "isSecret": true
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "ai.mermaid/mermaid-mcp-server-sse",
-      "title": "Mermaid   (SSE)",
-      "description": "Mermaid Chart provides browser-based tools for creating, editing, and sharing Mermaid diagrams, plus AI-assisted diagram generation features. The site also hosts the open-source Mermaid documentation and ecosystem resources.",
+      "title": "Mermaid Chart",
+      "description": "Mermaid Chart is a diagramming product built around Mermaid syntax, with AI-assisted creation, editing, sharing, and collaboration features. It also offers integrations that let AI assistants validate, render, and manage diagrams through MCP endpoints.",
       "version": "1.0.0",
       "websiteUrl": "https://mermaid.ai/docs/ai/mcp-server",
       "icons": [
@@ -16711,11 +17004,11 @@
       "remotes": [
         {
           "type": "sse",
-          "url": "https://mcp.mermaid.ai/sse",
+          "url": "https://mcp.mermaid.ai/mcp",
           "headers": [
             {
               "name": "Authorization",
-              "description": "Mermaid Chart API token. Use Bearer <token>.",
+              "description": "Mermaid Chart token. Use Bearer <token>.",
               "isRequired": true,
               "isSecret": true
             }
@@ -16728,8 +17021,8 @@
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "ai.mermaid/mermaid-chart-claude-mcp-app",
-      "title": "Mermaid Chart Claude  App",
-      "description": "Mermaid Chart provides browser-based tools for creating, editing, and sharing Mermaid diagrams, plus AI-assisted diagram generation features. The site also hosts the open-source Mermaid documentation and ecosystem resources.",
+      "title": "Mermaid Claude  App",
+      "description": "Mermaid Chart is a diagramming product built around Mermaid syntax, with AI-assisted creation, editing, sharing, and collaboration features. It also offers integrations that let AI assistants validate, render, and manage diagrams through MCP endpoints.",
       "version": "1.0.0",
       "websiteUrl": "https://mermaid.ai/docs/ai/mcp-apps-server",
       "icons": [
@@ -16783,6 +17076,27 @@
         {
           "type": "streamable-http",
           "url": "https://mcp.metaview.ai/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.shopware.meteor/mcp-server",
+      "title": "Meteor",
+      "description": "Shopware Meteor is Shopware's design system and documentation site for its component library, design tokens, icon kit, and UI guidelines. It also publishes machine-readable documentation for AI tools via an MCP server and llms.txt files.",
+      "version": "1.0.0",
+      "websiteUrl": "https://integrations.sh/meteor.shopware.com/mcp-server/",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/meteor.shopware.com"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://meteor.shopware.com/.well-known/mcp/server-card.json"
         }
       ]
     }
@@ -17171,6 +17485,27 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "dev.modem/mcp",
+      "title": "Modem",
+      "description": "Modem is a product-feedback and workflow platform for developer-facing teams. It aggregates conversations from tools like Slack, Discord, GitHub, Zendesk, Intercom, and email into prioritized topics and lets teams query or act on that context with AI.",
+      "version": "1.0.0",
+      "websiteUrl": "https://modem.dev/docs/api/modem-mcp-server",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/modem.dev"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.modem.dev/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "ar.com.playdigital/mcp",
       "title": "MODO",
       "description": "PlayDigital appears to operate digital payment or benefits-related services in Argentina. For developers and AI agents, the only verified public integration surface found is a MODO MCP endpoint.",
@@ -17403,6 +17738,35 @@
         {
           "type": "streamable-http",
           "url": "https://api.moodys.com/genai-ready-data/m1/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "io.morningscore/mcp",
+      "title": "Morningscore",
+      "description": "Morningscore is an SEO platform that provides domain, keyword, competitor, backlink, onsite health, GEO/AI-visibility, and AI writing data and tools. Its product is used to analyze website SEO performance and automate related workflows.",
+      "version": "1.0.0",
+      "websiteUrl": "https://api.morningscore.io/",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/morningscore.io"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.morningscore.io/mcp",
+          "headers": [
+            {
+              "name": "Authorization",
+              "description": "Morningscore API key. Use Bearer <token>.",
+              "isRequired": true,
+              "isSecret": true
+            }
+          ]
         }
       ]
     }
@@ -17838,6 +18202,35 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "design.nano/mcp",
+      "title": "nano",
+      "description": "nano is a collaborative design canvas where designs are real HTML and CSS. People and AI agents can work on the same designs live in the browser, including temporary guest workspaces that can later be claimed by a signed-in user.",
+      "version": "1.0.0",
+      "websiteUrl": "https://nano.design/agents",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/nano.design"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://nano.design/mcp",
+          "headers": [
+            {
+              "name": "Authorization",
+              "description": "nano guest key. Use Bearer <token>.",
+              "isRequired": true,
+              "isSecret": true
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "app.replit.chatgptmcpzip/mcp",
       "title": "Nashville Real Estate AI",
       "description": "Nashville Real Estate AI appears to be an AI service related to real estate. For this domain, the only verified integration surface is a public MCP server endpoint listed in the OpenAI registries.",
@@ -17936,27 +18329,6 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.neartail/mcp",
-      "title": "Neartail",
-      "description": "Neartail provides software for businesses such as meal prep companies and canteens to create and manage online order forms and weekly changing menus. Its site also describes related form, payment, WhatsApp, and website-building tools.",
-      "version": "1.0.0",
-      "websiteUrl": "https://neartail.com/google-order-forms/neartail-mcp-server.html",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/neartail.com"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://neartail.com/mcp"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.negativeev/mcp",
       "title": "NegativeEV",
       "description": "NegativeEV is a sports bet checker that grades MLB, WNBA, PGA, and ATP bets against thousands of play-by-play simulations. It compares simulated win probability with the sportsbook's implied probability and returns a written verdict and edge analysis.",
@@ -18041,6 +18413,27 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.getnerdify/mcp",
+      "title": "Nerdify",
+      "description": "Nerdify is a nearshore software engineering firm based in Managua, Nicaragua that builds and maintains web and mobile products for clients. It also offers AI feature and agent development services and technical training.",
+      "version": "1.0.0",
+      "websiteUrl": "https://getnerdify.com/services/ai",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/getnerdify.com"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://getnerdify.com/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "ai.nesha/mcp",
       "title": "Nesha",
       "description": "Nesha is an AI-powered strategic partner intelligence product that helps teams discover, evaluate, and prioritize companies for partnerships, investments, joint ventures, or acquisitions.",
@@ -18055,6 +18448,27 @@
         {
           "type": "sse",
           "url": "https://mcp.nesha.ai/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.netatmo/mcp",
+      "title": "Netatmo",
+      "description": "Netatmo makes connected home devices including weather stations, security cameras, alarms, and energy or home-control products. Its cloud services let users and third-party apps access device data, home events, and control features.",
+      "version": "1.0.0",
+      "websiteUrl": "https://www.netatmo.com/.well-known/mcp/server-card.json",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/netatmo.com"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://www.netatmo.com/.well-known/mcp/server-card.json"
         }
       ]
     }
@@ -18430,7 +18844,7 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.usenotra/mcp",
       "title": "Notra",
-      "description": "Notra turns engineering and product activity into publish-ready changelogs, blog posts, social posts, and related marketing content in a team’s brand voice. It also connects workspace integrations such as GitHub and provides chat, scheduling, and reusable writing-skill features.",
+      "description": "Notra is a GEO and AI-content platform that tracks brand visibility in AI engines, attributes AI agent traffic, identifies content gaps, and helps teams generate posts and changelogs in a saved brand voice.",
       "version": "1.0.0",
       "websiteUrl": "https://docs.usenotra.com/devtools/mcp",
       "icons": [
@@ -18618,6 +19032,27 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "ai.objekts.mcp/mcp",
+      "title": "objekts Production Desk",
+      "description": "objekts Production Desk is a production-planning and feasibility service for commercial visual work operated by objekts. Its public integration surface is a remote MCP server for diagnosis, estimates, and optional human handoff, alongside machine-readable discovery endpoints (`/about`, `/health`, `/llms.txt`) documented by an OpenAPI contract.",
+      "version": "1.0.0",
+      "websiteUrl": "https://mcp.objekts.ai/install",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/mcp.objekts.ai"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.objekts.ai/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.okx/mcp",
       "title": "OKX  chat endpoint",
       "description": "OKX is a cryptocurrency exchange and trading platform. It offers spot, derivatives, account, and market-data functionality for both human traders and programmatic clients.",
@@ -18632,27 +19067,6 @@
         {
           "type": "streamable-http",
           "url": "https://www.okx.com/api/v1/mcp/chatgpt"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.okkanji/mcp",
-      "title": "OK幹事",
-      "description": "OK幹事 appears to be a web service on okkanji.com. Publicly discoverable integration evidence was limited to an MCP endpoint.",
-      "version": "1.0.0",
-      "websiteUrl": "https://integrations.sh/okkanji.com/ok-mcp-server/",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/okkanji.com"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://okkanji.com/api/mcp"
         }
       ]
     }
@@ -18838,7 +19252,7 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.onlineornot/mcp",
       "title": "OnlineOrNot",
-      "description": "OnlineOrNot is an uptime monitoring platform for websites, APIs, browser flows, and scheduled jobs. It also supports alerts, heartbeats, maintenance windows, and public status pages.",
+      "description": "OnlineOrNot is an uptime monitoring platform for developers and software teams. It monitors websites, APIs, browser flows, and scheduled jobs, and publishes service health through status pages.",
       "version": "1.0.0",
       "websiteUrl": "https://onlineornot.com/docs/reference/mcp",
       "icons": [
@@ -18849,7 +19263,36 @@
       "remotes": [
         {
           "type": "streamable-http",
-          "url": "https://mcp.onlineornot.com/mcp"
+          "url": "https://mcp.onlineornot.com/mcp",
+          "headers": [
+            {
+              "name": "Authorization",
+              "description": "OnlineOrNot API token. Use Bearer <token>.",
+              "isRequired": true,
+              "isSecret": true
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "ai.op0/op0-mcp",
+      "title": "op0",
+      "description": "op0 is a governed runtime for agent work that combines company context, explicit approval boundaries, and receipt-backed execution records. It also provides usectx, a hosted memory service for agents at ctx.op0.ai.",
+      "version": "1.0.0",
+      "websiteUrl": "https://op0.ai/AGENTS.md",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/op0.ai"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://app.op0.ai/v1/mcp"
         }
       ]
     }
@@ -18941,6 +19384,56 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "dev.openlaunch.www/openlaunch-device-mcp",
+      "title": "openlaunch device",
+      "description": "openlaunch connects AI agents to owner-approved hardware, Linux host, and Home Assistant functions. It lets users pair devices, grant per-function access, issue actions, and inspect results through hosted services.",
+      "version": "1.0.0",
+      "websiteUrl": "https://www.openlaunch.dev/docs/agents",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/www.openlaunch.dev"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://www.openlaunch.dev/mcp",
+          "headers": [
+            {
+              "name": "Authorization",
+              "description": "openlaunch agent API token. Use Bearer <token>.",
+              "isRequired": true,
+              "isSecret": true
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "dev.openlaunch.www/openlaunch-documentation-mcp",
+      "title": "openlaunch documentation",
+      "description": "openlaunch connects AI agents to owner-approved hardware, Linux host, and Home Assistant functions. It lets users pair devices, grant per-function access, issue actions, and inspect results through hosted services.",
+      "version": "1.0.0",
+      "websiteUrl": "https://www.openlaunch.dev/docs/cli",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/www.openlaunch.dev"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://www.openlaunch.dev/docs-mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.openlens/mcp",
       "title": "OpenLens",
       "description": "OpenLens is an AI visibility tracking product for agencies and teams. It measures how major AI platforms mention brands, competitors, topics, and cited sources, and provides dashboards, reports, and programmatic access to that data.",
@@ -18997,27 +19490,6 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.openpanel/mcp",
-      "title": "OpenPanel",
-      "description": "OpenPanel is a web hosting control panel built around isolated per-user service containers for websites, databases, mail, and related hosting functions. It includes an end-user panel (OpenPanel) and an administrator panel (OpenAdmin) for managing hosting accounts and server settings.",
-      "version": "1.0.0",
-      "websiteUrl": "https://openpanel.com/docs/panel/account/mcp/",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/openpanel.com"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://panel.example.com/mcp"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "dev.openpanel/mcp",
       "title": "OpenPanel",
       "description": "OpenPanel is an open-source web and product analytics platform for tracking events, users, funnels, retention, and related analytics data. It can be used as a hosted service or self-hosted.",
@@ -19047,6 +19519,35 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "st.openpo/mcp",
+      "title": "OpenPost",
+      "description": "OpenPost is a workspace for creating, adapting, scheduling, publishing, and tracking social content across supported social networks. It is available as a hosted service and as open-source software you can self-host.",
+      "version": "1.0.0",
+      "websiteUrl": "https://docs.openpo.st/mcp/",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/openpo.st"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://app.openpo.st/mcp",
+          "headers": [
+            {
+              "name": "Authorization",
+              "description": "OpenPost API token. Use Bearer <token>.",
+              "isRequired": true,
+              "isSecret": true
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "ai.openrouter/mcp",
       "title": "OpenRouter",
       "description": "OpenRouter is an AI gateway that provides access to many language and multimodal models through a single API, with routing and fallback across providers. It also offers model discovery, account credit and key management, and tools for agent-oriented development.",
@@ -19061,6 +19562,27 @@
         {
           "type": "streamable-http",
           "url": "https://mcp.openrouter.ai/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "so.openseo/mcp",
+      "title": "OpenSEO",
+      "description": "OpenSEO is an SEO platform and open-source toolkit for keyword research, SERP and competitor analysis, local SEO, backlink overview, and Google Search Console workflows. Its hosted service lets AI agents connect to these capabilities through an MCP server.",
+      "version": "1.0.0",
+      "websiteUrl": "https://openseo.so/docs/mcp",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/openseo.so"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://app.openseo.so/mcp"
         }
       ]
     }
@@ -19623,27 +20145,6 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.pallyy/mcp",
-      "title": "Pallyy",
-      "description": "Pallyy is a social media management platform for scheduling, approving, publishing, and reporting on posts across multiple social networks. It also includes shared inbox, media library, analytics, and link-in-bio features for agencies, brands, and creators.",
-      "version": "1.0.0",
-      "websiteUrl": "https://pallyy.com/llms.txt",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/pallyy.com"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://pallyy.com/.well-known/mcp/server-card.json"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.palomaparties/mcp",
       "title": "Paloma",
       "description": "Paloma is hospitality booking software for restaurants and venues. It centralizes private-event inquiries, bookings, deposits, and customer communication for venue teams.",
@@ -19708,6 +20209,27 @@
               "isSecret": true
             }
           ]
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "ai.parallel.search/mcp",
+      "title": "Parallel Search",
+      "description": "Parallel provides web search and content extraction tools for AI agents and applications. Its Search MCP lets MCP-aware clients access real-time web search and page fetching against Parallel’s search infrastructure.",
+      "version": "1.0.0",
+      "websiteUrl": "https://docs.parallel.ai/integrations/mcp/search-mcp",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/search.parallel.ai"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://search.parallel.ai/mcp"
         }
       ]
     }
@@ -19813,27 +20335,6 @@
         {
           "type": "streamable-http",
           "url": "https://mcp.paypal.com/mcp"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "app.vercel.pazy-mcp-vercel/mcp",
-      "title": "Pazy",
-      "description": "Pazy MCP server discovered by integrations.sh.",
-      "version": "1.0.0",
-      "websiteUrl": "https://www.pazy.es",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/pazy-mcp-vercel.vercel.app"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://pazy-mcp-vercel.vercel.app/mcp"
         }
       ]
     }
@@ -19966,27 +20467,6 @@
         {
           "type": "streamable-http",
           "url": "https://penny.apps.trychannel3.com/mcp"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.googleapis.people/mcp",
-      "title": "People API",
-      "description": "Google People API provides access to profile, contacts, other contacts, and Google Workspace directory data for a user. It is used to read and manage people-related information tied to Google accounts and Workspace domains.",
-      "version": "1.0.0",
-      "websiteUrl": "https://developers.google.com/people/api/mcp",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/people.googleapis.com"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://people.googleapis.com/mcp/v1"
         }
       ]
     }
@@ -20673,6 +21153,35 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.postshiba/mcp",
+      "title": "PostShiba",
+      "description": "PostShiba is an email infrastructure service for developers and SaaS platforms that send and receive email on behalf of their customers. It supports outbound sending, inbound mail handling, domains, tenants, clusters, templates, and webhooks.",
+      "version": "1.0.0",
+      "websiteUrl": "https://www.postshiba.com/docs/connect-mcp",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/postshiba.com"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://app.postshiba.com/mcp",
+          "headers": [
+            {
+              "name": "Authorization",
+              "description": "PostShiba API key. Use Bearer <token>.",
+              "isRequired": true,
+              "isSecret": true
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.olutely/pregnancy-progress-mcp",
       "title": "Pregnancy Progress",
       "description": "Olutely's widget service, operated by Spheric Admin Ltd, provides interactive widgets and basic app behavior inside ChatGPT. Its terms describe widget requests being handled by the company's own MCP servers without storing conversation content persistently.",
@@ -21318,6 +21827,48 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "dev.pydantic/pydantic-logfire-mcp-server-eu",
+      "title": "Pydantic Logfire   (EU)",
+      "description": "Pydantic provides Python-focused data validation, agent tooling, and the Logfire observability platform. Its hosted Logfire service offers region-specific APIs and an MCP server for querying and managing telemetry, dashboards, alerts, variables, and related resources.",
+      "version": "1.0.0",
+      "websiteUrl": "https://pydantic.dev/docs/logfire/guides/mcp-server/",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/pydantic.dev"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://logfire-eu.pydantic.dev/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "dev.pydantic/pydantic-logfire-mcp-server-us",
+      "title": "Pydantic Logfire   (US)",
+      "description": "Pydantic provides Python-focused data validation, agent tooling, and the Logfire observability platform. Its hosted Logfire service offers region-specific APIs and an MCP server for querying and managing telemetry, dashboards, alerts, variables, and related resources.",
+      "version": "1.0.0",
+      "websiteUrl": "https://pydantic.dev/docs/logfire/guides/mcp-server/",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/pydantic.dev"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://logfire-us.pydantic.dev/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.usepylon/mcp",
       "title": "Pylon",
       "description": "Pylon is a B2B support platform that combines ticketing, chat, knowledge base, AI support, and customer/account data workflows. It lets teams manage issues, accounts, contacts, and related support operations in one system.",
@@ -21332,6 +21883,35 @@
         {
           "type": "streamable-http",
           "url": "https://mcp.usepylon.com/"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "cloud.pyrite.www/mcp",
+      "title": "Pyrite Cloud",
+      "description": "Pyrite Cloud is a managed cloud platform for deploying and operating applications, databases, workers, storage, networking, and AI-related infrastructure without managing servers. It provides global deployment, scaling, observability, and team management features for developers and businesses.",
+      "version": "1.0.0",
+      "websiteUrl": "https://www.pyrite.cloud/raw/docs/ai/mcp.md",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/www.pyrite.cloud"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://api.pyrite.cloud/mcp",
+          "headers": [
+            {
+              "name": "Authorization",
+              "description": "Pyrite Cloud Team API Key. Use Bearer <token>.",
+              "isRequired": true,
+              "isSecret": true
+            }
+          ]
         }
       ]
     }
@@ -21710,27 +22290,6 @@
         {
           "type": "sse",
           "url": "https://app.ranked.ai/api/mcp/sse"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.raptive/mcp",
-      "title": "Raptive Food",
-      "description": "Raptive is a media and advertising technology company that helps creators and publishers monetize audiences and grow revenue. It also offers identity-related tooling for publishers, documented in its support center.",
-      "version": "1.0.0",
-      "websiteUrl": "https://integrations.sh/raptive.com/raptive-food-mcp/",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/raptive.com"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://chatgpt-recipe-app.production.raptive.com/mcp"
         }
       ]
     }
@@ -22413,6 +22972,35 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "ai.render/mcp",
+      "title": "render.ai",
+      "description": "render.ai is an AI platform for generating editable presentations and visual assets from text prompts. It lets users create decks, apply themes, monitor generation, and export results such as PDF, PowerPoint, and Google Slides.",
+      "version": "1.0.0",
+      "websiteUrl": "https://render.ai/agents.md",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/render.ai"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://api.render.ai/mcp",
+          "headers": [
+            {
+              "name": "X-API-Key",
+              "description": "render.ai API key. Use <token>.",
+              "isRequired": true,
+              "isSecret": true
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "io.rentcast/mcp",
       "title": "RentCast",
       "description": "RentCast provides US real estate and property data, including property records, owner details, valuation estimates, listings, and market statistics. Its product is used by real estate applications, CRMs, and workflows that need on-demand property and rental data.",
@@ -22463,7 +23051,7 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.replit-mcp/replit-mcp-server",
+      "name": "com.replit-mcp/mcp",
       "title": "Replit",
       "description": "Replit is a cloud development platform for creating and deploying applications. Its MCP server lets external AI clients create, update, and manage Replit apps through the Model Context Protocol.",
       "version": "1.0.0",
@@ -22498,27 +23086,6 @@
         {
           "type": "streamable-http",
           "url": "https://replit-mcp.com/server/mcp"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.replit-mcp/replit-mcp-server-chatgpt-app-endpoint",
-      "title": "Replit   (ChatGPT app endpoint)",
-      "description": "Replit is a cloud development platform for creating and deploying applications. Its MCP server lets external AI clients create, update, and manage Replit apps through the Model Context Protocol.",
-      "version": "1.0.0",
-      "websiteUrl": "https://docs.replit.com/platforms/mcp-server",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/replit-mcp.com"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://replit-mcp.com/chatgpt-app/mcp"
         }
       ]
     }
@@ -22758,6 +23325,27 @@
         {
           "type": "streamable-http",
           "url": "https://api.rillet.com/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "dev.rivet/mcp",
+      "title": "Rivet",
+      "description": "Rivet provides infrastructure components for durable actors, agent runtimes, workflows, and dynamic app deployment. Its products let developers run stateful backends and AI-agent-related workloads locally or on Rivet Cloud.",
+      "version": "1.0.0",
+      "websiteUrl": "https://rivet.dev/docs/mcp/",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/rivet.dev"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.rivet.dev/mcp"
         }
       ]
     }
@@ -23046,9 +23634,9 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "dev.samva/mcp",
+      "name": "dev.samva/mcp-server",
       "title": "Samva",
-      "description": "Samva is a developer email platform for sending and managing transactional and campaign email, templates, contacts, domains, webhooks, and related analytics. It also offers hosted MCP access so AI agents can perform organization-scoped email operations.",
+      "description": "Samva is a developer email platform for transactional and product email, with templates, inbound threading, analytics, and signed webhooks. It provides organization-scoped tools for sending and managing email through API, CLI, and MCP interfaces.",
       "version": "1.0.0",
       "websiteUrl": "https://samva.dev/docs/developers/mcp",
       "icons": [
@@ -23068,6 +23656,27 @@
               "isSecret": true
             }
           ]
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "dev.samva/samva-mcp-public",
+      "title": "Samva public  endpoint",
+      "description": "Samva is a developer email platform for transactional and product email, with templates, inbound threading, analytics, and signed webhooks. It provides organization-scoped tools for sending and managing email through API, CLI, and MCP interfaces.",
+      "version": "1.0.0",
+      "websiteUrl": "https://samva.dev/docs/developers/mcp",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/samva.dev"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://samva.dev/mcp"
         }
       ]
     }
@@ -23117,7 +23726,7 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.scalar/scalar-docs-mcp",
+      "name": "com.scalar/mcp",
       "title": "Scalar Docs",
       "description": "Scalar is an API platform for publishing developer documentation, managing API specifications in a registry, generating SDKs, and exposing APIs to AI agents through MCP. It also offers an API client and related tooling built around OpenAPI.",
       "version": "1.0.0",
@@ -23131,41 +23740,6 @@
         {
           "type": "streamable-http",
           "url": "https://scalar.com/mcp"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.scalar/scalar-installation-mcp",
-      "title": "Scalar Installation",
-      "description": "Scalar is an API platform for publishing developer documentation, managing API specifications in a registry, generating SDKs, and exposing APIs to AI agents through MCP. It also offers an API client and related tooling built around OpenAPI.",
-      "version": "1.0.0",
-      "websiteUrl": "https://scalar.com/products/agent/mcp",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/scalar.com"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://api.scalar.com/vector/mcp/YOUR_INSTALL_ID",
-          "variables": {
-            "install_id": {
-              "description": "Installation-specific ID in the MCP server URL.",
-              "isRequired": false
-            }
-          },
-          "headers": [
-            {
-              "name": "Authorization",
-              "description": "Scalar personal access token. Use <token>.",
-              "isRequired": true,
-              "isSecret": true
-            }
-          ]
         }
       ]
     }
@@ -23377,83 +23951,20 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.scrimba/mcp-server",
-      "title": "Scrimba",
-      "description": "Scrimba is an online coding-learning platform with interactive courses, career paths, and documentation for programming and AI topics. Its public site and docs focus on education content rather than a broader developer API platform.",
+      "name": "dev.s1/mcp",
+      "title": "Search1API",
+      "description": "Search1API provides web search, news search, page crawling, sitemap discovery, trending feeds, screenshots, extraction, and deep crawling for AI agents and applications. It also offers hosted agent interfaces such as an MCP server and a terminal CLI built on the same service.",
       "version": "1.0.0",
-      "websiteUrl": "https://integrations.sh/scrimba.com/mcp-server/",
+      "websiteUrl": "https://s1.dev/docs/integrations/mcp",
       "icons": [
         {
-          "src": "https://integrations.sh/logo/scrimba.com"
+          "src": "https://integrations.sh/logo/s1.dev"
         }
       ],
       "remotes": [
         {
           "type": "streamable-http",
-          "url": "https://scrimba.com/mcp"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.scrimba/scrimba-mcp",
-      "title": "Scrimba",
-      "description": "Scrimba is an online coding-learning platform with interactive courses, career paths, and documentation for programming and AI topics. Its public site and docs focus on education content rather than a broader developer API platform.",
-      "version": "1.0.0",
-      "websiteUrl": "https://scrimba.com/intro-to-model-context-protocol-mcp-c0sake4uir",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/scrimba.com"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://scrimba.com/mcp/v2"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "co.listoai/seaclub-alcudia-mcp",
-      "title": "Seaclub Alcudia",
-      "description": "Listo builds AI visibility and booking infrastructure for hotels and other businesses, including MCP connections that let AI assistants access live business data. Its public site describes services around GEO/SEO, AI-channel distribution, and MCP-based booking integrations.",
-      "version": "1.0.0",
-      "websiteUrl": "https://listoai.co/en/blog/what-is-an-mcp-for-hotels",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/listoai.co"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "sse",
-          "url": "https://seaclub-mcp-8f2c4a91-3d6e-4b7a-9f21-6c8d2e5a4b3c.listoai.co/mcp"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.googleapis.searchconsole/mcp",
-      "title": "Search Console",
-      "description": "Google Search Console helps site owners monitor, maintain, and troubleshoot their site's presence in Google Search results. It provides search performance data, sitemap management, property management, and URL inspection features.",
-      "version": "1.0.0",
-      "websiteUrl": "https://developers.google.com/webmaster-tools",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/searchconsole.googleapis.com"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://searchconsole.googleapis.com/mcp"
+          "url": "https://mcp.search1api.com/mcp"
         }
       ]
     }
@@ -23545,28 +24056,7 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "ai.securelend/securelend-ai-agents-mcp",
-      "title": "SecureLend AI Agents",
-      "description": "SecureLend provides AI-driven loan comparison and underwriting infrastructure for lenders, financial institutions, and AI assistants. Its products cover a borrower marketplace for comparing loans and agentic underwriting workflows such as pitch-deck precheck, memo drafting, and document intelligence.",
-      "version": "1.0.0",
-      "websiteUrl": "https://docs.securelend.ai/agents/authentication",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/securelend.ai"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://agents.securelend.ai/mcp"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "ai.securelend/securelend-marketplace-mcp",
+      "name": "ai.securelend/mcp",
       "title": "SecureLend Marketplace",
       "description": "SecureLend provides AI-driven loan comparison and underwriting infrastructure for lenders, financial institutions, and AI assistants. Its products cover a borrower marketplace for comparing loans and agentic underwriting workflows such as pitch-deck precheck, memo drafting, and document intelligence.",
       "version": "1.0.0",
@@ -23580,6 +24070,27 @@
         {
           "type": "streamable-http",
           "url": "https://mcp.securelend.ai/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "ai.loomalabs/mcp",
+      "title": "Selah",
+      "description": "Looma Labs is a company focused on AI-powered wellness products. Its Selah product is an app for scripture-based meditation, prayer, and sleep experiences.",
+      "version": "1.0.0",
+      "websiteUrl": "https://loomalabs.ai/",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/loomalabs.ai"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.loomalabs.ai/mcp"
         }
       ]
     }
@@ -23630,27 +24141,6 @@
               "isSecret": true
             }
           ]
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.semrush/mcp",
-      "title": "Semrush",
-      "description": "Semrush is a search and online visibility platform for SEO, traffic analysis, advertising research, local SEO, content, and related marketing workflows. It provides access to Semrush datasets and tools for keyword, traffic, backlink, and local ranking analysis.",
-      "version": "1.0.0",
-      "websiteUrl": "https://developer.semrush.com/api/introduction/semrush-mcp/",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/semrush.com"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://mcp.semrush.com/openai/v1/mcp"
         }
       ]
     }
@@ -24020,7 +24510,7 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.shopee/mcp",
       "title": "Shopee",
-      "description": "Shopee is an e-commerce marketplace platform. Its Open Platform lets partner applications integrate with seller shops, orders, listings, marketing, chat, and related commerce workflows.",
+      "description": "Shopee is an e-commerce marketplace platform. Its Open Platform lets sellers and software partners build integrations for shop operations such as products, orders, logistics, marketing, and related workflows.",
       "version": "1.0.0",
       "websiteUrl": "https://mcp.shopee.com/openai/v1",
       "icons": [
@@ -24040,10 +24530,10 @@
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.shopify/mcp",
-      "title": "Shopify",
-      "description": "Shopify exposes Admin REST and GraphQL APIs, Storefront, Partner, Customer Account, and Payments GraphQL APIs, plus an MCP endpoint and the `shopify` CLI; auth is mainly via `X-Shopify-Access-Token` app/store or partner tokens, Storefront public/private tokens, Customer Account OAuth, CLI login, while the recorded MCP supports none or OAuth.",
+      "title": "Shopify Setup",
+      "description": "Shopify is a commerce platform for creating and operating online stores, checkout, payments, and retail sales. It also provides developer tooling for apps, custom storefronts, and AI-powered shopping and store-management experiences.",
       "version": "1.0.0",
-      "websiteUrl": "https://integrations.sh/shopify.com/shopify/",
+      "websiteUrl": "https://shopify.dev/docs/apps/build/ai-toolkit",
       "icons": [
         {
           "src": "https://integrations.sh/logo/shopify.com"
@@ -24053,6 +24543,27 @@
         {
           "type": "streamable-http",
           "url": "https://setup.shopify.com/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.shopware.meteor/shopware-meteor-mcp-server",
+      "title": "Shopware Meteor",
+      "description": "Shopware Meteor is Shopware's design system and documentation site for its component library, design tokens, icon kit, and UI guidelines. It also publishes machine-readable documentation for AI tools via an MCP server and llms.txt files.",
+      "version": "1.0.0",
+      "websiteUrl": "https://meteor.shopware.com/documentation/getting-started/agents",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/meteor.shopware.com"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://meteor.shopware.com/mcp"
         }
       ]
     }
@@ -24074,27 +24585,6 @@
         {
           "type": "streamable-http",
           "url": "https://mcp.shortcut.com/mcp"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.shuftipro/mcp",
-      "title": "Shufti",
-      "description": "Shufti is an identity verification and compliance platform that provides KYC, KYB, AML screening, fraud prevention, and transaction monitoring services. It serves businesses that need to verify users or companies and monitor risk across onboarding and ongoing compliance workflows.",
-      "version": "1.0.0",
-      "websiteUrl": "https://shuftipro.com/llms.txt",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/shuftipro.com"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://shuftipro.com/mcp"
         }
       ]
     }
@@ -24158,6 +24648,48 @@
         {
           "type": "streamable-http",
           "url": "https://scholar.chatgptapps.sider.ai/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "io.siebly/mcp",
+      "title": "Siebly agent skill index",
+      "description": "Siebly publishes documentation, machine-readable indexes, and open-source package guidance for Node.js/JavaScript/TypeScript SDKs that integrate with third-party cryptocurrency exchanges. It is not itself an exchange or API provider; the documented SDKs target other domains.",
+      "version": "1.0.0",
+      "websiteUrl": "https://siebly.io/.well-known/agent-skills/siebly-crypto-exchange-api/SKILL.md",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/siebly.io"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://siebly.io/.well-known/agent-skills/index.json"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.sigiro/mcp",
+      "title": "Sigiro",
+      "description": "Sigiro ingests OpenTelemetry data and lets users query and inspect telemetry, traces, alerts, and profiles to diagnose what changed in their software. It is available as a hosted service and as a self-hosted binary or container.",
+      "version": "1.0.0",
+      "websiteUrl": "https://sigiro.com/.well-known/mcp.json",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/sigiro.com"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://sigiro.com/mcp"
         }
       ]
     }
@@ -24412,7 +24944,7 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.skipcalls/skipcalls-mcp-server",
+      "name": "com.skipcalls/mcp",
       "title": "SkipCalls",
       "description": "SkipCalls provides an AI phone receptionist for businesses that answers calls, captures leads, books appointments, handles outbound calls and SMS, and sends summaries and transcripts. Customers manage it through a web dashboard and mobile apps tied to dedicated business phone numbers.",
       "version": "1.0.0",
@@ -24426,35 +24958,6 @@
         {
           "type": "streamable-http",
           "url": "https://be.skipcalls.com/mcp",
-          "headers": [
-            {
-              "name": "Authorization",
-              "description": "SkipCalls API key. Use Bearer <token>.",
-              "isRequired": true,
-              "isSecret": true
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.skipcalls/skipcalls-mcp-server-legacy-sse",
-      "title": "SkipCalls   (legacy SSE)",
-      "description": "SkipCalls provides an AI phone receptionist for businesses that answers calls, captures leads, books appointments, handles outbound calls and SMS, and sends summaries and transcripts. Customers manage it through a web dashboard and mobile apps tied to dedicated business phone numbers.",
-      "version": "1.0.0",
-      "websiteUrl": "https://skipcalls.com/for-agents",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/skipcalls.com"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "sse",
-          "url": "https://be.skipcalls.com/sse",
           "headers": [
             {
               "name": "Authorization",
@@ -24680,27 +25183,6 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "app.run.a.slidesgpt-server-uojeu24xoq-uc/mcp",
-      "title": "SlidesGPT",
-      "description": "SlidesGPT is a service for generating and exporting presentation decks, including formats like PowerPoint, Google Slides, and PDF. The provided domain appears to host its MCP server endpoint.",
-      "version": "1.0.0",
-      "websiteUrl": "https://www.integrations.sh/mcp/slidesgpt/",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/slidesgpt-server-uojeu24xoq-uc.a.run.app"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://slidesgpt-server-uojeu24xoq-uc.a.run.app/mcp"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.slidesgpt/mcp",
       "title": "SlidesGPT",
       "description": "SlidesGPT is a service for generating PowerPoint presentations with AI from prompts or source material. It also offers agent-facing MCP access for creating and styling slide decks from compatible AI clients.",
@@ -24863,6 +25345,27 @@
               "isSecret": true
             }
           ]
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "sh.smoketest/mcp",
+      "title": "Smoketest",
+      "description": "Smoketest is an AI browser testing service for web application smoke tests such as signup, login, and checkout. It runs tests in a real browser and returns recordings, step logs, and pass/fail results, with both reusable tests and issue-driven QA workflows.",
+      "version": "1.0.0",
+      "websiteUrl": "https://docs.smoketest.sh/integrations/mcp",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/smoketest.sh"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://api.smoketest.sh/mcp"
         }
       ]
     }
@@ -25203,9 +25706,9 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.spotify/mcp",
       "title": "Spotify",
-      "description": "Spotify is a music, podcast, and audiobook streaming platform. It also provides developer products for app integrations, playback control, advertising workflows, partner account linking, and embeddable content.",
+      "description": "Spotify is a music, podcast, and audiobook streaming service. Its developer platform lets applications access catalog metadata, user library and playback features, and related Spotify data.",
       "version": "1.0.0",
-      "websiteUrl": "https://support.spotify.com/",
+      "websiteUrl": "https://developer.spotify.com/documentation/web-api/tutorials/building-with-ai",
       "icons": [
         {
           "src": "https://integrations.sh/logo/spotify.com"
@@ -25236,6 +25739,27 @@
         {
           "type": "streamable-http",
           "url": "https://developer.spreedly.com/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "dev.sprites/mcp",
+      "title": "Sprites",
+      "description": "Sprites provides persistent Linux environments (“Sprites”) that can be created, managed, and used to run commands, services, filesystems, checkpoints, and network policies. It is operated by Fly.io and supports both direct API access and remote MCP-based agent control.",
+      "version": "1.0.0",
+      "websiteUrl": "https://docs.sprites.dev/integrations/remote-mcp/",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/sprites.dev"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://sprites.dev/mcp"
         }
       ]
     }
@@ -25475,6 +25999,27 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "co.stellary/mcp",
+      "title": "Stellary",
+      "description": "Stellary is an AI-powered project management and delivery workspace that combines boards, documents, dashboards, automations, and AI agents in one system. It lets teams and AI agents work from shared project context, with both REST and MCP access to workspace data and actions.",
+      "version": "1.0.0",
+      "websiteUrl": "https://stellary.co/docs/mcp/",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/stellary.co"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://api.stellary.co/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.sticklight/mcp",
       "title": "Sticklight",
       "description": "Sticklight is an AI-powered web creation platform for building and publishing websites, apps, dashboards, stores, and other digital products. Its public site presents it as a product-building platform for creators and professional web builders.",
@@ -25539,27 +26084,6 @@
         {
           "type": "streamable-http",
           "url": "https://degreeplanner.straighterline.com/mcp"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "io.strapi/strapi-docs-mcp-server",
-      "title": "Strapi Docs",
-      "description": "Strapi is an open-source headless CMS for defining content types and managing content through an admin interface and APIs. Developers can self-host Strapi projects and expose content, authentication, and content-management capabilities to applications and AI tools.",
-      "version": "1.0.0",
-      "websiteUrl": "https://docs.strapi.io/cms/ai/docs-mcp-server",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/strapi.io"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://strapi-docs.mcp.kapa.ai"
         }
       ]
     }
@@ -26214,6 +26738,35 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "xyz.tallyhand/mcp",
+      "title": "Tallyhand",
+      "description": "Tallyhand is an open-source contractor workspace for time tracking, invoicing, expenses, and project management. It offers hosted cloud access plus local/offline and self-hosted deployment options.",
+      "version": "1.0.0",
+      "websiteUrl": "https://tallyhand.xyz/docs#mcp",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/tallyhand.xyz"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://tallyhand.xyz/api/mcp",
+          "headers": [
+            {
+              "name": "Authorization",
+              "description": "Tallyhand personal API key. Use Bearer <token>.",
+              "isRequired": true,
+              "isSecret": true
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "dev.govcon/mcp",
       "title": "Tango",
       "description": "govcon.dev is the public site for Tango, a service from MakeGov that unifies U.S. federal procurement and assistance data from sources such as SAM.gov, USAspending, FPDS, Grants.gov, and related systems. It provides structured access to contracts, opportunities, entities, grants, forecasts, and related government contracting data.",
@@ -26539,68 +27092,6 @@
         {
           "type": "streamable-http",
           "url": "https://mcp.esky.com/mcpgpttc"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.thoughtspot/thoughtspot-spotter-mcp-server",
-      "title": "ThoughtSpot Spotter",
-      "description": "ThoughtSpot is an analytics platform for querying, modeling, and embedding governed data experiences, including AI-assisted analytics. It provides APIs and MCP-based access to ThoughtSpot instance data, content, and analytics workflows.",
-      "version": "1.0.0",
-      "websiteUrl": "https://developers.thoughtspot.com/docs/mcp-integration",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/thoughtspot.com"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://agent.thoughtspot.app/mcp?api-version={YYYY-MM-DD}",
-          "variables": {
-            "YYYY-MM-DD": {
-              "description": "Value for {YYYY-MM-DD}.",
-              "isRequired": true
-            }
-          }
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.thoughtspot/thoughtspot-spotter-mcp-server-bearer-token-endpoint",
-      "title": "ThoughtSpot Spotter   (bearer-token endpoint)",
-      "description": "ThoughtSpot is an analytics platform for querying, modeling, and embedding governed data experiences, including AI-assisted analytics. It provides APIs and MCP-based access to ThoughtSpot instance data, content, and analytics workflows.",
-      "version": "1.0.0",
-      "websiteUrl": "https://developers.thoughtspot.com/docs/custom-chatbot-integration-mcp",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/thoughtspot.com"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://agent.thoughtspot.app/token/mcp?api-version={YYYY-MM-DD}",
-          "variables": {
-            "YYYY-MM-DD": {
-              "description": "Value for {YYYY-MM-DD}.",
-              "isRequired": true
-            }
-          },
-          "headers": [
-            {
-              "name": "Authorization",
-              "description": "ThoughtSpot full access token (TS_AUTH_TOKEN). Use Bearer <token>.",
-              "isRequired": true,
-              "isSecret": true
-            }
-          ]
         }
       ]
     }
@@ -27348,6 +27839,48 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "to.treg/mcp-server",
+      "title": "Treg",
+      "description": "treg is a hosted tool catalog and credential-injecting proxy for AI agents and teams. It lets users call catalogued third-party endpoints and their own registered tools through one base URL while holding provider credentials server-side.",
+      "version": "1.0.0",
+      "websiteUrl": "https://integrations.sh/treg.to/mcp-server/",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/treg.to"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://treg.to/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "to.treg/treg-mcp-server",
+      "title": "treg",
+      "description": "treg is a hosted tool catalog and credential-injecting proxy for AI agents and teams. It lets users call catalogued third-party endpoints and their own registered tools through one base URL while holding provider credentials server-side.",
+      "version": "1.0.0",
+      "websiteUrl": "https://treg.to/llms.txt",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/treg.to"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://treg.to/mcp/"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.triggercmd/mcp",
       "title": "TRIGGERcmd",
       "description": "TRIGGERcmd MCP server discovered by integrations.sh.",
@@ -27425,6 +27958,27 @@
         {
           "type": "streamable-http",
           "url": "https://tripbtoz-mcp-gateway.tripbtoz.com/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "app.tripledger/mcp",
+      "title": "TripLedger",
+      "description": "TripLedger is a private personal travel ledger for tracking journeys, stays, expenses, residency-day calculations, and Schengen 90/180 usage. It helps users organize travel records and related day-count calculations for a chosen ledger.",
+      "version": "1.0.0",
+      "websiteUrl": "https://docs.tripledger.app/connect/credentials/",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/tripledger.app"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://my.tripledger.app/mcp"
         }
       ]
     }
@@ -27572,6 +28126,27 @@
         {
           "type": "streamable-http",
           "url": "https://trykopi.ai/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "io.tubi/mcp",
+      "title": "Tubi",
+      "description": "Tubi is an ad-supported streaming service for movies, TV shows, and live content. Its public web presence is centered on consumer streaming at tubi.tv.",
+      "version": "1.0.0",
+      "websiteUrl": "https://integrations.sh/tubi.io/tubi-mcp/",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/tubi.io"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://openai-app-mcp.main-production-custom.production.k8s.tubi.io/mcp"
         }
       ]
     }
@@ -28109,6 +28684,35 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.upstash/mcp",
+      "title": "Upstash",
+      "description": "Upstash is a serverless data platform offering managed Redis, vector search, search, message queues, workflow orchestration, compute sandboxes, and blob storage. Its products are designed to be used from serverless and edge environments over HTTP as well as through management tooling.",
+      "version": "1.0.0",
+      "websiteUrl": "https://upstash.com/docs/agent-resources/mcp",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/upstash.com"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.upstash.com/mcp",
+          "headers": [
+            {
+              "name": "Authorization",
+              "description": "Upstash Developer API credentials (account email + API key). Use Basic <token>.",
+              "isRequired": true,
+              "isSecret": true
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "io.github.upstash/mcp-server",
       "title": "Upstash",
       "description": "Official Upstash MCP server for Redis, QStash, and Vector workflows.",
@@ -28231,6 +28835,35 @@
         {
           "type": "sse",
           "url": "https://edge.upwork.com/api/v4/upw-chatgpt-app/mcp/"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "ai.op0/usectx-mcp",
+      "title": "usectx",
+      "description": "op0 is a governed runtime for agent work that combines company context, explicit approval boundaries, and receipt-backed execution records. It also provides usectx, a hosted memory service for agents at ctx.op0.ai.",
+      "version": "1.0.0",
+      "websiteUrl": "https://op0.ai/docs/usectx/",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/op0.ai"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://ctx.op0.ai/mcp",
+          "headers": [
+            {
+              "name": "Authorization",
+              "description": "usectx workspace bearer token (`CTX_HTTP_TOKEN`). Use Bearer <token>.",
+              "isRequired": true,
+              "isSecret": true
+            }
+          ]
         }
       ]
     }
@@ -28487,7 +29120,7 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.vercel/mcp",
       "title": "Vercel",
-      "description": "Vercel is a cloud platform for building, deploying, and operating web applications and AI workloads. It provides hosting, deployment automation, domains, observability, and AI gateway capabilities.",
+      "description": "Vercel is a cloud platform for building, deploying, and scaling web applications and AI workloads. It provides hosted infrastructure and tooling for projects, deployments, domains, analytics, and related account resources.",
       "version": "1.0.0",
       "websiteUrl": "https://vercel.com/docs/agent-resources/vercel-mcp",
       "icons": [
@@ -28498,7 +29131,7 @@
       "remotes": [
         {
           "type": "streamable-http",
-          "url": "https://mcp.vercel.com/"
+          "url": "https://mcp.vercel.com"
         }
       ]
     }
@@ -29389,27 +30022,6 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "org.berlin-group/mcp",
-      "title": "Wix Site  for berlin-group.org",
-      "description": "The Berlin Group is a European standards initiative that publishes scheme-independent specifications for payments interoperability, open banking, and open finance. Its site provides downloadable technical frameworks such as NextGenPSD2 and openFinance, plus general information about the organization and its working groups.",
-      "version": "1.0.0",
-      "websiteUrl": "https://dev.wix.com/docs/develop-websites/articles/get-started/about-the-wix-site-mcp",
-      "icons": [
-        {
-          "src": "https://integrations.sh/logo/berlin-group.org"
-        }
-      ],
-      "remotes": [
-        {
-          "type": "streamable-http",
-          "url": "https://www.berlin-group.org/_api/mcp"
-        }
-      ]
-    }
-  },
-  {
-    "server": {
-      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.wordpress/mcp",
       "title": "WordPress.com",
       "description": "WordPress.com is Automattic’s managed WordPress hosting platform for building and running websites, blogs, and ecommerce sites. It provides hosted WordPress infrastructure, site management features, and developer tooling on top of the open source WordPress software.",
@@ -29544,28 +30156,41 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.x/x-mcp",
-      "title": "X",
-      "description": "X is a social platform centered on short-form posts, user accounts, messaging, trends, and advertising. Its developer platform provides programmatic access to public conversation data, account actions, enterprise data products, and ad campaign management.",
+      "name": "com.mynameistito.x-lookup/mcp",
+      "title": "x-lookup",
+      "description": "x-lookup is a read-only browser for public X/Twitter content, returning posts, threads, profiles, search results, followers, and following as Markdown or JSON. It uses public upstream sources and does not access private or gated content.",
       "version": "1.0.0",
-      "websiteUrl": "https://docs.x.com/tools/mcp",
+      "websiteUrl": "https://x-lookup.mynameistito.com/docs",
       "icons": [
         {
-          "src": "https://integrations.sh/logo/x.com"
+          "src": "https://integrations.sh/logo/x-lookup.mynameistito.com"
         }
       ],
       "remotes": [
         {
           "type": "streamable-http",
-          "url": "https://api.x.com/mcp",
-          "headers": [
-            {
-              "name": "Authorization",
-              "description": "X app-only Bearer token. Use Bearer <token>.",
-              "isRequired": true,
-              "isSecret": true
-            }
-          ]
+          "url": "https://x-lookup.mynameistito.com/mcp"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.mdfromx/mcp",
+      "title": "x.md",
+      "description": "x.md is a read-only service for turning public X (Twitter) posts, threads, profiles, connections, and search results into Markdown or JSON. It mirrors X URLs on `mdfromx.com` and also offers versioned machine-readable endpoints and an MCP server for agents.",
+      "version": "1.0.0",
+      "websiteUrl": "https://mdfromx.com/docs/mcp",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/mdfromx.com"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mdfromx.com/mcp"
         }
       ]
     }
@@ -29807,9 +30432,9 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-      "name": "com.zapier/mcp",
+      "name": "com.zapier/zapier",
       "title": "Zapier",
-      "description": "Zapier is an automation and integration platform that connects thousands of apps and lets users build workflows, actions, and AI-driven automations. It also offers embeddable workflow tooling and developer tools for building integrations on the Zapier platform.",
+      "description": "Zapier is an automation platform that connects thousands of third-party apps so users and teams can run workflows, actions, and AI-assisted tasks across their software stack. It also offers embeddable APIs and MCP-based access for developers building automation or agent experiences into their own products.",
       "version": "1.0.0",
       "websiteUrl": "https://docs.zapier.com/mcp/home",
       "icons": [
@@ -29821,6 +30446,27 @@
         {
           "type": "streamable-http",
           "url": "https://mcp.zapier.com/api/v1/connect"
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "com.zapier/zapier-mcp-public-endpoint-listing",
+      "title": "Zapier",
+      "description": "Zapier is an automation platform that connects thousands of third-party apps so users and teams can run workflows, actions, and AI-assisted tasks across their software stack. It also offers embeddable APIs and MCP-based access for developers building automation or agent experiences into their own products.",
+      "version": "1.0.0",
+      "websiteUrl": "https://integrations.sh/zapier.com/zapier-mcp-public-endpoint-listing/",
+      "icons": [
+        {
+          "src": "https://integrations.sh/logo/zapier.com"
+        }
+      ],
+      "remotes": [
+        {
+          "type": "streamable-http",
+          "url": "https://mcp.zapier.com/mcp"
         }
       ]
     }
@@ -30055,9 +30701,9 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.zomato/mcp",
       "title": "Zomato",
-      "description": "Zomato MCP server discovered by integrations.sh.",
+      "description": "Zomato is a food ordering and restaurant platform. Its developer-facing documentation covers POS integrations for restaurant partners and an MCP server that can act on a user's Zomato account.",
       "version": "1.0.0",
-      "websiteUrl": "https://www.zomato.com",
+      "websiteUrl": "https://mcp-server.zomato.com/consent",
       "icons": [
         {
           "src": "https://integrations.sh/logo/zomato.com"
@@ -30075,10 +30721,10 @@
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.zoom/mcp",
-      "title": "Zoom for Claude",
-      "description": "Zoom provides video meetings, chat, phone, webinars, and related workplace and business communication services. Its platform lets organizations and developers integrate Zoom account data and workflows into their own applications.",
+      "title": "Zoom",
+      "description": "Zoom provides video meetings, chat, phone, rooms, whiteboard, developer platform, and related workplace and customer-experience services. Its developer platform includes APIs, AI services, SDK-related APIs, and AI-agent connectivity via MCP.",
       "version": "1.0.0",
-      "websiteUrl": "https://developers.zoom.us/docs/integrations/oauth/",
+      "websiteUrl": "https://developers.zoom.us/docs/mcp/",
       "icons": [
         {
           "src": "https://integrations.sh/logo/zoom.com"
@@ -30181,9 +30827,9 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.zumper/mcp",
       "title": "Zumper",
-      "description": "Zumper is a rental marketplace for apartments and houses in the U.S. and Canada. It helps renters search listings and market trends, and provides advertising and listing tools for property owners and managers.",
+      "description": "Zumper is a rental marketplace for apartment and home listings, along with rental market trend data and neighborhood insights. Its site content focuses on rental search, market reports, and renter/property-management tools.",
       "version": "1.0.0",
-      "websiteUrl": "https://www.zumper.com/blog/zumper-launches-app-in-chatgpt/",
+      "websiteUrl": "https://integrations.sh/zumper.com/zumper-mcp-server/",
       "icons": [
         {
           "src": "https://integrations.sh/logo/zumper.com"
