@@ -24,6 +24,9 @@ npx add-mcp search notion
 # Install a found server globally to a specific agent without prompts
 npx add-mcp find neon -a claude-code -g -y
 
+# Search a different registry for this command only
+npx add-mcp find vercel -a claude-code --registry https://registry.modelcontextprotocol.io/v0.1/servers -g -y
+
 # Install to all agents and add generated project configs to .gitignore
 npx add-mcp find github --all --gitignore
 ```
@@ -35,6 +38,7 @@ npx add-mcp find github --all --gitignore
 | `-g, --global`          | Install to user directory instead of project                             |
 | `-a, --agent <agent>`   | Target specific agents (e.g. `cursor`, `claude-code`). Repeatable.       |
 | `-n, --name <name>`     | Server name override (defaults to the selected catalog entry name)       |
+| `--registry <url>`      | Search this registry URL instead of the saved registries                 |
 | `-y, --yes`             | Skip confirmation prompts                                                |
 | `--auto-approve`        | Auto-approve MCP tool calls for supported agents (Codex, Claude Code)    |
 | `--approve-tool <tool>` | Tool to auto-approve with `--auto-approve` (repeatable; defaults to all) |
@@ -53,4 +57,4 @@ If a selected remote server defines URL variables or header inputs:
 
 ## Registries
 
-The first `find`/`search` run saves the default [add-mcp registry](/docs/registry) to `~/.config/add-mcp/config.json` and reuses it on every subsequent search. See the [registry docs](/docs/registry) for editing, adding, or hosting registries.
+The first `find`/`search` run saves the default [add-mcp registry](/docs/registry) to `~/.config/add-mcp/config.json` and reuses it on every subsequent search. Pass `--registry <url>` to search another registry-compatible `http(s)` endpoint for that command only; the saved config is left unchanged. See the [registry docs](/docs/registry) for editing, adding, or hosting registries.

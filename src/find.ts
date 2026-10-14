@@ -234,6 +234,38 @@ export function getDefaultFindRegistries(): FindRegistrySearchConfig[] {
   ];
 }
 
+function invalidRegistryUrlMessage(rawUrl: string): string {
+  return `Invalid --registry URL "${rawUrl}". Expected an http(s) URL.`;
+}
+
+/**
+ * Turn a `--registry` value into a search target. Known built-in URLs keep
+ * their labels; anything else is used as-is for this command only.
+ */
+export function parseRegistryOverride(
+  rawUrl: string,
+): FindRegistrySearchConfig {
+  const url = rawUrl.trim();
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error(invalidRegistryUrlMessage(rawUrl));
+  }
+  if (
+    (parsed.protocol !== "http:" && parsed.protocol !== "https:") ||
+    parsed.hostname.length === 0
+  ) {
+    throw new Error(invalidRegistryUrlMessage(rawUrl));
+  }
+
+  const known = getDefaultFindRegistries().find((entry) => entry.url === url);
+  if (known) {
+    return { url: known.url, label: known.label };
+  }
+  return { url };
+}
+
 export function formatRegistryFailure(failure: FailedRegistryInfo): string {
   const { registry, detail } = failure;
   const defaults = getDefaultFindRegistries();

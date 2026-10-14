@@ -44,7 +44,7 @@ Find and install MCP servers from the [add-mcp registry](https://add-mcp.com/reg
 npx add-mcp find vercel
 ```
 
-The first `find`/`search` run automatically saves the add-mcp registry to `~/.config/add-mcp/config.json` (or `$XDG_CONFIG_HOME/add-mcp/config.json`). You can edit that file to replace the default registry, add the official Anthropic registry, or point at any registry-compatible server.
+The first `find`/`search` run automatically saves the add-mcp registry to `~/.config/add-mcp/config.json` (or `$XDG_CONFIG_HOME/add-mcp/config.json`). You can edit that file to replace the default registry, add the official Anthropic registry, or point at any registry-compatible server. Pass `--registry <url>` to search a different registry for one command without changing that file.
 
 ## Supported Agents
 
@@ -285,6 +285,9 @@ npx add-mcp search notion
 # Install a found server globally to a specific agent without prompts
 npx add-mcp find neon -a claude-code -g -y
 
+# Search a different registry for this command only
+npx add-mcp find vercel -a claude-code --registry https://registry.modelcontextprotocol.io/v0.1/servers -g -y
+
 # Install to all agents and add generated project configs to .gitignore
 npx add-mcp find github --all --gitignore
 ```
@@ -296,6 +299,7 @@ npx add-mcp find github --all --gitignore
 | `-g, --global`          | Install to user directory instead of project                             |
 | `-a, --agent <agent>`   | Target specific agents (e.g., `cursor`, `claude-code`). Can be repeated. |
 | `-n, --name <name>`     | Server name override (defaults to the selected catalog entry name)       |
+| `--registry <url>`      | Search this registry URL instead of the saved registries                 |
 | `-y, --yes`             | Skip confirmation prompts                                                |
 | `--auto-approve`        | Auto-approve MCP tool calls for supported agents (Codex, Claude Code)    |
 | `--approve-tool <tool>` | Tool to auto-approve with `--auto-approve` (repeatable; defaults to all) |
@@ -315,6 +319,12 @@ If a selected remote server defines URL variables or header inputs:
 ### Configuring Registries for Find / Search
 
 The first time you run `find` or `search`, the CLI automatically saves the add-mcp registry to `~/.config/add-mcp/config.json` (respects `XDG_CONFIG_HOME`) and reuses that registry on every subsequent search.
+
+`--registry <url>` overrides that selection for a single command. The URL must be an `http` or `https` registry API endpoint. Saved `findRegistries` are not rewritten.
+
+```bash
+npx add-mcp find vercel -a claude-code --registry https://registry.modelcontextprotocol.io/v0.1/servers -g -y
+```
 
 ### Built-in Registries
 
