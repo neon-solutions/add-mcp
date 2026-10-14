@@ -616,6 +616,25 @@ test("E2E CLI: find --registry rejects a non-http URL", () => {
   );
 });
 
+test("E2E CLI: find --registry= rejects an empty URL", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    ["find", "vercel", "--registry=", "-y"],
+    projectDir,
+    homeDir,
+  );
+
+  assert.notStrictEqual(result.status, 0);
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.match(output, /Invalid --registry URL/);
+  assert.strictEqual(
+    existsSync(join(homeDir, ".config", "add-mcp", "config.json")),
+    false,
+  );
+});
+
 test("E2E CLI: mcporter default install writes project config", () => {
   const projectDir = createTempDir();
   const homeDir = createTempDir();
