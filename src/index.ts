@@ -714,16 +714,16 @@ async function runListCommand(options: Options): Promise<void> {
   let hadError = false;
 
   for (const agentServers of agentServersList) {
+    if (agentServers.error) {
+      p.log.error(`${agentServers.displayName}: ${agentServers.error}`);
+      hadError = true;
+      continue;
+    }
+
     if (!agentServers.detected) {
       console.log(
         `${TEXT}${agentServers.displayName}:${RESET} ${DIM}not detected${RESET}`,
       );
-      continue;
-    }
-
-    if (agentServers.error) {
-      p.log.error(`${agentServers.displayName}: ${agentServers.error}`);
-      hadError = true;
       continue;
     }
 

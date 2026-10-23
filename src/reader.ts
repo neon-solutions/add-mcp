@@ -223,17 +223,27 @@ export async function listInstalledServers(options: {
         );
       } else {
         const agent = agents[agentType];
-        const installOptions: InstallOptions = {
-          local: scope === "local",
-          cwd: options.cwd,
-        };
+        let configPath = "";
+        let error: string | undefined;
+        try {
+          configPath = getConfigPath(agent, {
+            local: scope === "local",
+            cwd: options.cwd,
+          });
+        } catch (resolveError) {
+          error =
+            resolveError instanceof Error
+              ? resolveError.message
+              : String(resolveError);
+        }
         results.push({
           agentType,
           displayName: agent.displayName,
           detected: false,
           scope,
-          configPath: getConfigPath(agent, installOptions),
+          configPath,
           servers: [],
+          ...(error ? { error } : {}),
         });
       }
     }

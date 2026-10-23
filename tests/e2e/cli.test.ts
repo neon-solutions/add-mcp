@@ -2826,6 +2826,33 @@ test("E2E CLI: an unreadable Hermes active_profile fails only the Hermes install
     /Could not read the Hermes profile selection at .*active_profile/,
   );
   assert.strictEqual(existsSync(join(homeDir, ".cursor", "mcp.json")), true);
+
+  mkdirSync(join(projectDir, ".cursor"));
+  writeFileSync(
+    join(projectDir, ".cursor", "mcp.json"),
+    JSON.stringify({
+      mcpServers: { keep: { url: "https://keep.example.com/mcp" } },
+    }),
+  );
+  for (const args of [
+    ["list", "-a", "cursor", "-a", "hermes"],
+    ["remove", "missing", "-a", "hermes", "-y"],
+  ]) {
+    const run = runCli(args, projectDir, homeDir, env);
+    assert.strictEqual(run.status, 1);
+    assert.doesNotMatch(run.stderr, /\n\s+at /);
+    assert.match(
+      run.stdout + run.stderr,
+      /Could not read the Hermes profile selection/,
+    );
+  }
+  const list = runCli(
+    ["list", "-a", "cursor", "-a", "hermes"],
+    projectDir,
+    homeDir,
+    env,
+  );
+  assert.match(list.stdout, /keep/);
 });
 
 test("E2E CLI: Junie global install honors JUNIE_HOME", () => {
