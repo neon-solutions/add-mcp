@@ -152,9 +152,15 @@ function pairSpan(source: string, pair: Pair): [number, number] {
   return [lineStart(source, key.range[0]), lineEnd(source, end)];
 }
 
+/** New lines follow the file's own line endings. */
+function lineEnding(source: string): string {
+  return source.includes("\r\n") ? "\r\n" : "\n";
+}
+
 function render(
   value: Record<string, unknown>,
   version: YamlVersion,
+  eol: string,
   indent: number,
   unit = 2,
 ): string {
@@ -163,11 +169,11 @@ function render(
     indent: unit,
   });
   const pad = " ".repeat(indent);
-  return text.replace(/^(?=.)/gm, pad);
+  return text.replace(/^(?=.)/gm, pad).replace(/\n/g, eol);
 }
 
-function withTrailingNewline(source: string): string {
-  return source === "" || source.endsWith("\n") ? source : `${source}\n`;
+function withTrailingNewline(source: string, eol: string): string {
+  return source === "" || source.endsWith("\n") ? source : source + eol;
 }
 
 /** The line holding the server map's key, with any empty value (`{}`, `~`, `null`) removed. */
@@ -190,8 +196,11 @@ function serversKeyLine(
   const line = source
     .slice(start, end)
     .replace(
-      /:[ \t]*(?:\{[ \t]*\}|~|null|Null|NULL)?[ \t]*(#.*)?\n?$/,
-      (_match, comment?: string) => (comment ? `: ${comment}\n` : ":\n"),
+      /:[ \t]*(?:\{[ \t]*\}|~|null|Null|NULL)?[ \t]*(#[^\r\n]*)?(?:\r?\n)?$/,
+      (_match, comment?: string) =>
+        comment
+          ? `: ${comment}${lineEnding(source)}`
+          : `:${lineEnding(source)}`,
     );
   return { start, end, indent: keyRange[0] - start, line };
 }
@@ -206,6 +215,7 @@ function upsertServer(
 ): string {
   const doc = parseSource(source, filePath, version);
   const servers = getServersNode(doc, filePath, configKey);
+  const eol = lineEnding(source);
 
   if (servers === undefined) {
     const nested = configKey
@@ -215,7 +225,7 @@ function upsertServer(
       >((inner, key) => ({ [key]: inner }), {
         [name]: entry,
       });
-    return withTrailingNewline(source) + render(nested, version, 0);
+    return withTrailingNewline(source, eol) + render(nested, version, eol, 0);
   }
 
   if (servers === null || servers.items.length === 0) {
@@ -223,7 +233,7 @@ function upsertServer(
     return (
       source.slice(0, key.start) +
       key.line +
-      render({ [name]: entry }, version, key.indent + 2) +
+      render({ [name]: entry }, version, eol, key.indent + 2) +
       source.slice(key.end)
     );
   }
@@ -231,7 +241,7 @@ function upsertServer(
   const first = servers.items[0]!.key as { range: [number, number, number] };
   const indent = first.range[0] - lineStart(source, first.range[0]);
   const unit = indent - serversKeyLine(doc, source, configKey).indent;
-  const snippet = render({ [name]: entry }, version, indent, unit);
+  const snippet = render({ [name]: entry }, version, eol, indent, unit);
   const existing = servers.items.find(
     (pair) => isScalar(pair.key) && pair.key.value === name,
   );
@@ -242,7 +252,7 @@ function upsertServer(
 
   const [, end] = pairSpan(source, servers.items[servers.items.length - 1]!);
   return (
-    withTrailingNewline(source.slice(0, end)) + snippet + source.slice(end)
+    withTrailingNewline(source.slice(0, end), eol) + snippet + source.slice(end)
   );
 }
 
@@ -290,8 +300,8 @@ export function removeYamlConfigKey(
     updated =
       source.slice(0, key.start) +
       key.line.replace(
-        /:( #.*)?\n$/,
-        (_match, comment = "") => `: {}${comment}\n`,
+        /:( #[^\r\n]*)?\r?\n$/,
+        (_match, comment = "") => `: {}${comment}${lineEnding(source)}`,
       ) +
       source.slice(key.end, start) +
       source.slice(end);

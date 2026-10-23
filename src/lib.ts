@@ -89,9 +89,9 @@ function doRemove(
   agentType: AgentType,
   serverName: string,
   options: InstallOptions,
+  configPath: string,
 ): RemoveServerResult {
   const agent = agents[agentType];
-  const configPath = getConfigPath(agent, options);
 
   if (!existsSync(configPath)) {
     return { success: true, path: configPath, removed: false };
@@ -121,12 +121,14 @@ export function removeServer(
   const error = validate(agentType, options.local);
   if (error) return { success: false, path: "", removed: false, error };
   const known = agentType as AgentType;
+  let configPath = "";
   try {
-    return doRemove(known, serverName, options);
+    configPath = getConfigPath(agents[known], options);
+    return doRemove(known, serverName, options, configPath);
   } catch (e) {
     return {
       success: false,
-      path: getConfigPath(agents[known], options),
+      path: configPath,
       removed: false,
       error: e instanceof Error ? e.message : "Unknown error",
     };

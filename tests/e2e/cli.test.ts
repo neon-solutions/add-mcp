@@ -2794,6 +2794,40 @@ test("E2E CLI: Hermes expands a literal ~ in HERMES_HOME", () => {
   assert.strictEqual(existsSync(join(projectDir, "~")), false);
 });
 
+test("E2E CLI: an unreadable Hermes active_profile fails only the Hermes install", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+  const hermesHome = createTempDir();
+  mkdirSync(join(hermesHome, "active_profile"));
+  const env = { HERMES_HOME: hermesHome };
+
+  const help = runCli(["--help"], projectDir, homeDir, env);
+  assert.strictEqual(help.status, 0);
+
+  const install = runCli(
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "hermes",
+      "-a",
+      "cursor",
+      "-g",
+      "-y",
+      "--name",
+      "remote",
+    ],
+    projectDir,
+    homeDir,
+    env,
+  );
+  assert.strictEqual(install.status, 1);
+  assert.match(
+    install.stdout + install.stderr,
+    /Could not read the Hermes profile selection at .*active_profile/,
+  );
+  assert.strictEqual(existsSync(join(homeDir, ".cursor", "mcp.json")), true);
+});
+
 test("E2E CLI: Junie global install honors JUNIE_HOME", () => {
   const projectDir = createTempDir();
   const homeDir = createTempDir();

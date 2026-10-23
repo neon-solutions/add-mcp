@@ -227,6 +227,30 @@ test("writeConfig - YAML leaves existing values as written", () => {
   });
 });
 
+test("writeConfig and removeServerFromConfig - YAML keep CRLF line endings", () => {
+  for (const format of ["yaml", "yaml-1.1"] as const) {
+    const filePath = join(createTempDir(), "config.yaml");
+    writeFileSync(filePath, "# top\r\nmcp_servers: {}\r\nmodel: x\r\n");
+
+    writeConfig(
+      filePath,
+      { mcp_servers: { remote: { url: "https://mcp.example.com/mcp" } } },
+      format,
+      "mcp_servers",
+    );
+    assert.strictEqual(
+      readFileSync(filePath, "utf-8"),
+      "# top\r\nmcp_servers:\r\n  remote:\r\n    url: https://mcp.example.com/mcp\r\nmodel: x\r\n",
+    );
+
+    removeServerFromConfig(filePath, format, "mcp_servers", "remote");
+    assert.strictEqual(
+      readFileSync(filePath, "utf-8"),
+      "# top\r\nmcp_servers: {}\r\nmodel: x\r\n",
+    );
+  }
+});
+
 test("removeServerFromConfig - YAML keeps comments", () => {
   const dir = createTempDir();
   const filePath = join(dir, "config.yaml");

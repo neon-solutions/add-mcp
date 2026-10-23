@@ -417,9 +417,10 @@ export function installServerForAgent(
   options: InstallOptions = {},
 ): InstallResult {
   const agent = agents[agentType];
-  const configPath = getConfigPath(agent, options);
+  let configPath = "";
 
   try {
+    configPath = getConfigPath(agent, options);
     if (typeof serverConfig.bearerTokenEnv === "string") {
       const name = serverConfig.bearerTokenEnv.trim();
       if (!isBearerTokenEnvName(name)) {

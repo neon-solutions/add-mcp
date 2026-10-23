@@ -71,7 +71,14 @@ function getHermesHome(): string {
   ) {
     return root;
   }
-  const activeProfile = readFileSync(activeProfilePath, "utf-8").trim();
+  let activeProfile: string;
+  try {
+    activeProfile = readFileSync(activeProfilePath, "utf-8").trim();
+  } catch (error) {
+    throw new Error(
+      `Could not read the Hermes profile selection at ${activeProfilePath}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
   return activeProfile && activeProfile !== "default"
     ? join(root, "profiles", activeProfile)
     : root;
@@ -1222,14 +1229,14 @@ export const agents: Record<AgentType, AgentConfig> = {
   hermes: {
     name: "hermes",
     displayName: "Hermes Agent",
-    configPath: join(getHermesHome(), "config.yaml"),
+    configPath: join(getHermesRoot(), "config.yaml"),
     projectDetectPaths: [],
     configKey: "mcp_servers",
     format: "yaml-1.1",
     supportedTransports: ["stdio", "http", "sse"],
     supportedFields: ["timeout"],
     detectGlobalInstall: async () => {
-      return existsSync(getHermesHome());
+      return existsSync(getHermesRoot());
     },
     resolveConfigPath: () => join(getHermesHome(), "config.yaml"),
     transformConfig: transformHermesConfig,
