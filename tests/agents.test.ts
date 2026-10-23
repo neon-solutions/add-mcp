@@ -60,9 +60,9 @@ function cleanup() {
 // Agent Configuration Tests
 // ============================================
 
-test("getAgentTypes returns all 23 agents", () => {
+test("getAgentTypes returns all 25 agents", () => {
   const types = getAgentTypes();
-  assert.strictEqual(types.length, 23);
+  assert.strictEqual(types.length, 25);
   assert.ok(types.includes("antigravity"));
   assert.ok(types.includes("cline"));
   assert.ok(types.includes("cline-cli"));
@@ -72,7 +72,9 @@ test("getAgentTypes returns all 23 agents", () => {
   assert.ok(types.includes("cursor"));
   assert.ok(types.includes("fx"));
   assert.ok(types.includes("gemini-cli"));
+  assert.ok(types.includes("factory-droid"));
   assert.ok(types.includes("goose"));
+  assert.ok(types.includes("hermes"));
   assert.ok(types.includes("github-copilot-cli"));
   assert.ok(types.includes("grok-build"));
   assert.ok(types.includes("junie"));
@@ -184,11 +186,13 @@ test("supportsProjectConfig - returns false for global-only agents", () => {
   assert.strictEqual(supportsProjectConfig("goose"), false);
   assert.strictEqual(supportsProjectConfig("windsurf"), false);
   assert.strictEqual(supportsProjectConfig("fx"), false);
+  assert.strictEqual(supportsProjectConfig("hermes"), false);
 });
 
-test("getProjectCapableAgents returns 16 agents", () => {
+test("getProjectCapableAgents returns 17 agents", () => {
   const projectAgents = getProjectCapableAgents();
-  assert.strictEqual(projectAgents.length, 16);
+  assert.strictEqual(projectAgents.length, 17);
+  assert.ok(projectAgents.includes("factory-droid"));
   assert.ok(projectAgents.includes("claude-code"));
   assert.ok(projectAgents.includes("cursor"));
   assert.ok(projectAgents.includes("vscode"));
@@ -207,9 +211,10 @@ test("getProjectCapableAgents returns 16 agents", () => {
   assert.ok(projectAgents.includes("zed"));
 });
 
-test("getGlobalOnlyAgents returns 7 agents", () => {
+test("getGlobalOnlyAgents returns 8 agents", () => {
   const globalAgents = getGlobalOnlyAgents();
-  assert.strictEqual(globalAgents.length, 7);
+  assert.strictEqual(globalAgents.length, 8);
+  assert.ok(globalAgents.includes("hermes"));
   assert.ok(globalAgents.includes("antigravity"));
   assert.ok(globalAgents.includes("cline"));
   assert.ok(globalAgents.includes("cline-cli"));
@@ -429,6 +434,14 @@ test("detectProjectAgents - detects .grok directory", () => {
   assert.ok(detected.includes("grok-build"));
 });
 
+test("detectProjectAgents - detects .factory directory", () => {
+  const tempDir = createTempDir();
+  mkdirSync(join(tempDir, ".factory"));
+
+  const detected = detectProjectAgents(tempDir);
+  assert.ok(detected.includes("factory-droid"));
+});
+
 test("detectProjectAgents - detects .junie directory", () => {
   const tempDir = createTempDir();
   mkdirSync(join(tempDir, ".junie"));
@@ -576,11 +589,13 @@ test("isTransportSupported - most agents support http", () => {
     "claude-code",
     "codex",
     "cursor",
+    "factory-droid",
     "fx",
     "gemini-cli",
     "github-copilot-cli",
     "goose",
     "grok-build",
+    "hermes",
     "junie",
     "kilo-code",
     "kimi-code",
@@ -611,11 +626,13 @@ test("isTransportSupported - most agents support sse", () => {
     "claude-code",
     "codex",
     "cursor",
+    "factory-droid",
     "fx",
     "gemini-cli",
     "github-copilot-cli",
     "goose",
     "grok-build",
+    "hermes",
     "junie",
     "kilo-code",
     "kimi-code",

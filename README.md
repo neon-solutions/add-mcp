@@ -2,7 +2,7 @@
 
 Add MCP servers to your favorite coding agents with a single command.
 
-Supports **Claude Code**, **Codex**, **Cursor**, **OpenCode**, **VS Code**, **Grok Build** and [17 more](#supported-agents).
+Supports **Claude Code**, **Codex**, **Cursor**, **OpenCode**, **VS Code**, **Grok Build** and [19 more](#supported-agents).
 
 Docs and registry: [add-mcp.com](https://add-mcp.com)
 
@@ -59,11 +59,13 @@ MCP servers can be installed to any of these agents:
 | Claude Desktop         | `claude-desktop`     | -                                                                             | `~/Library/Application Support/Claude/claude_desktop_config.json`                                               |
 | Codex                  | `codex`              | `.codex/config.toml`                                                          | `~/.codex/config.toml`                                                                                          |
 | Cursor                 | `cursor`             | `.cursor/mcp.json`                                                            | `~/.cursor/mcp.json`                                                                                            |
+| Factory Droid          | `factory-droid`      | `.factory/mcp.json`                                                           | `~/.factory/mcp.json`                                                                                           |
 | fx                     | `fx`                 | -                                                                             | `~/.fx/mcp.json`                                                                                                |
 | Gemini CLI             | `gemini-cli`         | `.gemini/settings.json`                                                       | `~/.gemini/settings.json`                                                                                       |
 | Goose                  | `goose`              | `.goose/config.yaml`                                                          | `~/.config/goose/config.yaml`                                                                                   |
 | GitHub Copilot CLI     | `github-copilot-cli` | `.mcp.json` (or existing `.github/mcp.json`)                                  | `$COPILOT_HOME/mcp-config.json` (defaults to `~/.copilot/mcp-config.json`)                                      |
 | Grok Build             | `grok-build`         | `.grok/config.toml`                                                           | `$GROK_HOME/config.toml` (defaults to `~/.grok/config.toml`)                                                    |
+| Hermes Agent           | `hermes`             | -                                                                             | `$HERMES_HOME/config.yaml` (defaults to `~/.hermes/config.yaml`, or the active profile)                         |
 | Junie                  | `junie`              | `.junie/mcp/mcp.json`                                                         | `$JUNIE_HOME/mcp/mcp.json` (defaults to `~/.junie/mcp/mcp.json`, which the Junie JetBrains IDE plugin reads)    |
 | Kilo Code              | `kilo-code`          | `kilo.json` (or existing `.kilo/`, `.kilocode/`, or root `kilo.jsonc` config) | `~/.config/kilo/kilo.json` (or existing `~/.config/kilo/kilo.jsonc`)                                            |
 | Kimi Code              | `kimi-code`          | `.kimi-code/mcp.json`                                                         | `$KIMI_CODE_HOME/mcp.json` (defaults to `~/.kimi-code/mcp.json`)                                                |
@@ -85,6 +87,8 @@ Pi has no built-in MCP. add-mcp writes the Pi-owned files [`pi-mcp-adapter`](htt
 Kimi Code only loads a project-level `.kimi-code/mcp.json` after you trust the folder in the CLI, so a project install may not take effect until then.
 
 Junie CLI and the Junie JetBrains IDE plugin read the same `mcp.json`. The IDE plugin always reads `~/.junie/mcp/mcp.json`, so it only sees a global install when `JUNIE_HOME` is unset. Junie requires server names to match `^[a-zA-Z0-9_-]+$`, so keep `--name` within that pattern. Junie CLI sends an `Authorization` header from the config; the IDE plugin does not support tokens in MCP configs.
+
+Hermes Agent keeps MCP servers under `mcp_servers` in the same `config.yaml` as its other settings; add-mcp edits only that entry and keeps the file's comments. Without `HERMES_HOME`, add-mcp writes to the profile selected with `hermes profile use`. A running session picks the change up after `/reload-mcp`.
 
 fx reads MCP servers only from `~/.fx/mcp.json`. A project file cannot add a server. A running session applies the change with `/mcp reload`.
 
@@ -222,12 +226,12 @@ Not every MCP client understands every field. `add-mcp` keeps one canonical
 server config and each agent declares which optional fields it supports, mapping
 them into that client's native shape:
 
-| Field              | Flag                                | Supported by                                                            | Mapped to                                                                                                           |
-| ------------------ | ----------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Timeout            | `--timeout`                         | Claude Code, Gemini CLI, Grok Build, Kilo Code, Kimi Code, Kiro CLI, Pi | `timeout` (milliseconds); Grok Build `tool_timeout_sec` (seconds), Kimi Code `toolTimeoutMs`, Pi `requestTimeoutMs` |
-| OAuth scopes       | `--scopes`                          | Cursor, Gemini CLI, Mastra Code                                         | Cursor `auth.scopes`, Gemini and Mastra Code `oauth.scopes`                                                         |
-| Bearer token env   | `--bearer-token-env`                | fx                                                                      | `bearer_token_env`                                                                                                  |
-| Tool auto-approval | `--auto-approve` / `--approve-tool` | Codex, Claude Code                                                      | Codex approval modes; Claude Code permission allow rules                                                            |
+| Field              | Flag                                | Supported by                                                                                         | Mapped to                                                                                                                                             |
+| ------------------ | ----------------------------------- | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Timeout            | `--timeout`                         | Claude Code, Factory Droid, Gemini CLI, Grok Build, Hermes Agent, Kilo Code, Kimi Code, Kiro CLI, Pi | `timeout` (milliseconds); Grok Build `tool_timeout_sec` (seconds), Hermes Agent `timeout` (seconds), Kimi Code `toolTimeoutMs`, Pi `requestTimeoutMs` |
+| OAuth scopes       | `--scopes`                          | Cursor, Gemini CLI, Mastra Code                                                                      | Cursor `auth.scopes`, Gemini and Mastra Code `oauth.scopes`                                                                                           |
+| Bearer token env   | `--bearer-token-env`                | fx                                                                                                   | `bearer_token_env`                                                                                                                                    |
+| Tool auto-approval | `--auto-approve` / `--approve-tool` | Codex, Claude Code                                                                                   | Codex approval modes; Claude Code permission allow rules                                                                                              |
 
 When you target an agent that does not support a field, `add-mcp` drops it from
 that agent's config and prints a warning (e.g. _"request timeout is not

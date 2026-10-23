@@ -1,7 +1,10 @@
 # Changelog
 
-## [2.5.1] - 2026-10-23
+## [2.6.0] - 2026-10-23
 
+- add `factory-droid` (aliases `droid`, `factory`) support for Factory Droid, with project installs to `.factory/mcp.json` and global installs to `~/.factory/mcp.json`. `--timeout` maps to Droid's `timeout` in milliseconds.
+- add `hermes` (alias `hermes-agent`) support for Hermes Agent, a global install to `mcp_servers` in `$HERMES_HOME/config.yaml` (default `~/.hermes/config.yaml`, or the profile selected with `hermes profile use`). `--timeout` maps to Hermes's `timeout` in seconds.
+- YAML configs (Goose, Hermes Agent) keep their comments and formatting when a server is added or removed.
 - add `junie` (JetBrains) support for Junie CLI and the Junie JetBrains IDE plugin, with project installs to `.junie/mcp/mcp.json` and global installs to `$JUNIE_HOME/mcp/mcp.json` (default `~/.junie/mcp/mcp.json`). `--timeout`, `--scopes`, and `--auto-approve` are dropped for Junie with a warning.
 
 ## [2.4.1] - 2026-09-29

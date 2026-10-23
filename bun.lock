@@ -8,13 +8,14 @@
         "@iarna/toml": "^2.2.5",
         "chalk": "^5.4.1",
         "commander": "^13.1.0",
-        "js-yaml": "^4.1.0",
         "jsonc-parser": "^3.3.1",
+        "yaml": "^2.9.1",
       },
       "devDependencies": {
         "@types/js-yaml": "^4.0.9",
         "@types/node": "^22.10.0",
         "fallow": "^2.61.0",
+        "js-yaml": "^4.1.0",
         "prettier": "^3.8.1",
         "tsup": "^8.3.5",
         "tsx": "^4.19.2",
@@ -323,5 +324,7 @@
     "tsx/esbuild/@esbuild/win32-ia32": ["@esbuild/win32-ia32@0.28.0", "", { "os": "win32", "cpu": "ia32" }, "sha512-zF3ag/gfiCe6U2iczcRzSYJKH1DCI+ByzSENHlM2FcDbEeo5Zd2C86Aq0tKUYAJJ1obRP84ymxIAksZUcdztHA=="],
 
     "tsx/esbuild/@esbuild/win32-x64": ["@esbuild/win32-x64@0.28.0", "", { "os": "win32", "cpu": "x64" }, "sha512-pEl1bO9mfAmIC+tW5btTmrKaujg3zGtUmWNdCw/xs70FBjwAL3o9OEKNHvNmnyylD6ubxUERiEhdsL0xBQ9efw=="],
+
+    "yaml": ["yaml@2.9.1", "", { "bin": { "yaml": "bin.mjs" } }, "sha512-3NxN8+78OdzbT7C/WjGsyfPAtJaN3FNDsWxv7Y7mcDsT/oOmgW8BpyQQFFBnvZE3j9Y2Sdz1ULFLezL7Eb2yFw=="],
   }
 }

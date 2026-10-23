@@ -177,6 +177,33 @@ test("YAML: removes server key from nested config", () => {
   assert.ok(extensions.github);
 });
 
+test("removeServerFromConfig - YAML keeps comments", () => {
+  const dir = createTempDir();
+  const filePath = join(dir, "config.yaml");
+  writeFileSync(
+    filePath,
+    [
+      "# top comment",
+      "mcp_servers:",
+      "  keep: # stays",
+      "    url: https://keep.example.com/mcp",
+      "  drop:",
+      "    url: https://drop.example.com/mcp",
+      "",
+    ].join("\n"),
+  );
+
+  removeServerFromConfig(filePath, "yaml", "mcp_servers", "drop");
+
+  const content = readFileSync(filePath, "utf-8");
+  assert.match(content, /^# top comment$/m);
+  assert.match(content, /# stays/);
+  const parsed = yaml.load(content) as Record<string, unknown>;
+  assert.deepStrictEqual(parsed.mcp_servers, {
+    keep: { url: "https://keep.example.com/mcp" },
+  });
+});
+
 test("YAML: no-op on nonexistent file", () => {
   const dir = createTempDir();
   const filePath = join(dir, "nonexistent.yaml");

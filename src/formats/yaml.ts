@@ -1,18 +1,36 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import { dirname } from "path";
-import yaml from "js-yaml";
+import { Document, isMap, parse, parseDocument } from "yaml";
 import type { ConfigFile } from "../types.js";
-import { deepMerge, dropReplacedServers } from "./utils.js";
+import { getNestedValue } from "./utils.js";
 
 export function readYamlConfig(filePath: string): ConfigFile {
   if (!existsSync(filePath)) {
     return {};
   }
 
-  const content = readFileSync(filePath, "utf-8");
-  const parsed = yaml.load(content);
-
+  const parsed: unknown = parse(readFileSync(filePath, "utf-8"));
   return (parsed as ConfigFile) || {};
+}
+
+/** Goose and Hermes keep all their settings in this file; editing the document in place keeps its comments. */
+function loadDocument(filePath: string): Document {
+  if (!existsSync(filePath)) {
+    return new Document({});
+  }
+
+  const doc: Document = parseDocument(readFileSync(filePath, "utf-8"));
+  if (doc.errors.length > 0) {
+    throw doc.errors[0];
+  }
+  if (!isMap(doc.contents)) {
+    doc.contents = doc.createNode({});
+  }
+  return doc;
+}
+
+function saveDocument(filePath: string, doc: Document): void {
+  writeFileSync(filePath, doc.toString({ lineWidth: 0 }));
 }
 
 export function removeYamlConfigKey(
@@ -24,27 +42,14 @@ export function removeYamlConfigKey(
     return;
   }
 
-  const existing = readYamlConfig(filePath);
-  const keys = configKey.split(".");
-  let current: unknown = existing;
-  for (const key of keys) {
-    if (current && typeof current === "object" && key in current) {
-      current = (current as ConfigFile)[key];
-    } else {
-      return;
-    }
+  const doc = loadDocument(filePath);
+  const serverPath = [...configKey.split("."), serverName];
+  if (!doc.hasIn(serverPath)) {
+    return;
   }
 
-  if (current && typeof current === "object" && serverName in current) {
-    delete (current as ConfigFile)[serverName];
-  }
-
-  const content = yaml.dump(existing, {
-    indent: 2,
-    lineWidth: -1,
-    noRefs: true,
-  });
-  writeFileSync(filePath, content);
+  doc.deleteIn(serverPath);
+  saveDocument(filePath, doc);
 }
 
 export function writeYamlConfig(
@@ -57,19 +62,19 @@ export function writeYamlConfig(
     mkdirSync(dir, { recursive: true });
   }
 
-  let existingConfig: ConfigFile = {};
-  if (existsSync(filePath)) {
-    existingConfig = readYamlConfig(filePath);
+  const doc = loadDocument(filePath);
+  const keyPath = configKey.split(".");
+  const serversNode = doc.getIn(keyPath, true);
+  if (!isMap(serversNode)) {
+    doc.setIn(keyPath, doc.createNode({}));
+  } else if (serversNode.items.length === 0) {
+    serversNode.flow = false;
   }
 
-  dropReplacedServers(existingConfig, config, configKey);
-  const mergedConfig = deepMerge(existingConfig, config);
+  const servers = getNestedValue(config, configKey) as ConfigFile;
+  for (const [name, entry] of Object.entries(servers)) {
+    doc.setIn([...keyPath, name], doc.createNode(entry));
+  }
 
-  const content = yaml.dump(mergedConfig, {
-    indent: 2,
-    lineWidth: -1,
-    noRefs: true,
-  });
-
-  writeFileSync(filePath, content);
+  saveDocument(filePath, doc);
 }

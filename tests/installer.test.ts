@@ -28,6 +28,7 @@ import { parseSource } from "../src/source-parser.js";
 import { applyFieldSupport } from "../src/schema.js";
 import * as jsonc from "jsonc-parser";
 import * as TOML from "@iarna/toml";
+import yaml from "js-yaml";
 import type { AgentType } from "../src/types.js";
 
 let passed = 0;
@@ -688,6 +689,227 @@ test("installServerForAgent - Junie maps stdio config", () => {
   });
   assert.ok(!("type" in server));
   assert.ok(!("url" in server));
+});
+
+test("installServerForAgent - Factory Droid writes an explicit type for each transport", () => {
+  const tempDir = createTempDir();
+  const options = { local: true, cwd: tempDir };
+  assert.ok(
+    installServerForAgent(
+      "remote",
+      {
+        type: "http",
+        url: "https://mcp.example.com/mcp",
+        headers: { "X-Workspace": "demo" },
+        timeout: 12000,
+      },
+      "factory-droid",
+      options,
+    ).success,
+  );
+  assert.ok(
+    installServerForAgent(
+      "legacy",
+      { type: "sse", url: "https://mcp.example.com/sse" },
+      "factory-droid",
+      options,
+    ).success,
+  );
+  assert.ok(
+    installServerForAgent(
+      "postgres",
+      {
+        command: "npx",
+        args: ["-y", "mcp-server-postgres"],
+        env: { DATABASE_URL: "postgres://localhost/test" },
+      },
+      "factory-droid",
+      options,
+    ).success,
+  );
+
+  const saved = readJsonConfig(join(tempDir, ".factory", "mcp.json"));
+  assert.deepStrictEqual(saved.mcpServers, {
+    remote: {
+      type: "http",
+      url: "https://mcp.example.com/mcp",
+      headers: { "X-Workspace": "demo" },
+      timeout: 12000,
+    },
+    legacy: { type: "sse", url: "https://mcp.example.com/sse" },
+    postgres: {
+      type: "stdio",
+      command: "npx",
+      args: ["-y", "mcp-server-postgres"],
+      env: { DATABASE_URL: "postgres://localhost/test" },
+    },
+  });
+});
+
+function withHermesHome<T>(hermesHome: string, fn: () => T): T {
+  const previous = process.env.HERMES_HOME;
+  process.env.HERMES_HOME = hermesHome;
+  try {
+    return fn();
+  } finally {
+    if (previous === undefined) {
+      delete process.env.HERMES_HOME;
+    } else {
+      process.env.HERMES_HOME = previous;
+    }
+  }
+}
+
+test("installServerForAgent - Hermes maps transports and timeout in seconds", () => {
+  const hermesHome = createTempDir();
+  const options = { local: false, cwd: createTempDir() };
+  withHermesHome(hermesHome, () => {
+    assert.ok(
+      installServerForAgent(
+        "remote",
+        {
+          type: "http",
+          url: "https://mcp.example.com/mcp",
+          headers: { Authorization: "Bearer token" },
+          timeout: 120000,
+        },
+        "hermes",
+        options,
+      ).success,
+    );
+    assert.ok(
+      installServerForAgent(
+        "legacy",
+        { type: "sse", url: "https://mcp.example.com/sse" },
+        "hermes",
+        options,
+      ).success,
+    );
+    assert.ok(
+      installServerForAgent(
+        "postgres",
+        { command: "npx", args: ["-y", "mcp-server-postgres"] },
+        "hermes",
+        options,
+      ).success,
+    );
+  });
+
+  const saved = yaml.load(
+    readFileSync(join(hermesHome, "config.yaml"), "utf-8"),
+  ) as Record<string, unknown>;
+  assert.deepStrictEqual(saved.mcp_servers, {
+    remote: {
+      url: "https://mcp.example.com/mcp",
+      headers: { Authorization: "Bearer token" },
+      timeout: 120,
+    },
+    legacy: { url: "https://mcp.example.com/sse", transport: "sse" },
+    postgres: { command: "npx", args: ["-y", "mcp-server-postgres"] },
+  });
+});
+
+test("installServerForAgent - Hermes keeps comments and other settings in config.yaml", () => {
+  const hermesHome = createTempDir();
+  const configPath = join(hermesHome, "config.yaml");
+  writeFileSync(
+    configPath,
+    [
+      "# Hermes settings",
+      "model: anthropic/claude-sonnet-4 # default model",
+      "mcp_servers:",
+      "  # kept on purpose",
+      "  existing:",
+      "    url: https://old.example.com/mcp",
+      "  replaced:",
+      "    command: old",
+      "    args: [--stale]",
+      "",
+    ].join("\n"),
+  );
+
+  withHermesHome(hermesHome, () => {
+    assert.ok(
+      installServerForAgent(
+        "replaced",
+        { type: "http", url: "https://new.example.com/mcp" },
+        "hermes",
+        { local: false, cwd: createTempDir() },
+      ).success,
+    );
+  });
+
+  const content = readFileSync(configPath, "utf-8");
+  assert.match(content, /^# Hermes settings$/m);
+  assert.match(content, /# default model/);
+  assert.match(content, /# kept on purpose/);
+  const saved = yaml.load(content) as Record<string, unknown>;
+  assert.strictEqual(saved.model, "anthropic/claude-sonnet-4");
+  assert.deepStrictEqual(saved.mcp_servers, {
+    existing: { url: "https://old.example.com/mcp" },
+    replaced: { url: "https://new.example.com/mcp" },
+  });
+});
+
+test("installServerForAgent - Hermes writes block style into an empty mcp_servers map", () => {
+  const hermesHome = createTempDir();
+  const configPath = join(hermesHome, "config.yaml");
+  writeFileSync(configPath, "mcp_servers: {}\n");
+
+  withHermesHome(hermesHome, () => {
+    assert.ok(
+      installServerForAgent(
+        "remote",
+        { type: "http", url: "https://mcp.example.com/mcp" },
+        "hermes",
+        { local: false, cwd: createTempDir() },
+      ).success,
+    );
+  });
+
+  assert.strictEqual(
+    readFileSync(configPath, "utf-8"),
+    "mcp_servers:\n  remote:\n    url: https://mcp.example.com/mcp\n",
+  );
+});
+
+test("installServerForAgent - Hermes writes to the sticky active profile", () => {
+  const hermesRoot = createTempDir();
+  writeFileSync(join(hermesRoot, "active_profile"), "work\n");
+
+  const result = withHermesHome(hermesRoot, () =>
+    installServerForAgent(
+      "remote",
+      { type: "http", url: "https://mcp.example.com/mcp" },
+      "hermes",
+      { local: false, cwd: createTempDir() },
+    ),
+  );
+
+  assert.ok(result.success);
+  assert.strictEqual(
+    result.path,
+    join(hermesRoot, "profiles", "work", "config.yaml"),
+  );
+  assert.strictEqual(existsSync(join(hermesRoot, "config.yaml")), false);
+});
+
+test("installServerForAgent - Hermes uses HERMES_HOME as is when it is a profile", () => {
+  const profileHome = join(createTempDir(), "profiles", "work");
+  mkdirSync(profileHome, { recursive: true });
+  writeFileSync(join(profileHome, "active_profile"), "other\n");
+
+  const result = withHermesHome(profileHome, () =>
+    installServerForAgent(
+      "remote",
+      { type: "http", url: "https://mcp.example.com/mcp" },
+      "hermes",
+      { local: false, cwd: createTempDir() },
+    ),
+  );
+
+  assert.ok(result.success);
+  assert.strictEqual(result.path, join(profileHome, "config.yaml"));
 });
 
 test("installServerForAgent - VS Code drops both timeout and scopes", () => {

@@ -75,6 +75,7 @@ function runCli(
   for (const key of [
     "COPILOT_HOME",
     "GROK_HOME",
+    "HERMES_HOME",
     "JUNIE_HOME",
     "KIMI_CODE_HOME",
     "PI_CODING_AGENT_DIR",
@@ -2689,6 +2690,85 @@ test("E2E CLI: Kimi global install falls back to ~/.kimi-code", () => {
   assert.strictEqual(server.transport, "stdio");
   assert.strictEqual(server.command, "npx");
   assert.deepStrictEqual(server.args, ["-y", "mcp-server-postgres"]);
+});
+
+test("E2E CLI: Factory Droid project install writes .factory/mcp.json", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    [
+      "https://mcp.example.com/mcp",
+      "-a",
+      "droid",
+      "-y",
+      "--name",
+      "droid-remote",
+      "--timeout",
+      "30000",
+    ],
+    projectDir,
+    homeDir,
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  const saved = JSON.parse(
+    readFileSync(join(projectDir, ".factory", "mcp.json"), "utf-8"),
+  );
+  assert.deepStrictEqual(saved.mcpServers["droid-remote"], {
+    type: "http",
+    url: "https://mcp.example.com/mcp",
+    timeout: 30000,
+  });
+});
+
+test("E2E CLI: Hermes global install, list, and remove honor HERMES_HOME", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+  const hermesHome = createTempDir();
+  const env = { HERMES_HOME: hermesHome };
+
+  const install = runCli(
+    ["https://mcp.example.com/mcp", "-a", "hermes", "-y", "--name", "remote"],
+    projectDir,
+    homeDir,
+    env,
+  );
+  if (install.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${install.stdout}\nSTDERR:\n${install.stderr}`,
+    );
+  }
+
+  const configPath = join(hermesHome, "config.yaml");
+  const saved = yaml.load(readFileSync(configPath, "utf-8")) as {
+    mcp_servers: Record<string, unknown>;
+  };
+  assert.deepStrictEqual(saved.mcp_servers.remote, {
+    url: "https://mcp.example.com/mcp",
+  });
+  assert.strictEqual(existsSync(join(homeDir, ".hermes")), false);
+
+  const list = runCli(["list", "-a", "hermes", "-g"], projectDir, homeDir, env);
+  assert.strictEqual(list.status, 0);
+  assert.match(list.stdout, /remote/);
+
+  const remove = runCli(
+    ["remove", "remote", "-a", "hermes", "-g", "-y"],
+    projectDir,
+    homeDir,
+    env,
+  );
+  assert.strictEqual(remove.status, 0);
+  const afterRemove = yaml.load(readFileSync(configPath, "utf-8")) as {
+    mcp_servers: Record<string, unknown>;
+  };
+  assert.deepStrictEqual(afterRemove.mcp_servers, {});
 });
 
 test("E2E CLI: Junie global install honors JUNIE_HOME", () => {
