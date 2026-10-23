@@ -448,49 +448,23 @@ function transformKiroCliConfig(
   return remoteConfig;
 }
 
-const JUNIE_SERVER_NAME = /^[a-zA-Z0-9_-]+$/;
-const JUNIE_MIN_TIMEOUT_MS = 1_000;
-const JUNIE_MAX_TIMEOUT_MS = 3_600_000;
-
 /**
  * Junie (Junie CLI and the JetBrains IDE plugin) infers a server's transport
- * from `command` vs `url`, so no `type` is emitted. Junie rejects server names
- * outside `[a-zA-Z0-9_-]`, and ignores a `timeout` outside 1s–1h in favor of
- * its 60-second default, so both fail the install instead.
+ * from `command` vs `url`, so no `type` is emitted.
  * See https://junie.jetbrains.com/docs/junie-cli-mcp-configuration.html.
  */
 function transformJunieConfig(
-  serverName: string,
+  _serverName: string,
   config: McpServerConfig,
 ): unknown {
-  if (!JUNIE_SERVER_NAME.test(serverName)) {
-    throw new Error(
-      `Junie server names may only contain letters, digits, "_", and "-". Pick another name with --name instead of "${serverName}".`,
-    );
+  if (!config.url) {
+    return buildStandardLocal(config);
   }
-  const timeout = config.timeout;
-  if (
-    typeof timeout === "number" &&
-    (timeout < JUNIE_MIN_TIMEOUT_MS || timeout > JUNIE_MAX_TIMEOUT_MS)
-  ) {
-    throw new Error(
-      `Junie accepts a timeout between ${JUNIE_MIN_TIMEOUT_MS} and ${JUNIE_MAX_TIMEOUT_MS} milliseconds, got ${timeout}.`,
-    );
+  const remote: Record<string, unknown> = { url: config.url };
+  if (config.headers && Object.keys(config.headers).length > 0) {
+    remote.headers = config.headers;
   }
-
-  let entry: Record<string, unknown>;
-  if (config.url) {
-    entry = { url: config.url };
-    if (config.headers && Object.keys(config.headers).length > 0) {
-      entry.headers = config.headers;
-    }
-  } else {
-    entry = buildStandardLocal(config);
-  }
-  if (typeof timeout === "number") {
-    entry.timeout = timeout;
-  }
-  return entry;
+  return remote;
 }
 
 /**
@@ -1137,7 +1111,7 @@ export const agents: Record<AgentType, AgentConfig> = {
     configKey: "mcpServers",
     format: "json",
     supportedTransports: ["stdio", "http", "sse"],
-    supportedFields: ["timeout"],
+    supportedFields: [],
     detectGlobalInstall: async () => {
       return existsSync(getJunieHome());
     },

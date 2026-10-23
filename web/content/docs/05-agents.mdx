@@ -56,7 +56,7 @@ Mastra Code also reads project `.mcp.json`. add-mcp writes `.mastracode/mcp.json
 
 Pi has no built-in MCP. add-mcp writes the Pi-owned files [`pi-mcp-adapter`](https://github.com/nicobailon/pi-mcp-adapter) reads. Install that extension with `pi install npm:pi-mcp-adapter`. A running Pi session picks the change up after `/reload`.
 
-Junie CLI and the Junie JetBrains IDE plugin read the same `mcp.json`. The IDE plugin always reads `~/.junie/mcp/mcp.json`, so it only sees a global install when `JUNIE_HOME` is unset. Junie rejects server names outside `[a-zA-Z0-9_-]`, so add-mcp refuses them; pick another with `--name`. Junie CLI sends an `Authorization` header from the config; the IDE plugin does not support tokens in MCP configs.
+Junie CLI and the Junie JetBrains IDE plugin read the same `mcp.json`. The IDE plugin always reads `~/.junie/mcp/mcp.json`, so it only sees a global install when `JUNIE_HOME` is unset. Junie requires server names to match `^[a-zA-Z0-9_-]+$`, so keep `--name` within that pattern. Junie CLI sends an `Authorization` header from the config; the IDE plugin does not support tokens in MCP configs.
 
 fx reads MCP servers only from `~/.fx/mcp.json`. A project file cannot add a server. A running session applies the change with `/mcp reload`.
 
