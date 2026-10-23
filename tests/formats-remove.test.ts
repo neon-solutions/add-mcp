@@ -177,6 +177,27 @@ test("YAML: removes server key from nested config", () => {
   assert.ok(extensions.github);
 });
 
+test("removeServerFromConfig - YAML removes from an aliased server map", () => {
+  const dir = createTempDir();
+  const filePath = join(dir, "config.yaml");
+  writeFileSync(
+    filePath,
+    "shared: &servers\n  keep:\n    cmd: a\n  drop:\n    cmd: b\nextensions: *servers\n",
+  );
+
+  removeServerFromConfig(filePath, "yaml", "extensions", "drop");
+
+  const parsed = yaml.load(readFileSync(filePath, "utf-8")) as Record<
+    string,
+    unknown
+  >;
+  assert.deepStrictEqual(parsed.extensions, { keep: { cmd: "a" } });
+  assert.deepStrictEqual(parsed.shared, {
+    keep: { cmd: "a" },
+    drop: { cmd: "b" },
+  });
+});
+
 test("removeServerFromConfig - YAML keeps comments", () => {
   const dir = createTempDir();
   const filePath = join(dir, "config.yaml");

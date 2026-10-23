@@ -28,10 +28,26 @@ function getJunieHome(): string {
   return process.env.JUNIE_HOME || join(home, ".junie");
 }
 
+/** Hermes expands `~` and environment references in `HERMES_HOME` before using it. */
+function expandHermesHome(raw: string): string {
+  const expanded = raw.replace(
+    /\$(\w+)|\$\{(\w+)\}|%(\w+)%/g,
+    (match, bare?: string, braced?: string, percent?: string) => {
+      if (percent && process.platform !== "win32") {
+        return match;
+      }
+      return process.env[bare ?? braced ?? percent ?? ""] ?? match;
+    },
+  );
+  return expanded === "~" || /^~[\\/]/.test(expanded)
+    ? join(home, expanded.slice(1))
+    : expanded;
+}
+
 /** Hermes reads `$HERMES_HOME`, else `~/.hermes` (`%LOCALAPPDATA%\hermes` on Windows). */
 function getHermesRoot(): string {
   if (process.env.HERMES_HOME?.trim()) {
-    return process.env.HERMES_HOME.trim();
+    return expandHermesHome(process.env.HERMES_HOME.trim());
   }
   if (process.platform === "win32") {
     return join(

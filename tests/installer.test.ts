@@ -873,6 +873,79 @@ test("installServerForAgent - Hermes writes block style into an empty mcp_server
   );
 });
 
+test("installServerForAgent - Hermes quotes strings YAML 1.1 reads as booleans", () => {
+  const hermesHome = createTempDir();
+  withHermesHome(hermesHome, () => {
+    assert.ok(
+      installServerForAgent(
+        "local",
+        {
+          command: "node",
+          args: ["server.js", "yes"],
+          env: { FEATURE_FLAG: "off" },
+        },
+        "hermes",
+        { local: false, cwd: createTempDir() },
+      ).success,
+    );
+  });
+
+  const content = readFileSync(join(hermesHome, "config.yaml"), "utf-8");
+  assert.match(content, /FEATURE_FLAG: "off"/);
+  assert.match(content, /- "yes"/);
+});
+
+test("installServerForAgent - Hermes keeps servers from an aliased mcp_servers map", () => {
+  const hermesHome = createTempDir();
+  const configPath = join(hermesHome, "config.yaml");
+  writeFileSync(
+    configPath,
+    "shared: &servers\n  existing:\n    url: https://old.example.com/mcp\nmcp_servers: *servers\n",
+  );
+
+  withHermesHome(hermesHome, () => {
+    assert.ok(
+      installServerForAgent(
+        "remote",
+        { type: "http", url: "https://mcp.example.com/mcp" },
+        "hermes",
+        { local: false, cwd: createTempDir() },
+      ).success,
+    );
+  });
+
+  const saved = yaml.load(readFileSync(configPath, "utf-8")) as Record<
+    string,
+    unknown
+  >;
+  assert.deepStrictEqual(saved.shared, {
+    existing: { url: "https://old.example.com/mcp" },
+  });
+  assert.deepStrictEqual(saved.mcp_servers, {
+    existing: { url: "https://old.example.com/mcp" },
+    remote: { url: "https://mcp.example.com/mcp" },
+  });
+});
+
+test("installServerForAgent - Hermes expands environment references in HERMES_HOME", () => {
+  const root = createTempDir();
+  process.env.ADD_MCP_TEST_HERMES_ROOT = root;
+  try {
+    const result = withHermesHome("${ADD_MCP_TEST_HERMES_ROOT}/hermes", () =>
+      installServerForAgent(
+        "remote",
+        { type: "http", url: "https://mcp.example.com/mcp" },
+        "hermes",
+        { local: false, cwd: createTempDir() },
+      ),
+    );
+    assert.ok(result.success);
+    assert.strictEqual(result.path, join(root, "hermes", "config.yaml"));
+  } finally {
+    delete process.env.ADD_MCP_TEST_HERMES_ROOT;
+  }
+});
+
 test("installServerForAgent - Hermes writes to the sticky active profile", () => {
   const hermesRoot = createTempDir();
   writeFileSync(join(hermesRoot, "active_profile"), "work\n");

@@ -2771,6 +2771,29 @@ test("E2E CLI: Hermes global install, list, and remove honor HERMES_HOME", () =>
   assert.deepStrictEqual(afterRemove.mcp_servers, {});
 });
 
+test("E2E CLI: Hermes expands a literal ~ in HERMES_HOME", () => {
+  const projectDir = createTempDir();
+  const homeDir = createTempDir();
+
+  const result = runCli(
+    ["https://mcp.example.com/mcp", "-a", "hermes", "-y", "--name", "remote"],
+    projectDir,
+    homeDir,
+    { HERMES_HOME: "~/.hermes-custom" },
+  );
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI failed.\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`,
+    );
+  }
+
+  assert.strictEqual(
+    existsSync(join(homeDir, ".hermes-custom", "config.yaml")),
+    true,
+  );
+  assert.strictEqual(existsSync(join(projectDir, "~")), false);
+});
+
 test("E2E CLI: Junie global install honors JUNIE_HOME", () => {
   const projectDir = createTempDir();
   const homeDir = createTempDir();
