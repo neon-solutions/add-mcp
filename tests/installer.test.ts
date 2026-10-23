@@ -1030,7 +1030,7 @@ test("installServerForAgent - Hermes expands environment references in HERMES_HO
 
 test("installServerForAgent - Hermes writes to the sticky active profile", () => {
   const hermesRoot = createTempDir();
-  writeFileSync(join(hermesRoot, "active_profile"), "work\n");
+  writeFileSync(join(hermesRoot, "active_profile"), "Work\n");
 
   const result = withHermesHome(hermesRoot, () =>
     installServerForAgent(
@@ -1047,6 +1047,37 @@ test("installServerForAgent - Hermes writes to the sticky active profile", () =>
     join(hermesRoot, "profiles", "work", "config.yaml"),
   );
   assert.strictEqual(existsSync(join(hermesRoot, "config.yaml")), false);
+});
+
+test("installServerForAgent - Hermes refuses an active_profile that is not a profile name", () => {
+  const hermesRoot = createTempDir();
+  writeFileSync(join(hermesRoot, "active_profile"), "../../public-export\n");
+
+  const result = withHermesHome(hermesRoot, () =>
+    installServerForAgent(
+      "remote",
+      {
+        type: "http",
+        url: "https://mcp.example.com/mcp",
+        headers: { Authorization: "Bearer token" },
+      },
+      "hermes",
+      { local: false, cwd: createTempDir() },
+    ),
+  );
+
+  assert.strictEqual(result.success, false);
+  assert.match(result.error ?? "", /not a valid profile name/);
+  assert.strictEqual(
+    existsSync(join(hermesRoot, "..", "public-export")),
+    false,
+  );
+
+  const listed = withHermesHome(hermesRoot, () =>
+    removeServer("hermes", "remote", { local: false }),
+  );
+  assert.strictEqual(listed.success, false);
+  assert.match(listed.error ?? "", /not a valid profile name/);
 });
 
 test("installServerForAgent - Hermes uses HERMES_HOME as is when it is a profile", () => {

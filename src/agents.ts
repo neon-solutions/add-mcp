@@ -58,6 +58,9 @@ function getHermesRoot(): string {
   return join(home, ".hermes");
 }
 
+/** Hermes stores profiles lowercase and accepts only these names (`PROFILE_ID_RE`). */
+const HERMES_PROFILE_NAME = /^[a-z0-9][a-z0-9_-]{0,63}$/;
+
 /**
  * Unless the root is itself a profile, the `hermes` CLI switches to the
  * profile named in `active_profile`, stored under `profiles/<name>`.
@@ -79,9 +82,16 @@ function getHermesHome(): string {
       `Could not read the Hermes profile selection at ${activeProfilePath}: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
-  return activeProfile && activeProfile !== "default"
-    ? join(root, "profiles", activeProfile)
-    : root;
+  const profile = activeProfile.toLowerCase();
+  if (!profile || profile === "default") {
+    return root;
+  }
+  if (!HERMES_PROFILE_NAME.test(profile)) {
+    throw new Error(
+      `The Hermes profile selection at ${activeProfilePath} names "${activeProfile}", which is not a valid profile name.`,
+    );
+  }
+  return join(root, "profiles", profile);
 }
 
 function getMastraCodeDir(): string {
