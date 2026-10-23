@@ -354,5 +354,43 @@
         }
       ]
     }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "io.github.sandbaseai/sandbase-harness",
+      "title": "SandBase Harness",
+      "description": "Local-first MCP bridge for SandBase Harness sessions, sandboxed execution, artifacts, approvals, audit, and replay.",
+      "repository": {
+        "url": "https://github.com/sandbaseai/sandbase-harness",
+        "source": "github"
+      },
+      "version": "0.3.8",
+      "websiteUrl": "https://github.com/sandbaseai/sandbase-harness",
+      "packages": [
+        {
+          "registryType": "oci",
+          "registryBaseUrl": "https://ghcr.io",
+          "identifier": "ghcr.io/sandbaseai/sandbase-harness-mcp:0.3.8",
+          "version": "0.3.8",
+          "transport": {
+            "type": "stdio"
+          },
+          "environmentVariables": [
+            {
+              "name": "MANAGED_AGENTS_URL",
+              "description": "Base URL of the connected SandBase Harness API.",
+              "isRequired": true
+            },
+            {
+              "name": "MANAGED_AGENTS_API_KEY",
+              "description": "Optional API key for the connected Harness deployment.",
+              "isRequired": false,
+              "isSecret": true
+            }
+          ]
+        }
+      ]
+    }
   }
 ]
