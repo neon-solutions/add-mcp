@@ -7,7 +7,11 @@ import {
   isScalar,
   parse,
   parseDocument,
-  visit,
+  type DocumentOptions,
+  type ParseOptions,
+  type ScalarTag,
+  type SchemaOptions,
+  type Tags,
   type YAMLMap,
 } from "yaml";
 import type { ConfigFile } from "../types.js";
@@ -20,6 +24,42 @@ import { getNestedValue } from "./utils.js";
  */
 export type YamlVersion = "1.1" | "1.2";
 
+/**
+ * PyYAML reads `1:20` as 80 but `0:20` as a string, while yaml's YAML 1.1
+ * schema reads both as numbers and writes 80 back as `01:20`. Match PyYAML and
+ * write those numbers in decimal.
+ */
+const PYYAML_SEXAGESIMAL_INT = /^[-+]?[1-9][0-9_]*(?::[0-5]?[0-9])+$/;
+
+function isSexagesimalIntTag(tag: Tags[number]): tag is ScalarTag {
+  return (
+    typeof tag === "object" &&
+    !tag.collection &&
+    tag.tag === "tag:yaml.org,2002:int" &&
+    tag.format === "TIME"
+  );
+}
+
+function matchPyYamlTags(tags: Tags): Tags {
+  return tags.map((tag) =>
+    isSexagesimalIntTag(tag)
+      ? {
+          ...tag,
+          test: PYYAML_SEXAGESIMAL_INT,
+          stringify: ({ value }) => String(value),
+        }
+      : tag,
+  );
+}
+
+function yamlOptions(
+  version: YamlVersion,
+): DocumentOptions & ParseOptions & SchemaOptions {
+  return version === "1.1"
+    ? { version, merge: true, customTags: matchPyYamlTags }
+    : { version, merge: true };
+}
+
 export function readYamlConfig(
   filePath: string,
   version: YamlVersion,
@@ -28,37 +68,29 @@ export function readYamlConfig(
     return {};
   }
 
-  const parsed: unknown = parse(readFileSync(filePath, "utf-8"), {
-    version,
-    merge: true,
-  });
+  const parsed: unknown = parse(
+    readFileSync(filePath, "utf-8"),
+    yamlOptions(version),
+  );
   return (parsed as ConfigFile) || {};
 }
 
 /** Goose and Hermes keep all their settings in this file; editing the document in place keeps its comments. */
 function loadDocument(filePath: string, version: YamlVersion): Document {
   if (!existsSync(filePath)) {
-    return new Document({}, { version });
+    return new Document({}, yamlOptions(version));
   }
 
-  const doc: Document = parseDocument(readFileSync(filePath, "utf-8"), {
-    version,
-    merge: true,
-  });
+  const doc: Document = parseDocument(
+    readFileSync(filePath, "utf-8"),
+    yamlOptions(version),
+  );
   if (doc.errors.length > 0) {
     throw doc.errors[0];
   }
   if (!isMap(doc.contents)) {
     doc.contents = doc.createNode({});
   }
-  // yaml writes `1:20` back as `01:20`, which PyYAML reads as a string; write the number instead.
-  visit(doc, {
-    Scalar(_key, scalar) {
-      if (scalar.format === "TIME") {
-        delete scalar.format;
-      }
-    },
-  });
   return doc;
 }
 

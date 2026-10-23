@@ -878,7 +878,7 @@ test("installServerForAgent - Hermes quotes new keys and values YAML 1.1 would r
   const configPath = join(hermesHome, "config.yaml");
   writeFileSync(
     configPath,
-    "mcp_servers:\n  existing:\n    url: https://old.example.com/mcp\n    timeout: 0123\n  slow:\n    url: https://slow.example.com/mcp\n    timeout: 1:20\n",
+    "mcp_servers:\n  existing:\n    url: https://old.example.com/mcp\n    timeout: 0123\n  slow:\n    url: https://slow.example.com/mcp\n    timeout: 1:20\n    args: [server.js, 0:20]\n    env:\n      DURATION: 00:20\n",
   );
 
   withHermesHome(hermesHome, () => {
@@ -899,6 +899,8 @@ test("installServerForAgent - Hermes quotes new keys and values YAML 1.1 would r
   const content = readFileSync(configPath, "utf-8");
   assert.match(content, /timeout: 0123/);
   assert.match(content, /timeout: 80$/m);
+  assert.match(content, /\[ server\.js, 0:20 \]/);
+  assert.match(content, /DURATION: 00:20$/m);
   assert.match(content, /^  "on":$/m);
   assert.match(content, /- "yes"/);
   assert.match(content, /FEATURE_FLAG: "off"/);
