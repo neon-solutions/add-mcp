@@ -185,6 +185,7 @@ test("removeServerFromConfig - YAML refuses aliased and merged server maps", () 
   for (const original of [
     "shared: &servers\n  drop:\n    cmd: b\nextensions: *servers\n",
     "shared: &servers\n  drop:\n    cmd: b\nextensions:\n  <<: *servers\n",
+    "defaults: &defaults\n  extensions:\n    drop:\n      cmd: b\n<<: *defaults\n",
   ]) {
     const filePath = join(createTempDir(), "config.yaml");
     writeFileSync(filePath, original);
@@ -217,7 +218,7 @@ test("writeConfig - YAML leaves existing values as written", () => {
     /args: \[ server\.js, yes \]|args: \[server\.js, yes\]/,
   );
   assert.match(content, /FEATURE: off/);
-  assert.match(content, /MODE: "on"/);
+  assert.match(content, /MODE: on/);
   assert.deepStrictEqual(readConfig(filePath, "yaml"), {
     extensions: {
       existing: { args: ["server.js", "yes"], envs: { FEATURE: "off" } },

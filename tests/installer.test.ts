@@ -873,16 +873,22 @@ test("installServerForAgent - Hermes writes block style into an empty mcp_server
   );
 });
 
-test("installServerForAgent - Hermes quotes strings YAML 1.1 reads as booleans", () => {
+test("installServerForAgent - Hermes quotes new keys and values YAML 1.1 would retype", () => {
   const hermesHome = createTempDir();
+  const configPath = join(hermesHome, "config.yaml");
+  writeFileSync(
+    configPath,
+    "mcp_servers:\n  existing:\n    url: https://old.example.com/mcp\n    timeout: 0123\n",
+  );
+
   withHermesHome(hermesHome, () => {
     assert.ok(
       installServerForAgent(
-        "local",
+        "on",
         {
           command: "node",
           args: ["server.js", "yes"],
-          env: { FEATURE_FLAG: "off" },
+          env: { FEATURE_FLAG: "off", DATE: "2026-10-23", DURATION: "1:20" },
         },
         "hermes",
         { local: false, cwd: createTempDir() },
@@ -890,30 +896,37 @@ test("installServerForAgent - Hermes quotes strings YAML 1.1 reads as booleans",
     );
   });
 
-  const content = readFileSync(join(hermesHome, "config.yaml"), "utf-8");
-  assert.match(content, /FEATURE_FLAG: "off"/);
+  const content = readFileSync(configPath, "utf-8");
+  assert.match(content, /timeout: 0123/);
+  assert.match(content, /^  "on":$/m);
   assert.match(content, /- "yes"/);
+  assert.match(content, /FEATURE_FLAG: "off"/);
+  assert.match(content, /DATE: "2026-10-23"/);
+  assert.match(content, /DURATION: "1:20"/);
 });
 
-test("installServerForAgent - Hermes refuses an aliased mcp_servers map", () => {
-  const hermesHome = createTempDir();
-  const configPath = join(hermesHome, "config.yaml");
-  const original =
-    "shared: &servers\n  existing:\n    url: https://old.example.com/mcp\nmcp_servers: *servers\n";
-  writeFileSync(configPath, original);
+test("installServerForAgent - Hermes refuses server maps reached through an alias or merge", () => {
+  for (const original of [
+    "shared: &servers\n  existing:\n    url: https://old.example.com/mcp\nmcp_servers: *servers\n",
+    "defaults: &defaults\n  mcp_servers:\n    inherited:\n      url: https://old.example.com/mcp\n<<: *defaults\n",
+  ]) {
+    const hermesHome = createTempDir();
+    const configPath = join(hermesHome, "config.yaml");
+    writeFileSync(configPath, original);
 
-  const result = withHermesHome(hermesHome, () =>
-    installServerForAgent(
-      "remote",
-      { type: "http", url: "https://mcp.example.com/mcp" },
-      "hermes",
-      { local: false, cwd: createTempDir() },
-    ),
-  );
+    const result = withHermesHome(hermesHome, () =>
+      installServerForAgent(
+        "remote",
+        { type: "http", url: "https://mcp.example.com/mcp" },
+        "hermes",
+        { local: false, cwd: createTempDir() },
+      ),
+    );
 
-  assert.strictEqual(result.success, false);
-  assert.match(result.error ?? "", /YAML alias or merge key/);
-  assert.strictEqual(readFileSync(configPath, "utf-8"), original);
+    assert.strictEqual(result.success, false);
+    assert.match(result.error ?? "", /YAML alias or merge key/);
+    assert.strictEqual(readFileSync(configPath, "utf-8"), original);
+  }
 });
 
 test("installServerForAgent - Hermes expands environment references in HERMES_HOME", () => {

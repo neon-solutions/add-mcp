@@ -1225,7 +1225,7 @@ export const agents: Record<AgentType, AgentConfig> = {
     configPath: join(getHermesHome(), "config.yaml"),
     projectDetectPaths: [],
     configKey: "mcp_servers",
-    format: "yaml",
+    format: "yaml-1.1",
     supportedTransports: ["stdio", "http", "sse"],
     supportedFields: ["timeout"],
     detectGlobalInstall: async () => {

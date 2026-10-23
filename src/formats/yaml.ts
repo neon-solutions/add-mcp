@@ -2,40 +2,48 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import { dirname } from "path";
 import {
   Document,
-  Scalar,
   isAlias,
   isMap,
   isScalar,
   parse,
   parseDocument,
-  visit,
   type YAMLMap,
 } from "yaml";
 import type { ConfigFile } from "../types.js";
 import { getNestedValue } from "./utils.js";
 
-/** Strings YAML 1.1 reads as booleans. Hermes loads YAML 1.1, so these are written quoted. */
-const YAML_1_1_BOOLEAN =
-  /^(?:y|Y|yes|Yes|YES|n|N|no|No|NO|true|True|TRUE|false|False|FALSE|on|On|ON|off|Off|OFF)$/;
+/**
+ * The YAML version the agent's parser uses. Parsing and writing in that
+ * version keeps existing values intact and quotes new strings that it would
+ * read as another type, such as `on` or `2026-10-23` in YAML 1.1.
+ */
+export type YamlVersion = "1.1" | "1.2";
 
-export function readYamlConfig(filePath: string): ConfigFile {
+export function readYamlConfig(
+  filePath: string,
+  version: YamlVersion,
+): ConfigFile {
   if (!existsSync(filePath)) {
     return {};
   }
 
   const parsed: unknown = parse(readFileSync(filePath, "utf-8"), {
+    version,
     merge: true,
   });
   return (parsed as ConfigFile) || {};
 }
 
 /** Goose and Hermes keep all their settings in this file; editing the document in place keeps its comments. */
-function loadDocument(filePath: string): Document {
+function loadDocument(filePath: string, version: YamlVersion): Document {
   if (!existsSync(filePath)) {
-    return new Document({});
+    return new Document({}, { version });
   }
 
-  const doc: Document = parseDocument(readFileSync(filePath, "utf-8"));
+  const doc: Document = parseDocument(readFileSync(filePath, "utf-8"), {
+    version,
+    merge: true,
+  });
   if (doc.errors.length > 0) {
     throw doc.errors[0];
   }
@@ -45,38 +53,37 @@ function loadDocument(filePath: string): Document {
   return doc;
 }
 
-/** Editing an aliased or merged map would change the anchored settings it shares. */
+function isAliasOrMerge(node: unknown): boolean {
+  return (
+    isAlias(node) ||
+    (isMap(node) &&
+      node.items.some(
+        (pair) =>
+          isScalar(pair.key) &&
+          typeof pair.key.value === "symbol" &&
+          pair.key.value.description === "<<",
+      ))
+  );
+}
+
+/** Editing a server map reached through an alias or merge would change, or hide, the settings it shares. */
 function getServersMap(
   doc: Document,
   filePath: string,
   configKey: string,
 ): YAMLMap | undefined {
-  const node = doc.getIn(configKey.split("."), true);
-  const isShared =
-    isAlias(node) ||
-    (isMap(node) &&
-      node.items.some((pair) => isScalar(pair.key) && pair.key.value === "<<"));
-  if (isShared) {
+  const keyPath = configKey.split(".");
+  const path = [
+    doc.contents,
+    ...keyPath.map((_, i) => doc.getIn(keyPath.slice(0, i + 1), true)),
+  ];
+  if (path.some(isAliasOrMerge)) {
     throw new Error(
       `${configKey} in ${filePath} uses a YAML alias or merge key, which add-mcp does not edit. Change it by hand.`,
     );
   }
-  return isMap(node) ? node : undefined;
-}
-
-function createEntryNode(doc: Document, entry: unknown) {
-  const node = doc.createNode(entry);
-  visit(node, {
-    Scalar(_key, scalar) {
-      if (
-        typeof scalar.value === "string" &&
-        YAML_1_1_BOOLEAN.test(scalar.value)
-      ) {
-        scalar.type = Scalar.QUOTE_DOUBLE;
-      }
-    },
-  });
-  return node;
+  const servers = path[path.length - 1];
+  return isMap(servers) ? servers : undefined;
 }
 
 function saveDocument(filePath: string, doc: Document): void {
@@ -87,12 +94,13 @@ export function removeYamlConfigKey(
   filePath: string,
   configKey: string,
   serverName: string,
+  version: YamlVersion,
 ): void {
   if (!existsSync(filePath)) {
     return;
   }
 
-  const doc = loadDocument(filePath);
+  const doc = loadDocument(filePath, version);
   const servers = getServersMap(doc, filePath, configKey);
   if (!servers?.has(serverName)) {
     return;
@@ -106,13 +114,14 @@ export function writeYamlConfig(
   filePath: string,
   config: ConfigFile,
   configKey: string,
+  version: YamlVersion,
 ): void {
   const dir = dirname(filePath);
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true });
   }
 
-  const doc = loadDocument(filePath);
+  const doc = loadDocument(filePath, version);
   const keyPath = configKey.split(".");
   const servers = getServersMap(doc, filePath, configKey);
   if (!servers) {
@@ -123,7 +132,7 @@ export function writeYamlConfig(
 
   const incoming = getNestedValue(config, configKey) as ConfigFile;
   for (const [name, entry] of Object.entries(incoming)) {
-    doc.setIn([...keyPath, name], createEntryNode(doc, entry));
+    doc.setIn([...keyPath, name], doc.createNode(entry));
   }
 
   saveDocument(filePath, doc);

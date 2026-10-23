@@ -31,7 +31,9 @@ export function readConfig(filePath: string, format: ConfigFormat): ConfigFile {
     case "json":
       return readJsonConfig(filePath);
     case "yaml":
-      return readYamlConfig(filePath);
+      return readYamlConfig(filePath, "1.2");
+    case "yaml-1.1":
+      return readYamlConfig(filePath, "1.1");
     case "toml":
       return readTomlConfig(filePath);
     default:
@@ -50,7 +52,10 @@ export function removeServerFromConfig(
       removeJsonConfigKey(filePath, configKey, serverName);
       break;
     case "yaml":
-      removeYamlConfigKey(filePath, configKey, serverName);
+      removeYamlConfigKey(filePath, configKey, serverName, "1.2");
+      break;
+    case "yaml-1.1":
+      removeYamlConfigKey(filePath, configKey, serverName, "1.1");
       break;
     case "toml":
       removeTomlConfigKey(filePath, configKey, serverName);
@@ -71,7 +76,10 @@ export function writeConfig(
       writeJsonConfig(filePath, config, configKey);
       break;
     case "yaml":
-      writeYamlConfig(filePath, config, configKey);
+      writeYamlConfig(filePath, config, configKey, "1.2");
+      break;
+    case "yaml-1.1":
+      writeYamlConfig(filePath, config, configKey, "1.1");
       break;
     case "toml":
       writeTomlConfig(filePath, config, configKey);

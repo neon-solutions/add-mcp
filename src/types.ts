@@ -45,7 +45,8 @@ export const agentAliases: Record<string, AgentType> = {
   "pi-agent": "pi",
 };
 
-export type ConfigFormat = "json" | "yaml" | "toml";
+/** `yaml` is YAML 1.2; `yaml-1.1` is for agents whose parser reads `on`, `off`, and `0123` the YAML 1.1 way. */
+export type ConfigFormat = "json" | "yaml" | "yaml-1.1" | "toml";
 
 export interface AgentConfig {
   /** Internal name */
