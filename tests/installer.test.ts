@@ -24,6 +24,7 @@ import {
   updateGitignoreWithPaths,
 } from "../src/installer.js";
 import { agents } from "../src/agents.js";
+import { removeServer } from "../src/lib.js";
 import { parseSource } from "../src/source-parser.js";
 import { applyFieldSupport } from "../src/schema.js";
 import * as jsonc from "jsonc-parser";
@@ -897,15 +898,91 @@ test("installServerForAgent - Hermes quotes new keys and values YAML 1.1 would r
   });
 
   const content = readFileSync(configPath, "utf-8");
-  assert.match(content, /timeout: 0123/);
-  assert.match(content, /timeout: 80$/m);
-  assert.match(content, /\[ server\.js, 0:20 \]/);
-  assert.match(content, /DURATION: 00:20$/m);
+  assert.ok(
+    content.startsWith(
+      "mcp_servers:\n  existing:\n    url: https://old.example.com/mcp\n    timeout: 0123\n  slow:\n    url: https://slow.example.com/mcp\n    timeout: 1:20\n    args: [server.js, 0:20]\n    env:\n      DURATION: 00:20\n",
+    ),
+  );
   assert.match(content, /^  "on":$/m);
   assert.match(content, /- "yes"/);
   assert.match(content, /FEATURE_FLAG: "off"/);
   assert.match(content, /DATE: "2026-10-23"/);
   assert.match(content, /DURATION: "1:20"/);
+});
+
+test("installServerForAgent - Hermes install and remove leave every other byte as written", () => {
+  const hermesHome = createTempDir();
+  const configPath = join(hermesHome, "config.yaml");
+  const original = [
+    "# Hermes settings",
+    "started: 2026-10-23 10:00:00.123456+02:00",
+    "mcp_servers:",
+    "    # kept on purpose",
+    "    keep:",
+    "        command: node",
+    "        args: [server.js, 0:20]",
+    "        env:",
+    "            BUILD: 019",
+    "            BIG: 9007199254740993",
+    "        timeout: 1:20 # seconds",
+    "other: {a: 1}",
+    "",
+  ].join("\n");
+  writeFileSync(configPath, original);
+  const options = { local: false, cwd: createTempDir() };
+
+  withHermesHome(hermesHome, () => {
+    assert.ok(
+      installServerForAgent(
+        "added",
+        { type: "http", url: "https://mcp.example.com/mcp" },
+        "hermes",
+        options,
+      ).success,
+    );
+  });
+  assert.strictEqual(
+    readFileSync(configPath, "utf-8"),
+    original.replace(
+      "        timeout: 1:20 # seconds\n",
+      "        timeout: 1:20 # seconds\n    added:\n        url: https://mcp.example.com/mcp\n",
+    ),
+  );
+
+  withHermesHome(hermesHome, () => {
+    const result = removeServer("hermes", "added", { local: false });
+    assert.ok(result.success && result.removed);
+  });
+  assert.strictEqual(readFileSync(configPath, "utf-8"), original);
+});
+
+test("installServerForAgent - Hermes fills an empty mcp_servers and leaves {} after the last removal", () => {
+  const hermesHome = createTempDir();
+  const configPath = join(hermesHome, "config.yaml");
+  writeFileSync(configPath, "mcp_servers: ~ # none yet\nmodel: x\n");
+
+  withHermesHome(hermesHome, () => {
+    assert.ok(
+      installServerForAgent(
+        "only",
+        { type: "http", url: "https://mcp.example.com/mcp" },
+        "hermes",
+        { local: false, cwd: createTempDir() },
+      ).success,
+    );
+  });
+  assert.strictEqual(
+    readFileSync(configPath, "utf-8"),
+    "mcp_servers: # none yet\n  only:\n    url: https://mcp.example.com/mcp\nmodel: x\n",
+  );
+
+  withHermesHome(hermesHome, () => {
+    assert.ok(removeServer("hermes", "only", { local: false }).removed);
+  });
+  assert.strictEqual(
+    readFileSync(configPath, "utf-8"),
+    "mcp_servers: {} # none yet\nmodel: x\n",
+  );
 });
 
 test("installServerForAgent - Hermes refuses server maps reached through an alias or merge", () => {
