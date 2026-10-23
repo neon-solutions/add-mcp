@@ -7,6 +7,7 @@ import {
   isScalar,
   parse,
   parseDocument,
+  visit,
   type YAMLMap,
 } from "yaml";
 import type { ConfigFile } from "../types.js";
@@ -50,6 +51,14 @@ function loadDocument(filePath: string, version: YamlVersion): Document {
   if (!isMap(doc.contents)) {
     doc.contents = doc.createNode({});
   }
+  // yaml writes `1:20` back as `01:20`, which PyYAML reads as a string; write the number instead.
+  visit(doc, {
+    Scalar(_key, scalar) {
+      if (scalar.format === "TIME") {
+        delete scalar.format;
+      }
+    },
+  });
   return doc;
 }
 
