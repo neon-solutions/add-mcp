@@ -13,7 +13,11 @@ import { join } from "node:path";
 import * as jsonc from "jsonc-parser";
 import yaml from "js-yaml";
 import * as TOML from "@iarna/toml";
-import { removeServerFromConfig } from "../src/formats/index.js";
+import {
+  readConfig,
+  removeServerFromConfig,
+  writeConfig,
+} from "../src/formats/index.js";
 
 let passed = 0;
 let failed = 0;
@@ -177,24 +181,48 @@ test("YAML: removes server key from nested config", () => {
   assert.ok(extensions.github);
 });
 
-test("removeServerFromConfig - YAML removes from an aliased server map", () => {
-  const dir = createTempDir();
-  const filePath = join(dir, "config.yaml");
+test("removeServerFromConfig - YAML refuses aliased and merged server maps", () => {
+  for (const original of [
+    "shared: &servers\n  drop:\n    cmd: b\nextensions: *servers\n",
+    "shared: &servers\n  drop:\n    cmd: b\nextensions:\n  <<: *servers\n",
+  ]) {
+    const filePath = join(createTempDir(), "config.yaml");
+    writeFileSync(filePath, original);
+
+    assert.throws(
+      () => removeServerFromConfig(filePath, "yaml", "extensions", "drop"),
+      /YAML alias or merge key/,
+    );
+    assert.strictEqual(readFileSync(filePath, "utf-8"), original);
+  }
+});
+
+test("writeConfig - YAML leaves existing values as written", () => {
+  const filePath = join(createTempDir(), "config.yaml");
   writeFileSync(
     filePath,
-    "shared: &servers\n  keep:\n    cmd: a\n  drop:\n    cmd: b\nextensions: *servers\n",
+    "extensions:\n  existing:\n    args: [server.js, yes]\n    envs:\n      FEATURE: off\n",
   );
 
-  removeServerFromConfig(filePath, "yaml", "extensions", "drop");
+  writeConfig(
+    filePath,
+    { extensions: { added: { envs: { MODE: "on" } } } },
+    "yaml",
+    "extensions",
+  );
 
-  const parsed = yaml.load(readFileSync(filePath, "utf-8")) as Record<
-    string,
-    unknown
-  >;
-  assert.deepStrictEqual(parsed.extensions, { keep: { cmd: "a" } });
-  assert.deepStrictEqual(parsed.shared, {
-    keep: { cmd: "a" },
-    drop: { cmd: "b" },
+  const content = readFileSync(filePath, "utf-8");
+  assert.match(
+    content,
+    /args: \[ server\.js, yes \]|args: \[server\.js, yes\]/,
+  );
+  assert.match(content, /FEATURE: off/);
+  assert.match(content, /MODE: "on"/);
+  assert.deepStrictEqual(readConfig(filePath, "yaml"), {
+    extensions: {
+      existing: { args: ["server.js", "yes"], envs: { FEATURE: "off" } },
+      added: { envs: { MODE: "on" } },
+    },
   });
 });
 

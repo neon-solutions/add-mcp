@@ -895,36 +895,25 @@ test("installServerForAgent - Hermes quotes strings YAML 1.1 reads as booleans",
   assert.match(content, /- "yes"/);
 });
 
-test("installServerForAgent - Hermes keeps servers from an aliased mcp_servers map", () => {
+test("installServerForAgent - Hermes refuses an aliased mcp_servers map", () => {
   const hermesHome = createTempDir();
   const configPath = join(hermesHome, "config.yaml");
-  writeFileSync(
-    configPath,
-    "shared: &servers\n  existing:\n    url: https://old.example.com/mcp\nmcp_servers: *servers\n",
+  const original =
+    "shared: &servers\n  existing:\n    url: https://old.example.com/mcp\nmcp_servers: *servers\n";
+  writeFileSync(configPath, original);
+
+  const result = withHermesHome(hermesHome, () =>
+    installServerForAgent(
+      "remote",
+      { type: "http", url: "https://mcp.example.com/mcp" },
+      "hermes",
+      { local: false, cwd: createTempDir() },
+    ),
   );
 
-  withHermesHome(hermesHome, () => {
-    assert.ok(
-      installServerForAgent(
-        "remote",
-        { type: "http", url: "https://mcp.example.com/mcp" },
-        "hermes",
-        { local: false, cwd: createTempDir() },
-      ).success,
-    );
-  });
-
-  const saved = yaml.load(readFileSync(configPath, "utf-8")) as Record<
-    string,
-    unknown
-  >;
-  assert.deepStrictEqual(saved.shared, {
-    existing: { url: "https://old.example.com/mcp" },
-  });
-  assert.deepStrictEqual(saved.mcp_servers, {
-    existing: { url: "https://old.example.com/mcp" },
-    remote: { url: "https://mcp.example.com/mcp" },
-  });
+  assert.strictEqual(result.success, false);
+  assert.match(result.error ?? "", /YAML alias or merge key/);
+  assert.strictEqual(readFileSync(configPath, "utf-8"), original);
 });
 
 test("installServerForAgent - Hermes expands environment references in HERMES_HOME", () => {
