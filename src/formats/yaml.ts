@@ -56,9 +56,9 @@ function yamlOptions(
 }
 
 /**
- * Agent config files often hold credentials. `prettyErrors` would copy the
- * lines around a parse error into the message, and `parse()` would print
- * warnings with the same excerpt, so errors carry only the position.
+ * Agent config files often hold credentials, and yaml's error messages,
+ * excerpts, and warnings can quote them. Errors here name only the file, the
+ * position, and yaml's error code, and warnings are not printed.
  */
 function parseYaml(
   source: string,
@@ -69,16 +69,30 @@ function parseYaml(
   const doc: Document = parseDocument(source, {
     ...yamlOptions(version),
     prettyErrors: false,
+    logLevel: "error",
     lineCounter,
   });
   const [error] = doc.errors;
   if (error) {
     const { line, col } = lineCounter.linePos(error.pos[0]);
     throw new Error(
-      `Invalid YAML in ${filePath} at line ${line}, column ${col}: ${error.message}`,
+      `Invalid YAML in ${filePath} at line ${line}, column ${col} (${error.code}).`,
     );
   }
   return doc;
+}
+
+/** yaml throws `ReferenceError` naming the alias when one does not resolve. */
+function toJSValue(filePath: string, convert: () => unknown): unknown {
+  try {
+    return convert();
+  } catch (error) {
+    const reason =
+      error instanceof ReferenceError
+        ? "an alias could not be resolved"
+        : "it could not be converted to a value";
+    throw new Error(`Invalid YAML in ${filePath}: ${reason}.`);
+  }
 }
 
 function parseYamlValue(
@@ -86,7 +100,8 @@ function parseYamlValue(
   filePath: string,
   version: YamlVersion,
 ): ConfigFile | null {
-  return parseYaml(source, filePath, version).toJS() as ConfigFile | null;
+  const doc = parseYaml(source, filePath, version);
+  return toJSValue(filePath, () => doc.toJS()) as ConfigFile | null;
 }
 
 export function readYamlConfig(
@@ -335,7 +350,12 @@ export function removeYamlConfigKey(
       source.slice(key.end, start) +
       source.slice(end);
   }
-  const expected = { ...(servers.toJS(doc) as Record<string, unknown>) };
+  const expected = {
+    ...(toJSValue(filePath, () => servers.toJS(doc)) as Record<
+      string,
+      unknown
+    >),
+  };
   delete expected[serverName];
   verifyEdit(updated, filePath, configKey.split("."), expected, version);
   writeFileSync(filePath, updated);

@@ -2,7 +2,7 @@
 
 ## [2.6.1] - 2026-10-31
 
-- YAML config errors (Goose, Hermes Agent) name the file, line, and column without quoting the file's lines, and an unresolved YAML tag no longer prints a warning with the line. Both used to copy nearby lines, such as API keys in `~/.hermes/config.yaml`, into the terminal.
+- YAML config errors (Goose, Hermes Agent) name the file, line, column, and YAML error code, and no longer quote the file's contents. YAML warnings are no longer printed. Error excerpts, error messages, and warnings could copy values such as API keys in `~/.hermes/config.yaml` into the terminal.
 
 ## [2.6.0] - 2026-10-23
 
