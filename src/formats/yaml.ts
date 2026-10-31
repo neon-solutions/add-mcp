@@ -6,7 +6,7 @@ import {
   isAlias,
   isMap,
   isScalar,
-  parse,
+  LineCounter,
   parseDocument,
   type DocumentOptions,
   type Pair,
@@ -55,6 +55,40 @@ function yamlOptions(
     : { version, merge: true };
 }
 
+/**
+ * Agent config files often hold credentials. `prettyErrors` would copy the
+ * lines around a parse error into the message, and `parse()` would print
+ * warnings with the same excerpt, so errors carry only the position.
+ */
+function parseYaml(
+  source: string,
+  filePath: string,
+  version: YamlVersion,
+): Document {
+  const lineCounter = new LineCounter();
+  const doc: Document = parseDocument(source, {
+    ...yamlOptions(version),
+    prettyErrors: false,
+    lineCounter,
+  });
+  const [error] = doc.errors;
+  if (error) {
+    const { line, col } = lineCounter.linePos(error.pos[0]);
+    throw new Error(
+      `Invalid YAML in ${filePath} at line ${line}, column ${col}: ${error.message}`,
+    );
+  }
+  return doc;
+}
+
+function parseYamlValue(
+  source: string,
+  filePath: string,
+  version: YamlVersion,
+): ConfigFile | null {
+  return parseYaml(source, filePath, version).toJS() as ConfigFile | null;
+}
+
 export function readYamlConfig(
   filePath: string,
   version: YamlVersion,
@@ -63,11 +97,9 @@ export function readYamlConfig(
     return {};
   }
 
-  const parsed: unknown = parse(
-    readFileSync(filePath, "utf-8"),
-    yamlOptions(version),
+  return (
+    parseYamlValue(readFileSync(filePath, "utf-8"), filePath, version) || {}
   );
-  return (parsed as ConfigFile) || {};
 }
 
 function parseSource(
@@ -75,10 +107,7 @@ function parseSource(
   filePath: string,
   version: YamlVersion,
 ): Document {
-  const doc: Document = parseDocument(source, yamlOptions(version));
-  if (doc.errors.length > 0) {
-    throw doc.errors[0];
-  }
+  const doc = parseYaml(source, filePath, version);
   if (doc.contents !== null && !isMap(doc.contents)) {
     throw new Error(`${filePath} is not a YAML map.`);
   }
@@ -264,7 +293,7 @@ function verifyEdit(
   expected: Record<string, unknown>,
   version: YamlVersion,
 ): void {
-  const after = parse(updated, yamlOptions(version)) as ConfigFile | null;
+  const after = parseYamlValue(updated, filePath, version);
   const servers = getNestedValue(after ?? {}, keyPath.join("."));
   if (!isDeepStrictEqual(servers, expected)) {
     throw new Error(
@@ -326,7 +355,7 @@ export function writeYamlConfig(
   const original = existsSync(filePath) ? readFileSync(filePath, "utf-8") : "";
   const keyPath = configKey.split(".");
   const before = getNestedValue(
-    (parse(original, yamlOptions(version)) as ConfigFile | null) ?? {},
+    parseYamlValue(original, filePath, version) ?? {},
     configKey,
   );
   const expected: Record<string, unknown> = {

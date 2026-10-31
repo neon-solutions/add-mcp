@@ -7,6 +7,7 @@
  */
 
 import assert from "node:assert";
+import { spawnSync } from "node:child_process";
 import { mkdtempSync, rmSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -312,6 +313,73 @@ test("TOML: no-op on nonexistent file", () => {
   const dir = createTempDir();
   const filePath = join(dir, "nonexistent.toml");
   removeServerFromConfig(filePath, "toml", "mcp_servers", "neon");
+});
+
+// ── YAML diagnostics ─────────────────────────────────────────────────────
+
+const SECRET = "sk-other-credential";
+
+function assertYamlErrorHidesSecret(source: string, line: number) {
+  const dir = createTempDir();
+  const filePath = join(dir, "config.yaml");
+  writeFileSync(filePath, source);
+  const calls = [
+    () => readConfig(filePath, "yaml"),
+    () =>
+      writeConfig(
+        filePath,
+        { mcp_servers: { neon: { url: "https://mcp.neon.tech/mcp" } } },
+        "yaml",
+        "mcp_servers",
+      ),
+    () => removeServerFromConfig(filePath, "yaml", "mcp_servers", "neon"),
+  ];
+  for (const call of calls) {
+    assert.throws(call, (err: Error) => {
+      assert.ok(
+        err.message.startsWith(`Invalid YAML in ${filePath} at line ${line}`),
+        err.message,
+      );
+      assert.ok(!err.message.includes(SECRET), err.message);
+      return true;
+    });
+  }
+  assert.strictEqual(readFileSync(filePath, "utf-8"), source);
+}
+
+test("YAML: a duplicate key error names the position, not the lines", () => {
+  assertYamlErrorHidesSecret(
+    `model:\n  api_key: ${SECRET}-1\n  api_key: ${SECRET}-2\nmcp_servers: {}\n`,
+    3,
+  );
+});
+
+test("YAML: a syntax error names the position, not the lines", () => {
+  assertYamlErrorHidesSecret(`api_key: ${SECRET}\nbroken: [\n`, 3);
+});
+
+test("YAML: an unresolved tag does not print the line", () => {
+  const dir = createTempDir();
+  const filePath = join(dir, "config.yaml");
+  writeFileSync(
+    filePath,
+    `model:\n  api_key: !unknown ${SECRET}\nmcp_servers: {}\n`,
+  );
+  const formats = join(import.meta.dirname, "..", "src", "formats", "index.ts");
+  const script = `
+    import { readConfig, writeConfig } from ${JSON.stringify(formats)};
+    const path = ${JSON.stringify(filePath)};
+    readConfig(path, "yaml");
+    writeConfig(path, { mcp_servers: { neon: { url: "https://mcp.neon.tech/mcp" } } }, "yaml", "mcp_servers");
+  `;
+  const result = spawnSync(
+    process.execPath,
+    ["--import", "tsx", "--input-type=module", "-e", script],
+    { encoding: "utf-8" },
+  );
+  assert.strictEqual(result.status, 0, result.stderr);
+  assert.ok(!result.stderr.includes(SECRET), result.stderr);
+  assert.ok(readFileSync(filePath, "utf-8").includes("neon:"));
 });
 
 // ── cleanup ──────────────────────────────────────────────────────────────
