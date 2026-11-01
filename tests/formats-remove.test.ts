@@ -10,7 +10,8 @@ import assert from "node:assert";
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, rmSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import * as jsonc from "jsonc-parser";
 import yaml from "js-yaml";
 import * as TOML from "@iarna/toml";
@@ -385,7 +386,7 @@ for (const [name, value] of [
     const filePath = join(dir, "config.yaml");
     writeFileSync(filePath, `${value}mcp_servers: {}\n`);
     const formats = join(
-      import.meta.dirname,
+      dirname(fileURLToPath(import.meta.url)),
       "..",
       "src",
       "formats",
