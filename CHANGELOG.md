@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.6.1] - 2026-10-31
+
+- YAML config errors (Goose, Hermes Agent) name the file, line, column, and YAML error code, and no longer quote the file's contents. YAML warnings are no longer printed. Error excerpts, error messages, and warnings could copy values such as API keys in `~/.hermes/config.yaml` into the terminal.
+
 ## [2.6.0] - 2026-10-23
 
 - add `factory-droid` (aliases `droid`, `factory`) support for Factory Droid, with project installs to `.factory/mcp.json` and global installs to `~/.factory/mcp.json`. `--timeout` maps to Droid's `timeout` in milliseconds.
