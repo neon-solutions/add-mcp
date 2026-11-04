@@ -2,6 +2,36 @@
   {
     "server": {
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      "name": "io.github.glommer/cachebro",
+      "title": "CacheBro",
+      "description": "File cache with diff tracking for AI coding agents. Drop-in MCP server that cuts token usage by ~26%.",
+      "repository": {
+        "url": "https://github.com/glommer/cachebro",
+        "source": "github"
+      },
+      "version": "0.2.2",
+      "packages": [
+        {
+          "registryType": "npm",
+          "registryBaseUrl": "https://registry.npmjs.org",
+          "identifier": "cachebro",
+          "version": "0.2.2",
+          "transport": {
+            "type": "stdio"
+          },
+          "packageArguments": [
+            {
+              "type": "positional",
+              "value": "serve"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "server": {
+      "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "io.github.github/github-mcp-server",
       "title": "GitHub",
       "description": "Official GitHub MCP server",
