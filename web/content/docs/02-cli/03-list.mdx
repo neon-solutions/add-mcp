@@ -27,6 +27,8 @@ npx add-mcp list -a cursor
 | `-g, --global`        | List global configs instead of project |
 | `-a, --agent <agent>` | Filter to specific agent(s)            |
 
+If a config is unreadable, `list` reports the error, continues listing other agents, and exits nonzero ([release changelog](https://github.com/neon-solutions/add-mcp/blob/v2.6.1/CHANGELOG.md)).
+
 ## Related: list-agents
 
 `list-agents` prints all supported coding agents with their supported scopes (project/global):

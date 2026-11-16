@@ -22,6 +22,8 @@ npx add-mcp sync -y
 npx add-mcp sync -g -y
 ```
 
+Unreadable config files are reported and skipped for every agent sharing that file; the command exits nonzero. Sync also refuses to overwrite a different OpenCode server already using the destination name ([release changelog](https://github.com/neon-solutions/add-mcp/blob/v2.6.1/CHANGELOG.md)).
+
 ## Options
 
 | Option         | Description                            |

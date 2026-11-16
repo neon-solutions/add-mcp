@@ -19,7 +19,7 @@ import {
 
 ## upsertServer
 
-Adds or updates an MCP server in an agent's config file. Creates the config file (and parent directories) when missing.
+Adds or replaces an MCP server in an agent's config file. Creates the config file (and parent directories) when missing. Reinstalling an existing name replaces the entire entry rather than merging fields; pass the complete desired configuration. Unrelated servers and config sections are preserved ([2.0.0 changelog](https://github.com/neon-solutions/add-mcp/blob/v2.6.1/CHANGELOG.md)).
 
 ```ts
 function upsertServer(
@@ -39,6 +39,8 @@ function upsertServer(
 
 Returns [`InstallResult`](#installresult). Never throws — errors are reported via `result.error`.
 
+`upsertServer` and `removeServer` default to global scope. For project scope, pass `local: true`; `cwd` alone does not change scope. Global-only agents reject `local: true` rather than falling back to global. These functions accept canonical agent identifiers, not CLI aliases ([SDK validation](https://github.com/neon-solutions/add-mcp/blob/v2.6.1/src/lib.ts), [path resolution](https://github.com/neon-solutions/add-mcp/blob/v2.6.1/src/installer.ts)).
+
 ## removeServer
 
 Removes a server entry from an agent's config file. Succeeds (with `removed: false`) when the config or entry doesn't exist.
@@ -55,7 +57,7 @@ Returns `{ success: boolean; path: string; removed: boolean; error?: string }`.
 
 ## listInstalledServers
 
-Gathers installed servers across detected (or explicitly specified) agents.
+Gathers installed servers across detected (or explicitly specified) agents. Defaults to project scope; pass `global: true` for global configs ([reader source](https://github.com/neon-solutions/add-mcp/blob/v2.6.1/src/reader.ts)).
 
 ```ts
 function listInstalledServers(options: {
@@ -114,12 +116,14 @@ interface McpServerConfig {
   env?: Record<string, string>;
 
   // Capability-gated optional fields
-  timeout?: number; // milliseconds; Claude Code, Factory Droid, Gemini CLI, Grok Build, Hermes Agent, Kilo Code, Kimi Code, Kiro CLI
-  oauthScopes?: string[]; // Cursor, Gemini CLI
+  timeout?: number; // milliseconds; Claude Code, Factory Droid, Gemini CLI, Grok Build, Hermes Agent, Kilo Code, Kimi Code, Kiro CLI, Pi
+  oauthScopes?: string[]; // Cursor, Gemini CLI, Mastra Code
   autoApproveTools?: string[]; // Codex, Claude Code; [] = all tools
   bearerTokenEnv?: string; // fx writes bearer_token_env
 }
 ```
+
+Capability lists and mappings come from the [2.6.1 agent transforms](https://github.com/neon-solutions/add-mcp/blob/v2.6.1/src/agents.ts) and [canonical types](https://github.com/neon-solutions/add-mcp/blob/v2.6.1/src/types.ts). Unlike the remote-only CLI `--timeout` flag, SDK stdio configs can also carry a timeout for Factory Droid, Hermes, Kilo Code, Kimi Code, and Pi. Kimi Code drops timeouts outside the integer range `1..2147483647`.
 
 ### InstallOptions
 

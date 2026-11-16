@@ -44,6 +44,8 @@ upsertServer("claude-code", "postgres", {
 
 `upsertServer` and `removeServer` return `{ success, path, error? }` rather than throwing, so a failed write in one agent never crashes your tool.
 
+`upsertServer` and `removeServer` default to global scope; pass `local: true` for a project install/removal. `listInstalledServers` defaults to project scope instead. Use canonical agent IDs, not CLI aliases ([SDK reference](/docs/sdk/reference)).
+
 ## Detect the user's agents
 
 ```ts
