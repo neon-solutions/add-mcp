@@ -3,7 +3,9 @@ title: Supported agents
 description: Every coding agent add-mcp can install MCP servers to, with config paths and scopes.
 ---
 
-MCP servers can be installed to any of these agents. Project paths are relative to your working directory; agents without a project path are global-only.
+MCP servers can be installed to any of these agents. Project paths are relative to your working directory; agents without a project path are global-only. Global paths below show macOS defaults unless an override is noted; see the platform and environment notes below.
+
+Verified against add-mcp **2.6.1** on **2026-11-16**: [agent configuration source](https://github.com/neon-solutions/add-mcp/blob/v2.6.1/src/agents.ts), [agent identifiers and aliases](https://github.com/neon-solutions/add-mcp/blob/v2.6.1/src/types.ts), and [release changelog](https://github.com/neon-solutions/add-mcp/blob/v2.6.1/CHANGELOG.md).
 
 | Agent                  | `--agent`            | Project path                                                                  | Global path                                                                                                     |
 | ---------------------- | -------------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
@@ -17,7 +19,7 @@ MCP servers can be installed to any of these agents. Project paths are relative 
 | Factory Droid          | `factory-droid`      | `.factory/mcp.json`                                                           | `~/.factory/mcp.json`                                                                                           |
 | fx                     | `fx`                 | —                                                                             | `~/.fx/mcp.json`                                                                                                |
 | Gemini CLI             | `gemini-cli`         | `.gemini/settings.json`                                                       | `~/.gemini/settings.json`                                                                                       |
-| Goose                  | `goose`              | `.goose/config.yaml`                                                          | `~/.config/goose/config.yaml`                                                                                   |
+| Goose                  | `goose`              | —                                                                             | `~/.config/goose/config.yaml`                                                                                   |
 | GitHub Copilot CLI     | `github-copilot-cli` | `.mcp.json` (or existing `.github/mcp.json`)                                  | `$COPILOT_HOME/mcp-config.json` (defaults to `~/.copilot/mcp-config.json`)                                      |
 | Grok Build             | `grok-build`         | `.grok/config.toml`                                                           | `$GROK_HOME/config.toml` (defaults to `~/.grok/config.toml`)                                                    |
 | Hermes Agent           | `hermes`             | —                                                                             | `$HERMES_HOME/config.yaml` (defaults to `~/.hermes/config.yaml`, or the active profile)                         |
@@ -33,20 +35,38 @@ MCP servers can be installed to any of these agents. Project paths are relative 
 | Windsurf               | `windsurf`           | —                                                                             | `~/.codeium/windsurf/mcp_config.json`                                                                           |
 | Zed                    | `zed`                | `.zed/settings.json`                                                          | `~/Library/Application Support/Zed/settings.json`                                                               |
 
+## Platform and environment paths
+
+- **Cline CLI** uses `$CLINE_DIR/data/settings/cline_mcp_settings.json` when `CLINE_DIR` is set. **Codex** uses `$CODEX_HOME/config.toml` when `CODEX_HOME` is set.
+- On **Windows**, the `~/Library/Application Support` paths above use `%APPDATA%` (default `~/AppData/Roaming`) instead. Goose uses `%APPDATA%/Block/goose/config/config.yaml`. Hermes defaults to `%LOCALAPPDATA%/hermes/config.yaml` (with `~/AppData/Local` as the fallback base).
+- On **Linux**, the `~/Library/Application Support` paths above use `$XDG_CONFIG_HOME` (default `~/.config`) instead; Zed's directory is lowercase `zed`. Goose uses `$XDG_CONFIG_HOME/goose/config.yaml`. On macOS, Goose uses `~/.config/goose/config.yaml` regardless of `XDG_CONFIG_HOME`.
+- **Kilo Code** uses `$XDG_CONFIG_HOME/kilo` (default `~/.config/kilo`) on every platform, including Windows. **OpenCode** stays under `~/.config/opencode`; **GitHub Copilot CLI** uses `$COPILOT_HOME` (default `~/.copilot`), not `XDG_CONFIG_HOME`.
+- **OpenCode** reuses the first existing project file in this order: `opencode.jsonc`, `opencode.json`, `.opencode/opencode.jsonc`, `.opencode/opencode.json`. If none exists, it creates `opencode.jsonc`. Globally, `.jsonc` wins over `.json`.
+- **Kilo Code** reuses the first existing project file in this order: `.kilo/kilo.jsonc`, `.kilo/kilo.json`, `.kilocode/kilo.jsonc`, `.kilocode/kilo.json`, root `kilo.jsonc`; otherwise it writes root `kilo.json`. Globally, an existing `kilo.jsonc` wins over `kilo.json`.
+- **MCPorter** prefers an existing global `mcporter.json` over `mcporter.jsonc`; a new file uses `.json`.
+
+## Transports
+
+All listed agents accept stdio, HTTP, and SSE installs through add-mcp **except Claude Desktop**, whose config file supports stdio only. Add Claude Desktop remote servers through **Settings → Connectors** in the app instead. A remote CLI install that selects Claude Desktop fails unless `--all` is set, in which case it is skipped with a warning.
+
 ## Aliases
 
-| Alias                | Resolves to  |
-| -------------------- | ------------ |
-| `codeium`, `cascade` | `windsurf`   |
-| `cline-vscode`       | `cline`      |
-| `gemini`             | `gemini-cli` |
-| `github-copilot`     | `vscode`     |
-| `grok`               | `grok-build` |
-| `kilo`, `kilocode`   | `kilo-code`  |
-| `kimi`               | `kimi-code`  |
-| `kiro`               | `kiro-cli`   |
-| `mastra`             | `mastracode` |
-| `pi-agent`           | `pi`         |
+| Alias                | Resolves to     |
+| -------------------- | --------------- |
+| `codeium`, `cascade` | `windsurf`      |
+| `cline-vscode`       | `cline`         |
+| `droid`, `factory`   | `factory-droid` |
+| `gemini`             | `gemini-cli`    |
+| `github-copilot`     | `vscode`        |
+| `grok`               | `grok-build`    |
+| `hermes-agent`       | `hermes`        |
+| `kilo`, `kilocode`   | `kilo-code`     |
+| `kimi`               | `kimi-code`     |
+| `kiro`               | `kiro-cli`      |
+| `mastra`             | `mastracode`    |
+| `pi-agent`           | `pi`            |
+
+These aliases work with the CLI’s `--agent` flag. SDK `upsertServer` and `removeServer` require canonical identifiers instead ([SDK source](https://github.com/neon-solutions/add-mcp/blob/v2.6.1/src/lib.ts)).
 
 ## Troubleshooting
 
@@ -58,12 +78,14 @@ Mastra Code also reads project `.mcp.json`. add-mcp writes `.mastracode/mcp.json
 
 Pi has no built-in MCP. add-mcp writes the Pi-owned files [`pi-mcp-adapter`](https://github.com/nicobailon/pi-mcp-adapter) reads. Install that extension with `pi install npm:pi-mcp-adapter`. A running Pi session picks the change up after `/reload`.
 
-Junie CLI and the Junie JetBrains IDE plugin read the same `mcp.json`. The IDE plugin always reads `~/.junie/mcp/mcp.json`, so it only sees a global install when `JUNIE_HOME` is unset. Junie requires server names to match `^[a-zA-Z0-9_-]+$`, so keep `--name` within that pattern. Junie CLI sends an `Authorization` header from the config; the IDE plugin does not support tokens in MCP configs.
+Junie CLI and the Junie JetBrains IDE plugin read the same `mcp.json`. The IDE plugin always reads `~/.junie/mcp/mcp.json`, so a global install to a different `JUNIE_HOME` is only used by the CLI. Junie requires server names to match `^[a-zA-Z0-9_-]+$`, so keep `--name` within that pattern. Junie CLI sends an `Authorization` header from the config; the IDE plugin does not support tokens in MCP configs.
 
-Hermes Agent keeps MCP servers under `mcp_servers` in the same `config.yaml` as its other settings; add-mcp edits only that entry and keeps the file's comments. Without `HERMES_HOME`, add-mcp writes to the profile selected with `hermes profile use`. A running session picks the change up after `/reload-mcp`.
+Hermes Agent keeps MCP servers under `mcp_servers` in the same `config.yaml` as its other settings; add-mcp edits only that entry and keeps the file's comments. add-mcp follows the `active_profile` file under the Hermes root, including a custom `HERMES_HOME`, and writes `profiles/<name>/config.yaml` for a non-default profile. Empty or `default` selections use the root config; a root already directly under `profiles/` is used as-is. A running session picks the change up after `/reload-mcp`.
+
+Goose and Hermes YAML parse errors report the file, line, column, and error code without quoting file contents. YAML warnings are suppressed in 2.6.1.
 
 fx reads MCP servers only from `~/.fx/mcp.json`. A project file cannot add a server. A running session applies the change with `/mcp reload`.
 
-OpenCode keeps the shape already in the file: `mcp.<name>` on a V1 or empty config, `mcp.servers.<name>` when that native map is already there. In a mixed file, a native entry wins over a legacy entry with the same name. Adding a new name to a mixed file still writes V1; renaming a server keeps it in the map it already uses.
+OpenCode keeps the shape already in the file: `mcp.<name>` on a V1 or empty config, `mcp.servers.<name>` when that native map is already there. In a mixed file, a native entry wins over a legacy entry with the same name. Adding a new name to a mixed file normally writes V1; names that collide with `mcp.servers` or `mcp.timeout` settings use the native map when available. Renames keep the existing map unless the destination collides with those settings ([OpenCode resolver](https://github.com/neon-solutions/add-mcp/blob/v2.6.1/src/opencode-config.ts)).
 
 GitHub Copilot CLI project installs write `.mcp.json`. If `.mcp.json` is absent, an existing `.github/mcp.json` is reused. Copilot CLI does not read `.vscode/mcp.json` (that path is the VS Code agent). Entries left in `.vscode/mcp.json` from older Copilot CLI installs stay there for VS Code; rerun with `--agent github-copilot-cli` to write the CLI path. `.mcp.json` is shared with Claude Code: removing a server from either agent removes it for both. add-mcp will not create `.mcp.json` when `.github/mcp.json` already exists, because Copilot CLI would then ignore the GitHub file. Merge those servers into `.mcp.json` under `mcpServers` first. Copilot writes replace the file with strict JSON, so comments in that file are dropped (including global `~/.copilot/mcp-config.json`). Copilot CLI loads a project file only after the folder is trusted; confirm with `copilot mcp list --json`.

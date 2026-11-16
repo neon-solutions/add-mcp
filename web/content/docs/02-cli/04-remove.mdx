@@ -3,7 +3,7 @@ title: remove
 description: Remove an MCP server from agent configurations.
 ---
 
-Remove a server by name, URL, or package name:
+Remove servers by a case-insensitive name substring, or by an exact URL/package identity match ([matching source](https://github.com/neon-solutions/add-mcp/blob/v2.6.1/src/reader.ts)):
 
 ```bash
 npx add-mcp remove <name | url | package> [options]
@@ -24,6 +24,8 @@ npx add-mcp remove https://mcp.neon.tech/mcp -y
 # Remove from global configs for a specific agent
 npx add-mcp remove neon -g -a cursor -y
 ```
+
+Unreadable config files are reported and skipped for every agent sharing that file; the command exits nonzero. Project `.mcp.json` is shared by Claude Code and GitHub Copilot CLI, so removing an entry from either removes it for both ([release changelog](https://github.com/neon-solutions/add-mcp/blob/v2.6.1/CHANGELOG.md)).
 
 ## Options
 

@@ -60,15 +60,15 @@ Use single quotes around values with `${VAR}` placeholders so your shell doesn't
 
 ## Project vs. global scope
 
-| Scope       | Flag      | Written to                | Use case                                       |
-| ----------- | --------- | ------------------------- | ---------------------------------------------- |
-| **Project** | (default) | `.cursor/mcp.json`, etc.  | Committed with your project, shared with team  |
-| **Global**  | `-g`      | `~/.cursor/mcp.json` etc. | Available across all projects                  |
+| Scope       | Flag      | Written to                | Use case                                      |
+| ----------- | --------- | ------------------------- | --------------------------------------------- |
+| **Project** | (default) | `.cursor/mcp.json`, etc.  | Committed with your project, shared with team |
+| **Global**  | `-g`      | `~/.cursor/mcp.json` etc. | Available across all projects                 |
 
-When every selected agent supports both scopes, interactive mode asks which one you want. `-g` always forces global, and `-y` stays deterministic.
+Scope is determined after any transport-incompatible agents are skipped with `--all`. When every remaining agent supports both scopes, interactive mode asks which one you want; `-y` uses project scope by default. If any remaining agent is global-only (for example Goose or fx), the entire install uses global scope. `-g` always forces global. This shared-scope behavior is documented in the [release changelog](https://github.com/neon-solutions/add-mcp/blob/v2.6.1/CHANGELOG.md).
 
 ## Next steps
 
-- [CLI reference](/docs/cli) — all commands: `add`, `find`, `list`, `remove`, `sync`.
+- [CLI reference](/docs/cli) — the default install command plus `find`, `list`, `remove`, and `sync`.
 - [Supported agents](/docs/agents) — the full agent table with config paths.
 - [SDK](/docs/sdk) — install MCP servers from your own tool.

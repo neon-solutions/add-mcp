@@ -6,7 +6,7 @@ description: Search MCP registries from the terminal and install a selected matc
 Search configured MCP registries by keyword and install a result interactively. `search` is an alias for `find`.
 
 ```bash
-npx add-mcp find <keyword> [options]
+npx add-mcp find [keyword] [options]
 ```
 
 ## Examples
@@ -24,22 +24,24 @@ npx add-mcp search notion
 # Install a found server globally to a specific agent without prompts
 npx add-mcp find neon -a claude-code -g -y
 
-# Install to all agents and add generated project configs to .gitignore
-npx add-mcp find github --all --gitignore
+# Install to project-level Cursor without prompts and ignore its config
+npx add-mcp find github -a cursor -y --gitignore
 ```
 
 ## Options
 
-| Option                  | Description                                                              |
-| ----------------------- | ------------------------------------------------------------------------ |
-| `-g, --global`          | Install to user directory instead of project                             |
-| `-a, --agent <agent>`   | Target specific agents (e.g. `cursor`, `claude-code`). Repeatable.       |
-| `-n, --name <name>`     | Server name override (defaults to the selected catalog entry name)       |
-| `-y, --yes`             | Skip confirmation prompts                                                |
-| `--auto-approve`        | Auto-approve MCP tool calls for supported agents (Codex, Claude Code)    |
-| `--approve-tool <tool>` | Tool to auto-approve with `--auto-approve` (repeatable; defaults to all) |
-| `--all`                 | Install to all agents                                                    |
-| `--gitignore`           | Add generated config files to `.gitignore`                               |
+| Option                  | Description                                                           |
+| ----------------------- | --------------------------------------------------------------------- |
+| `-g, --global`          | Install to user directory instead of project                          |
+| `-a, --agent <agent>`   | Target specific agents (e.g. `cursor`, `claude-code`). Repeatable.    |
+| `-n, --name <name>`     | Server name override (defaults to the selected catalog entry name)    |
+| `-y, --yes`             | Skip confirmation prompts                                             |
+| `--auto-approve`        | Auto-approve MCP tool calls for supported agents (Codex, Claude Code) |
+| `--approve-tool <tool>` | Tool to auto-approve (repeatable; implies `--auto-approve`)           |
+| `--all`                 | Install to all agents                                                 |
+| `--gitignore`           | Add generated config files to `.gitignore`                            |
+
+Without explicit `-a` selections, `--all` selects global-only agents too, so an all-agent install uses global scope and ignores `--gitignore`. Explicit agents take precedence; scope is determined after any incompatible agents are skipped. Use project-capable agents as above to generate project configs ([2.6.1 CLI source](https://github.com/neon-solutions/add-mcp/blob/v2.6.1/src/index.ts)).
 
 ## Transport selection
 
