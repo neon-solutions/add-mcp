@@ -244,7 +244,7 @@ export function formatRegistryFailure(failure: FailedRegistryInfo): string {
   return `Registry ${registry.url} is unavailable — ${detail}`;
 }
 
-interface RegistryServerListItem {
+export interface RegistryServerListItem {
   server?: {
     name?: string;
     title?: string;
@@ -259,7 +259,9 @@ interface RegistryServerListItem {
   };
 }
 
-function toEntry(item: RegistryServerListItem): RegistryServerEntry | null {
+export function toEntry(
+  item: RegistryServerListItem,
+): RegistryServerEntry | null {
   const server = item?.server;
   if (!server?.name || !server?.description || !server?.version) {
     return null;

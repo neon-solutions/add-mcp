@@ -2,9 +2,11 @@
 
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { isDeepStrictEqual } from "node:util";
 import { z } from "zod";
 
 const REGISTRY_PATH = path.resolve(process.cwd(), "registry.json");
+const OVERLAY_PATH = path.resolve(process.cwd(), "registry.overlay.json");
 
 const registryVariableSchema = z
   .object({
@@ -88,6 +90,55 @@ function extractServerCandidate(value: unknown): unknown {
     return value;
   }
   return "server" in value ? value.server : value;
+}
+
+function installTargets(entry: RegistryServerEntry): string[] {
+  return [
+    ...(entry.remotes ?? []).map((remote) => remote.url),
+    ...(entry.packages ?? []).map((pkg) => pkg.identifier),
+  ];
+}
+
+// The sync merges registry.overlay.json last, so each overlay entry must appear in registry.json unchanged and be
+// the only entry with its install targets.
+function overlayIssues(
+  overlayEntries: unknown[],
+  rawEntries: unknown[],
+  parsedEntries: RegistryServerEntry[],
+): string[] {
+  const issues: string[] = [];
+  overlayEntries.forEach((rawOverlay, index) => {
+    const parsed = registryServerSchema.safeParse(
+      extractServerCandidate(rawOverlay),
+    );
+    if (!parsed.success) {
+      issues.push(`Overlay entry ${index + 1} is invalid`);
+      return;
+    }
+    const { name } = parsed.data;
+    const inRegistry = rawEntries.find((rawEntry) => {
+      const candidate = extractServerCandidate(rawEntry);
+      return isRecord(candidate) && candidate.name === name;
+    });
+    if (inRegistry === undefined) {
+      issues.push(`Overlay entry ${name} is missing from registry.json`);
+    } else if (!isDeepStrictEqual(inRegistry, rawOverlay)) {
+      issues.push(
+        `Overlay entry ${name} differs from its registry.json entry; run \`bun run registry:sync\``,
+      );
+    }
+    const pinned = new Set(installTargets(parsed.data));
+    for (const entry of parsedEntries) {
+      if (entry.name === name) continue;
+      const shared = installTargets(entry).find((target) => pinned.has(target));
+      if (shared) {
+        issues.push(
+          `${entry.name} duplicates overlay entry ${name}'s install target ${shared}`,
+        );
+      }
+    }
+  });
+  return issues;
 }
 
 function hasAnyInstallTarget(entry: RegistryServerEntry): boolean {
@@ -176,20 +227,26 @@ async function main(): Promise<void> {
     const expected = sortedEntries[firstMismatch];
     issues.push(
       `Registry entries are not sorted by title at position ${firstMismatch + 1}: ` +
-        `found "${current?.title ?? "unknown"}" but expected "${expected?.title ?? "unknown"}"`,
+        `found "${current?.title ?? "unknown"}" but expected "${expected?.title ?? "unknown"}"; run \`bun run registry:sort\``,
     );
   }
+
+  const overlayEntries = parseEntries(
+    JSON.parse(await readFile(OVERLAY_PATH, "utf8")),
+  );
+  issues.push(...overlayIssues(overlayEntries, rawEntries, parsedEntries));
 
   if (issues.length > 0) {
     console.error("Registry verification failed:");
     for (const issue of issues) {
       console.error(`- ${issue}`);
     }
-    console.error("Run `bun run registry:sort` to fix ordering.");
     process.exit(1);
   }
 
-  console.log(`Verified ${parsedEntries.length} registry entries`);
+  console.log(
+    `Verified ${parsedEntries.length} registry entries and ${overlayEntries.length} overlay entries`,
+  );
 }
 
 main().catch((error: unknown) => {
