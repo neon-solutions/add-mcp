@@ -1545,9 +1545,9 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.airtable/mcp",
       "title": "Airtable",
-      "description": "Airtable is a cloud platform for building collaborative databases, workflows, interfaces, and automations. It lets teams store structured data in bases and access or manipulate that data through APIs and AI-tool integrations.",
+      "description": "Airtable is a cloud platform for building and collaborating on structured data workflows, combining spreadsheet-like tables with relational database features. Users organize records, fields, views, automations, and related workspace content in hosted bases.",
       "version": "1.0.0",
-      "websiteUrl": "https://airtable.com/developers/agents/mcp/getting-started",
+      "websiteUrl": "https://support.airtable.com/docs/using-the-airtable-mcp-server",
       "icons": [
         {
           "src": "https://integrations.sh/logo/airtable.com"
@@ -1556,15 +1556,7 @@
       "remotes": [
         {
           "type": "streamable-http",
-          "url": "https://mcp.airtable.com/mcp",
-          "headers": [
-            {
-              "name": "Authorization",
-              "description": "Airtable personal access token. Use Bearer <token>.",
-              "isRequired": true,
-              "isSecret": true
-            }
-          ]
+          "url": "https://mcp.airtable.com/mcp"
         }
       ]
     }
@@ -19631,7 +19623,7 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.neon/mcp",
       "title": "Neon",
-      "description": "Neon provides managed Postgres-based backend services including branching databases, authentication, realtime, object storage, serverless functions, a Data API, and an AI Gateway. It is aimed at developers building applications and AI agents on hosted cloud infrastructure.",
+      "description": "Neon provides a managed Postgres platform with branching, serverless compute, and related backend services such as a Data API, object storage, functions, auth, and AI tooling. It is used to build and operate application backends and agent workflows on top of Postgres.",
       "version": "1.0.0",
       "websiteUrl": "https://neon.com/docs/ai/neon-mcp-server",
       "icons": [
@@ -19642,15 +19634,7 @@
       "remotes": [
         {
           "type": "streamable-http",
-          "url": "https://mcp.neon.tech/mcp",
-          "headers": [
-            {
-              "name": "Authorization",
-              "description": "Neon API key. Use Bearer <token>.",
-              "isRequired": true,
-              "isSecret": true
-            }
-          ]
+          "url": "https://mcp.neon.tech/mcp"
         }
       ]
     }
@@ -20581,7 +20565,7 @@
       "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
       "name": "com.onlineornot/mcp",
       "title": "OnlineOrNot",
-      "description": "OnlineOrNot is an uptime monitoring platform for developers and software teams. It monitors websites, APIs, browser flows, and scheduled jobs, and publishes service health through status pages.",
+      "description": "OnlineOrNot is an uptime monitoring platform for websites, APIs, browser flows, and scheduled jobs. It also supports alerts, heartbeats, maintenance windows, and public status pages.",
       "version": "1.0.0",
       "websiteUrl": "https://onlineornot.com/docs/reference/mcp",
       "icons": [
@@ -20592,15 +20576,7 @@
       "remotes": [
         {
           "type": "streamable-http",
-          "url": "https://mcp.onlineornot.com/mcp",
-          "headers": [
-            {
-              "name": "Authorization",
-              "description": "OnlineOrNot API token. Use Bearer <token>.",
-              "isRequired": true,
-              "isSecret": true
-            }
-          ]
+          "url": "https://mcp.onlineornot.com/mcp"
         }
       ]
     }
