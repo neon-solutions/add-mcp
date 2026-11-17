@@ -118,12 +118,12 @@ async function installPlan(server: Server): Promise<string> {
   if (!plan) return "not installable";
   const parts = [`${code(plan.target)} as ${code(plan.serverName)}`];
   if (plan.transport) parts.push(plan.transport);
-  const keys = [
-    ...Object.keys(plan.headers ?? {}),
-    ...Object.keys(plan.env ?? {}),
-  ];
-  if (keys.length > 0)
-    parts.push(`asks for ${keys.map((key) => code(key)).join(", ")}`);
+  const headers = Object.keys(plan.headers ?? {});
+  const env = Object.keys(plan.env ?? {});
+  if (headers.length > 0)
+    parts.push(`header ${headers.map((key) => code(key)).join(", ")}`);
+  if (env.length > 0)
+    parts.push(`env ${env.map((key) => code(key)).join(", ")}`);
   if (plan.args) parts.push(`args ${code(plan.args.join(" "))}`);
   return parts.join("; ");
 }
@@ -166,8 +166,10 @@ async function main(): Promise<void> {
   const renamed: { from: Server; to: Server }[] = [];
   for (const from of removed) {
     const targets = new Set(installTargets(from));
-    const to = added.find((candidate) =>
-      installTargets(candidate).some((target) => targets.has(target)),
+    const to = added.find(
+      (candidate) =>
+        !renamed.some((pair) => pair.to === candidate) &&
+        installTargets(candidate).some((target) => targets.has(target)),
     );
     if (to) renamed.push({ from, to });
   }
