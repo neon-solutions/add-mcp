@@ -3,8 +3,14 @@
 import { execFileSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { isDeepStrictEqual } from "node:util";
+import { queryServers } from "../registry/src/lib/query-servers.js";
+import {
+  sourceRegistrySchema,
+  type ServerEntry,
+} from "../registry/src/lib/schema.js";
 import {
   buildInstallPlanForEntry,
+  filterSmitheryWhenAlternativesExist,
   rankRegistryEntries,
   toEntry,
   type RegistryServerEntry,
@@ -72,10 +78,22 @@ function targetCell(server: Server): string {
     .join(", ");
 }
 
-function entries(list: Server[]): RegistryServerEntry[] {
-  return list
-    .map((server) => toEntry({ server }))
-    .filter((entry): entry is RegistryServerEntry => entry !== null);
+// The registry API's first page of search results ranked by the CLI, as `add-mcp find <query>` shows them.
+function topFindResult(
+  query: string,
+  registry: ServerEntry[],
+  serversByName: Map<string, Server>,
+): string {
+  const page = queryServers(registry, { search: query, limit: "100" });
+  const found = page.servers.flatMap((entry) => {
+    const server = serversByName.get(entry.server.name);
+    const candidate = server ? toEntry({ server }) : null;
+    return candidate ? [candidate] : [];
+  });
+  return (
+    filterSmitheryWhenAlternativesExist(rankRegistryEntries(query, found))[0]
+      ?.name ?? "none"
+  );
 }
 
 // What `add-mcp find --yes` writes for this entry: the CLI's own resolve path.
@@ -105,19 +123,15 @@ function changedFields(before: Server, after: Server): string[] {
 
 async function main(): Promise<void> {
   const { base } = parseArgs(process.argv.slice(2));
-  const before = servers(
-    JSON.parse(
-      execFileSync("git", ["show", `${base}:registry.json`], {
-        encoding: "utf8",
-        maxBuffer: 256 * 1024 * 1024,
-      }),
-    ),
-    `${base}:registry.json`,
+  const beforeRaw = JSON.parse(
+    execFileSync("git", ["show", `${base}:registry.json`], {
+      encoding: "utf8",
+      maxBuffer: 256 * 1024 * 1024,
+    }),
   );
-  const after = servers(
-    JSON.parse(await readFile("registry.json", "utf8")),
-    "registry.json",
-  );
+  const afterRaw = JSON.parse(await readFile("registry.json", "utf8"));
+  const before = servers(beforeRaw, `${base}:registry.json`);
+  const after = servers(afterRaw, "registry.json");
   const overlay = servers(
     JSON.parse(await readFile("registry.overlay.json", "utf8")),
     "registry.overlay.json",
@@ -236,13 +250,11 @@ async function main(): Promise<void> {
     "| Query | Before | After |",
     "| --- | --- | --- |",
   );
-  const beforeEntries = entries(before);
-  const afterEntries = entries(after);
+  const beforeRegistry = sourceRegistrySchema.parse(beforeRaw);
+  const afterRegistry = sourceRegistrySchema.parse(afterRaw);
   for (const query of POPULAR_QUERIES) {
-    const top = (list: RegistryServerEntry[]) =>
-      rankRegistryEntries(query, list)[0]?.name ?? "none";
-    const was = top(beforeEntries);
-    const now = top(afterEntries);
+    const was = topFindResult(query, beforeRegistry, beforeByName);
+    const now = topFindResult(query, afterRegistry, afterByName);
     lines.push(
       `| ${query} | \`${was}\` | ${was === now ? "unchanged" : `\`${now}\``} |`,
     );
