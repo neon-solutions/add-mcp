@@ -26,6 +26,10 @@ A CLI to install MCP servers for different coding agents (Claude Code, Cursor, V
 
 CI runs registry verification, typecheck, a subset of unit/e2e tests, and build. Keep local runs of the full `test` script green before you rely on CI.
 
+## Registry data
+
+`registry.json` is generated: never hand-edit it. `bun run registry:sync` rebuilds it from integrations.sh and merges `registry.overlay.json` last; hand-curated entries go in the overlay. `bun run registry:verify` fails when an overlay entry is missing or changed in `registry.json`, or when another entry shares its install target. Put `bun run registry:diff` output in the PR description of every registry change.
+
 ## Releasing
 
 `add-mcp` ships through a locked-down GitHub Actions pipeline using npm Trusted Publishing (OIDC), provenance attestation, and `npm stage publish` with WebAuthn-gated maintainer approval. **There is no supported `npm publish` from a laptop.** See [docs/RELEASING.md](docs/RELEASING.md) for the one-time setup checklist, per-release runbook, and break-glass procedure.

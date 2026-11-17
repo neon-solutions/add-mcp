@@ -74,13 +74,29 @@ Options:
 `);
 }
 
-async function fetchJson(url) {
-  const response = await fetch(url, {
+function get(url) {
+  return fetch(url, {
     headers: {
       accept: "application/json",
       "user-agent": "add-mcp-registry-sync",
     },
   });
+}
+
+async function fetchJson(url) {
+  const response = await get(url);
+  if (!response.ok) {
+    throw new Error(`GET ${url} failed with HTTP ${response.status}`);
+  }
+  return response.json();
+}
+
+// integrations.sh answers 400 or 404 for a domain it has no surface document for. Any other failure (rate limit,
+// outage) aborts the sync, so a partial fetch never writes a registry missing the servers it could not reach.
+async function fetchSurface(apiBase, domain) {
+  const url = `${apiBase}/api/${encodeURIComponent(domain)}/surface`;
+  const response = await get(url);
+  if (response.status === 400 || response.status === 404) return null;
   if (!response.ok) {
     throw new Error(`GET ${url} failed with HTTP ${response.status}`);
   }
@@ -322,10 +338,25 @@ async function readOverlay(filePath) {
   return parsed;
 }
 
+function installTargets(server) {
+  return [
+    ...(server.remotes ?? []).map((remote) => remote.url),
+    ...(server.packages ?? []).map((pkg) => pkg.identifier),
+  ];
+}
+
+// An overlay entry owns its install targets: a generated entry with the same URL or package under another name would
+// list the server twice in `find`.
 function mergeEntries(generated, overlay) {
+  const pinned = new Set(
+    overlay.flatMap((entry) => installTargets(entry.server)),
+  );
   const byName = new Map();
   for (const entry of generated) {
-    if (entry?.server?.name) byName.set(entry.server.name, entry);
+    if (installTargets(entry.server).some((target) => pinned.has(target))) {
+      continue;
+    }
+    byName.set(entry.server.name, entry);
   }
   for (const entry of overlay) {
     if (entry?.server?.name) byName.set(entry.server.name, entry);
@@ -346,46 +377,37 @@ function mergeEntries(generated, overlay) {
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const catalog = await fetchJson(`${options.apiBase}/api.json`);
-  const mcpDomains = [
+  // Every catalog domain, whatever kind it is listed under: a domain listed only as openapi or graphql can still
+  // publish an MCP surface.
+  const domains = [
     ...new Set(
       (catalog.data || [])
-        .filter((item) => item?.kind === "mcp" && item?.domain)
+        .filter((item) => item?.domain)
         .map((item) => item.domain),
     ),
   ].slice(0, options.limit);
 
-  let failed = 0;
   let skipped = 0;
   const generatedGroups = await mapConcurrent(
-    mcpDomains,
+    domains,
     options.concurrency,
     async (domain) => {
-      try {
-        const doc = await fetchJson(
-          `${options.apiBase}/api/${encodeURIComponent(domain)}/surface`,
-        );
-        const installable = (doc.surfaces || []).filter(
-          (surface) =>
-            surface?.type === "mcp" &&
-            typeof surface.url === "string" &&
-            surface.url.startsWith("https://"),
-        );
-        if (installable.length === 0) {
-          skipped++;
-          return [];
-        }
-        return installable
-          .map((surface) =>
-            entryForSurface(doc, surface, installable.length, options.apiBase),
-          )
-          .filter(Boolean);
-      } catch (error) {
-        failed++;
-        console.warn(
-          `Skipping ${domain}: ${error instanceof Error ? error.message : error}`,
-        );
+      const doc = await fetchSurface(options.apiBase, domain);
+      const installable = (doc?.surfaces || []).filter(
+        (surface) =>
+          surface?.type === "mcp" &&
+          typeof surface.url === "string" &&
+          surface.url.startsWith("https://"),
+      );
+      if (installable.length === 0) {
+        skipped++;
         return [];
       }
+      return installable
+        .map((surface) =>
+          entryForSurface(doc, surface, installable.length, options.apiBase),
+        )
+        .filter(Boolean);
     },
   );
 
@@ -397,7 +419,7 @@ async function main() {
   await writeFile(options.outPath, `${JSON.stringify(merged, null, 2)}\n`);
 
   console.log(
-    `Wrote ${merged.length} servers to ${options.outPath} (${generated.length} integrations.sh, ${overlay.length} overlay, ${skipped} skipped, ${failed} failed).`,
+    `Wrote ${merged.length} servers to ${options.outPath} (${domains.length} domains probed, ${skipped} without an MCP surface, ${generated.length} integrations.sh entries, ${overlay.length} overlay).`,
   );
 }
 
