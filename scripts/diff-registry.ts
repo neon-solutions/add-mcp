@@ -68,13 +68,27 @@ function installTargets(server: Server): string[] {
   ];
 }
 
-function cell(value: string | undefined): string {
-  return (value ?? "").replace(/\|/g, "\\|");
+// Registry fields come from integrations.sh, and this output goes into PR descriptions a reviewer acts on: render
+// every field as one inert table cell, never as markdown or HTML.
+function text(value: string | undefined): string {
+  return (value ?? "")
+    .replace(/\s+/g, " ")
+    .replace(/[\\`*_[\]<>|#!~&]/g, (char) => `\\${char}`);
+}
+
+function code(value: string | undefined): string {
+  const flat = (value ?? "").replace(/\s+/g, " ").replace(/\|/g, "\\|");
+  const longestRun = Math.max(
+    0,
+    ...[...flat.matchAll(/`+/g)].map((run) => run[0].length),
+  );
+  const fence = "`".repeat(longestRun + 1);
+  return `${fence} ${flat} ${fence}`;
 }
 
 function targetCell(server: Server): string {
   return installTargets(server)
-    .map((target) => `\`${cell(target)}\``)
+    .map((target) => code(target))
     .join(", ");
 }
 
@@ -102,14 +116,15 @@ async function installPlan(server: Server): Promise<string> {
   if (!entry) return "not installable";
   const plan = await buildInstallPlanForEntry(entry, { yes: true });
   if (!plan) return "not installable";
-  const parts = [`\`${cell(plan.target)}\` as \`${cell(plan.serverName)}\``];
+  const parts = [`${code(plan.target)} as ${code(plan.serverName)}`];
   if (plan.transport) parts.push(plan.transport);
   const keys = [
     ...Object.keys(plan.headers ?? {}),
     ...Object.keys(plan.env ?? {}),
   ];
-  if (keys.length > 0) parts.push(`asks for ${keys.join(", ")}`);
-  if (plan.args) parts.push(`args ${plan.args.join(" ")}`);
+  if (keys.length > 0)
+    parts.push(`asks for ${keys.map((key) => code(key)).join(", ")}`);
+  if (plan.args) parts.push(`args ${code(plan.args.join(" "))}`);
   return parts.join("; ");
 }
 
@@ -177,7 +192,7 @@ async function main(): Promise<void> {
     );
     for (const server of gone) {
       lines.push(
-        `| \`${cell(server.name)}\` | ${cell(server.title)} | ${targetCell(server)} |`,
+        `| ${code(server.name)} | ${text(server.title)} | ${targetCell(server)} |`,
       );
     }
   }
@@ -192,7 +207,7 @@ async function main(): Promise<void> {
     );
     for (const { from, to } of renamed) {
       lines.push(
-        `| \`${cell(from.name)}\` | \`${cell(to.name)}\` | ${await installPlan(from)} | ${await installPlan(to)} |`,
+        `| ${code(from.name)} | ${code(to.name)} | ${await installPlan(from)} | ${await installPlan(to)} |`,
       );
     }
   }
@@ -207,7 +222,7 @@ async function main(): Promise<void> {
     );
     for (const server of fresh) {
       lines.push(
-        `| \`${cell(server.name)}\` | ${cell(server.title)} | ${targetCell(server)} |`,
+        `| ${code(server.name)} | ${text(server.title)} | ${targetCell(server)} |`,
       );
     }
   }
@@ -226,7 +241,11 @@ async function main(): Promise<void> {
       const planBefore = await installPlan(previous);
       const planAfter = await installPlan(server);
       lines.push(
-        `| \`${cell(server.name)}\` | ${changedFields(previous, server).join(", ")} | ${planBefore} | ${planBefore === planAfter ? "unchanged" : planAfter} |`,
+        `| ${code(server.name)} | ${changedFields(previous, server)
+          .map((field) => text(field))
+          .join(
+            ", ",
+          )} | ${planBefore} | ${planBefore === planAfter ? "unchanged" : planAfter} |`,
       );
     }
   }
@@ -240,7 +259,7 @@ async function main(): Promise<void> {
   lines.push(
     overlayChanges.length === 0
       ? `All ${overlay.length} overlay entries resolve as they did on ${base}.`
-      : `${overlayChanges.length} of ${overlay.length} overlay entries changed: ${overlayChanges.map((server) => `\`${cell(server.name)}\``).join(", ")}.`,
+      : `${overlayChanges.length} of ${overlay.length} overlay entries changed: ${overlayChanges.map((server) => code(server.name)).join(", ")}.`,
   );
 
   lines.push(
@@ -256,7 +275,7 @@ async function main(): Promise<void> {
     const was = topFindResult(query, beforeRegistry, beforeByName);
     const now = topFindResult(query, afterRegistry, afterByName);
     lines.push(
-      `| ${query} | \`${was}\` | ${was === now ? "unchanged" : `\`${now}\``} |`,
+      `| ${query} | ${code(was)} | ${was === now ? "unchanged" : code(now)} |`,
     );
   }
 
